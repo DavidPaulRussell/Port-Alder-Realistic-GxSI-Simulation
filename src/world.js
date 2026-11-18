@@ -215,10 +215,18 @@ export class World {
       if (this.hood[c] === 6) v = 30000 + Math.max(0, 40000 - dd * 600);
       this.landValue[c] = Math.floor(v);
     }
-    const T = this.buildings;
+    const T = this.buildings, D = this.dwellings, homesOf = new Map();
+    for (const d of D.each()) { const b = D.bld[d]; if (!homesOf.has(b)) homesOf.set(b, []); homesOf.get(b).push(d); }
     for (const i of T.each()) {
       let lv = 0; for (let y = T.y[i]; y < T.y[i] + T.h[i]; y++) for (let x = T.x[i]; x < T.x[i] + T.w[i]; x++) lv += this.landValue[cellOf(x, y)] * CELL_M * CELL_M;
-      const cover = [0.42, 0.55, 0.6, 0.7, 0.75, 0.62, 0.8, 0.6, 0.55, 0.5, 0.6, 0.6, 0.6][T.kind[i]], area = T.w[i] * T.h[i] * CELL_M * CELL_M * cover * T.floors[i];   // floor area, m2
+      const k = T.kind[i], cover = [0.42, 0.55, 0.6, 0.7, 0.75, 0.62, 0.8, 0.6, 0.55, 0.5, 0.6, 0.6, 0.6][k], lot = T.w[i] * T.h[i] * CELL_M * CELL_M, env = lot * cover * T.floors[i];   // the envelope's floor area, m2
+      // what is valued is what is built inside the envelope: homes of the floor areas their rooms make (Everett's typical
+      // units: a flat of r rooms about 30 + 25r m2 with 15% for halls and stairs, a townhouse about 100 + 25r m2), a mixed
+      // building's shopfronts on its ground floor, office suites of about 650 m2 and a hotel of about 110 rooms (history)
+      let area = env;
+      if (k === B.townhouse || k === B.apartments || k === B.mixed) { let a = 0; for (const d of homesOf.get(i) || []) a += k === B.townhouse ? 100 + 25 * D.rooms[d] : (30 + 25 * D.rooms[d]) * 1.15; area = Math.min(env, a + (k === B.mixed && T.spaces[i] ? lot * cover : 0)); }
+      else if (k === B.office) area = Math.min(env, T.spaces[i] * 650);
+      else if (k === B.hotel) area = Math.min(env, 6500);
       const cost = [195000, 190000, 200000, 210000, 180000, 260000, 110000, 250000, 280000, 240000, 330000, 230000, 290000][T.kind[i]];   // cents per m2
       T.land[i] = Math.round(lv); T.value[i] = Math.round(lv + area * cost * (500 + T.cond[i] / 2) / 1000);
     }

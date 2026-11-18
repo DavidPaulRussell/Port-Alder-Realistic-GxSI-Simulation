@@ -19,7 +19,7 @@ import { along, sunAt, LAMP, tideAt } from "./motion.js";
 const weyl = (n, a = 0.6180339887498949) => (((n * a) % 1) + 1) % 1, look = (n) => Math.floor(weyl(n) * 4294967296) >>> 0;
 import { homeCell } from "./people.js";
 
-export const CITY3D_VERSION = "1.1.0";
+export const CITY3D_VERSION = "1.2.0";
 const WORLD = N * CELL_M, LAT = 47.6, LON = -122.6;
 // base colours of the 24 materials (linear), used in safe graphics and until the library is loaded
 const MAT_COL = [[0.05, 0.05, 0.055], [0.42, 0.41, 0.39], [0.36, 0.16, 0.10], [0.30, 0.29, 0.28], [0.10, 0.22, 0.05], [0.20, 0.14, 0.08], [0.62, 0.55, 0.42], [0.16, 0.11, 0.07],

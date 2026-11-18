@@ -8,7 +8,11 @@ import { dayInfo, DAY0, civilFromDays } from "./rules.js";
 import { OCCS, O, CATS, NCAT, B as BK, CELL_M, personName, firmName } from "./citydata.js";
 import { AC, E_H0, E_F0, E_B0, E_CITY, E_SCHOOL, E_ROW, E_FEDGOV, holdKind } from "./books.js";
 import { sat, TRUST_SPEC, tickTrust, priorTrust, copyTrust, F_RUNNING, F_TERMINATE } from "./core.js";
-import { census, censusBell, breeder, mortality, cumHazard, cox, MORTALITY, asfr, relax, fade, smooth, hebb, align, ln, ex, bellman, rasch, kleiber, MASS_BY_AGE } from "./laws.js";
+import { census, censusBell, breeder, mortality, cumHazard, cox, MORTALITY, asfr, relax, fade, smooth, hebb, align, ln, ex, bellman, rasch, kleiber, MASS_BY_AGE, lif } from "./laws.js";
+// the charges (law 57.9) behind a person's household decisions: to share a home, to leave a parent's, to part. Their
+// slots follow the day's urges (URGE in economy.js: pair 15, leave 16, split 17, of 18)
+const U_PAIR = 15, U_LEAVE = 16, U_SPLIT = 17, U_N = 18;
+const urgeP = (P, i, k, drive) => { const x = i * U_N + k, v = lif(P.urge[x], drive, 0); if (v >= 1) { P.urge[x] = v - 1; return true; } P.urge[x] = v; return false; };
 import { issue, relocate, retire as retireSin } from "./registry.js";
 import { cellOf } from "./world.js";
 
@@ -23,12 +27,12 @@ export const PEOPLE_SPEC = [["alive", Uint8Array], ["serial", Uint32Array], ["hh
   ["friend", Int32Array, 4], ["partner", Int32Array],
   ["ytdW", Float64Array], ["ytdT", Float64Array], ["ytdUI", Float64Array], ["ytdOT", Float64Array], ["ytdFIT", Float64Array], ["ytdSS", Float64Array], ["ytdMed", Float64Array], ["empW", Float64Array], ["empWnt", Float64Array],
   ["qw", Int32Array, 5], ["wk", Uint16Array], ["preg", Uint16Array], ["pot", Uint16Array], ["ptips", Int32Array], ["psick", Uint16Array],
-  ["ui", Int32Array], ["uiLeft", Uint8Array], ["uiWait", Uint8Array], ["uiEmp", Int32Array], ["ss", Int32Array],
+  ["ui", Int32Array], ["uiLeft", Uint8Array], ["uiWait", Uint8Array], ["uiEmp", Int32Array], ["ss", Int32Array], ["pen", Int32Array],
   ["mode", Uint8Array], ["today", Uint8Array], ["visit", Int32Array, 3], ["vtime", Uint16Array, 3], ["lastEmp", Int32Array], ["laidAt", Int32Array], ["school", Int32Array],
   ["sin", Int32Array], ["frail", Float64Array], ["frailQ", Float32Array], ["cumH", Float64Array], ["wish", Float32Array], ["gest", Int32Array], ["fw", Float32Array, 4], ["acq", Int32Array, 4], ["acqW", Float32Array, 4],
   ["away", Int32Array], ["awayH", Uint8Array], ["ah", Uint8Array], ["ahRenew", Int32Array], ["ssi", Int32Array], ["abd", Int32Array], ["abawd", Uint8Array], ["dis", Uint16Array],
   ["mh", Uint16Array], ["mhDays", Uint16Array], ["mhEp", Uint8Array], ["mhTx", Uint16Array], ["mhNext", Int32Array], ["mhYtd", Uint16Array], ["crisis", Uint16Array], ["forgone", Uint16Array], ["visits", Uint16Array], ["hosp", Uint16Array],
-  ["dose", Float32Array], ["inf", Uint8Array], ["infDay", Uint16Array], ["immune", Uint16Array], ["vax", Int32Array], ["cent", Uint16Array], ["urge", Float32Array, 12], ["flare", Float32Array], ["imp", Float32Array], ["immunity", Float32Array], ["search", Float32Array]];
+  ["dose", Float32Array], ["inf", Uint8Array], ["infDay", Uint16Array], ["immune", Uint16Array], ["vax", Int32Array], ["cent", Uint16Array], ["urge", Float32Array, 18], ["flare", Float32Array], ["imp", Float32Array], ["immunity", Float32Array], ["search", Float32Array]];
 export const HOUSEHOLD_SPEC = [["alive", Uint8Array], ["head", Int32Array], ["first", Int32Array], ["size", Uint8Array], ["kids", Uint8Array], ["adults", Uint8Array], ["joint", Uint8Array],
   ["home", Int32Array], ["tenure", Uint8Array], ["landlord", Int32Array], ["rent", Int32Array], ["lease", Int32Array], ["notice", Int32Array], ["noticeAt", Int32Array],
   ["mort", Int32Array], ["auto", Int32Array], ["card", Int32Array], ["cardLim", Int32Array], ["cars", Uint8Array], ["carBought", Int32Array],
@@ -37,7 +41,8 @@ export const HOUSEHOLD_SPEC = [["alive", Uint8Array], ["head", Int32Array], ["fi
   ["progs", Uint16Array], ["snap", Int32Array], ["ebt", Int32Array], ["snapRenew", Int32Array], ["tanf", Int32Array], ["tanfMonths", Uint8Array], ["wic", Int32Array], ["sun", Int32Array], ["copay", Int32Array],
   ["voucher", Uint8Array], ["vWait", Int32Array], ["hap", Int32Array], ["wftcY", Uint16Array], ["fresh", Int32Array], ["mbits", Uint8Array], ["mRent", Int32Array], ["apply", Float32Array, 10], ["plan", Uint8Array], ["leave", Float32Array],
   ["env", Float64Array, 8], ["fuel", Float32Array], ["carD", Float32Array], ["prep", Int16Array], ["ins", Uint8Array], ["prem", Int32Array], ["heat", Int32Array], ["kwh", Float32Array], ["hurge", Float32Array, 6],
-  ["rArr", Int32Array], ["rMo", Uint8Array], ["lPat", Float32Array], ["ntc", Int32Array], ["sell", Uint8Array]];
+  ["rArr", Int32Array], ["rMo", Uint8Array], ["lPat", Float32Array], ["ntc", Int32Array], ["ntcs", Int32Array, 3], ["udStay", Int32Array], ["udLow", Uint8Array], ["lmp", Int32Array], ["lmpAt", Int32Array], ["sell", Uint8Array],
+  ["mkt", Uint8Array], ["mktPrem", Int32Array]];
 
 export const STATUS = ["child", "student", "working", "looking for work", "not in the labour force", "retired", "on family leave"];
 export const NEEDS = ["food", "rest", "health", "shelter", "social", "purpose", "leisure", "money"];
@@ -52,7 +57,8 @@ export const MEM = [["", 0], ["was hired", 90], ["was laid off", -110], ["got a 
   ["bought a home", 110], ["started a business", 80], ["the business failed", -120], ["saw a price jump", -20], ["voted", 10], ["moved to the city", 40], ["was robbed", -70], ["retired", 60],
   ["drew a design", 35], ["my design was chosen", 120], ["my home is to be torn down", -90], ["a new building opened nearby", 20], ["saw a familiar building come down", -15], ["my design was passed over", -12],
   ["got help with food", 30], ["got health coverage", 40], ["was denied benefits", -35], ["started counselling", 25], ["reached out in a crisis", 10], ["got help with child care", 35], ["got help with rent", 45],
-  ["went without care", -30], ["a friend moved away", -25], ["the strike ended", 30], ["got an eviction notice", -80], ["a friend helped with the rent", 40]];
+  ["went without care", -30], ["a friend moved away", -25], ["the strike ended", 30], ["got an eviction notice", -80], ["a friend helped with the rent", 40], ["the court gave us time to pay", 30],
+  ["moved out on my own", 40], ["separated from a partner", -70], ["the state paid what we owed in rent", 25]];
 export const M = Object.fromEntries(MEM.map(([k], i) => [k.replace(/[^a-z]+/g, "_").replace(/^_|_$/g, ""), i]));
 
 export const ageYears = (c, i, e = c.epoch) => Math.floor((e - c.people.born[i]) / 365.25);
@@ -161,10 +167,18 @@ export function newPerson(c, h, ageDays, sex, fam, salt, opt = {}) {
   if (years < 5) P.status[i] = 0; else if (years < 18) P.status[i] = 1;
   else if (opt.status !== undefined) { P.status[i] = opt.status; if (opt.status === 3 || opt.status === 2) P.occ[i] = opt.occ ?? chooseOcc(c, i, P.edu[i]); if (opt.status === 5) P.ss[i] = opt.ss ?? 180000; }
   else if (founding) {
-    if (years >= 67 || (years >= 63 && r(11) % 3 === 0)) { P.status[i] = 5; P.ss[i] = 140000 + (r(12) % 160000); }
-    else if (years < 23 && r(13) % 3 === 0) P.status[i] = 1;
-    else if (r(14) % 1000 < 190) P.status[i] = 4;                      // caring at home, disabled, studying or between jobs
-    else { P.status[i] = 3; P.occ[i] = pickW(OCC_BY_EDU[P.edu[i]], r(15)); }
+    // Social Security as the census reads it: spread about a median near $1,850 a month (the 2025 average retired-worker
+    // benefit was about $1,975), low for many who earned little
+    // Each adult's place in the labour force is read by age (BLS 2025 participation by age, as history: half at 18-19,
+    // 72% at 20-24, 83% at 25-54, 72% at 55-59, 60% at 60-61, 47% at 62-64, 33% at 65-69, 19% at 70-74, 8% from 75).
+    // Those outside it are students when young, at home (caring, disabled, between jobs) in mid-life, and retired on
+    // Social Security from 62. About two retirees in five also draw a pension or annuity from a former employer
+    // (history: the census's retirement income, median near $1,300 a month).
+    const lfpr = years < 20 ? 500 : years < 25 ? 720 : years < 55 ? 830 : years < 60 ? 720 : years < 62 ? 600 : years < 65 ? 470 : years < 70 ? 330 : years < 75 ? 190 : 80;
+    const inLF = r(14) % 1000 < lfpr, ss = () => Math.max(70000, Math.min(420000, Math.round(ex(ln(185000) + (0.36 * censusBell(c, 0x55a, i)) / 147.8) / 100) * 100));
+    if (years >= 62 && !inLF) { P.status[i] = 5; P.ss[i] = ss(); if (r(11) % 1000 < 400) P.pen[i] = Math.max(20000, Math.min(600000, Math.round(ex(ln(130000) + (0.6 * censusBell(c, 0x9e5, i)) / 147.8) / 100) * 100)); }
+    else if (!inLF) P.status[i] = years < 25 && r(13) % 1000 < 700 ? 1 : 4;
+    else { P.status[i] = 3; P.occ[i] = pickW(OCC_BY_EDU[P.edu[i]], r(15)); if (years >= 67) P.ss[i] = ss(); }
   } else { P.status[i] = 3; P.occ[i] = chooseOcc(c, i, P.edu[i]); }
   P.sickBal[i] = founding ? r(16) % 120 : 0; P.mode[i] = 0;
   return i;
@@ -204,31 +218,46 @@ export function genesisPeople(c) {
     const bank = pickW([[0, 40], [1, 35], [2, 25]].slice(0, c.cfg.banks), cz(0xba4c, d));
     const h = newHousehold(c, bank); if (h < 0) break;
     const fam = cz(0xfa31, d) % 48, q = cz(0x40e6, d) % 1000;
-    const types = kind === BK.house ? [170, 450, 800, 860] : kind === BK.townhouse ? [240, 530, 820, 890] : [430, 700, 820, 890];
-    const type = q < types[0] ? 0 : q < types[1] ? 1 : q < types[2] ? 2 : q < types[3] ? 3 : 4;   // single, couple, family, single parent, retirees
-    const span = (lo, hi, k) => lo + (cz(0xa9e, d, k) % (hi - lo + 1));
-    const adultAge = (k) => (type === 4 ? span(65, 91, k) : span(type === 0 ? 20 : 25, type === 0 ? 64 : 60, k)) * 365 + (cz(0xa9f, d, k) % 365);
-    const a1 = newPerson(c, h, adultAge(0), cz(0x5e, d) & 1, fam, 0);
+    // the census reads Everett's households (ACS 2019-2023, as history): about a third live alone, a quarter are
+    // couples without children at home, a sixth couples with children, a tenth single parents, the rest other families
+    // (an adult child, a parent or a sibling at home) and roommates; houses hold more families, flats more people alone
+    const types = kind === BK.house ? [230, 560, 780, 850, 930] : kind === BK.townhouse ? [330, 600, 750, 840, 920] : [500, 690, 750, 840, 890];
+    const type = q < types[0] ? 0 : q < types[1] ? 1 : q < types[2] ? 2 : q < types[3] ? 3 : q < types[4] ? 4 : 5;   // alone, couple, couple with children, single parent, other family, roommates
+    // ages by role, from the census's age bands (bins of [from, to, weight]) so that the city's ages come out as
+    // Everett's: under 5 about 5.6%, 5-17 14.5%, 18-24 9.3%, 25-34 18.4%, 35-54 25.3%, 55-64 12.4%, 65+ 14.4%
+    // (past 75 the census thins with age: about half of Everett's people over 75 are 75-79, a quarter 80-84, a quarter older)
+    const AGE = [[[18, 24, 8], [25, 34, 20], [35, 44, 12], [45, 54, 12], [55, 64, 16], [65, 74, 17], [75, 79, 7], [80, 84, 4], [85, 96, 4]],
+      [[21, 34, 19], [35, 54, 20], [55, 64, 23], [65, 74, 24], [75, 79, 7], [80, 84, 4], [85, 94, 2]], [[24, 34, 32], [35, 44, 42], [45, 54, 22], [55, 58, 4]],
+      [[19, 29, 26], [30, 39, 38], [40, 49, 26], [50, 58, 10]], [[24, 44, 32], [45, 64, 46], [65, 84, 22]], [[18, 24, 42], [25, 34, 44], [35, 49, 14]]];
+    const ageIn = (bins, k) => { let tot = 0; for (const b of bins) tot += b[2]; let x = cz(0xa9d, d, k) % tot, j = 0; while (x >= bins[j][2]) x -= bins[j++][2]; const [lo, hi] = bins[j]; return (lo + (cz(0xa9e, d, k) % (hi - lo + 1))) * 365 + (cz(0xa9f, d, k) % 365); };
+    const a1 = newPerson(c, h, ageIn(AGE[type], 0), type === 3 ? (cz(0x5e, d) % 100 < 82 ? 1 : 0) : cz(0x5e, d) & 1, fam, 0), pa = ageYears(c, a1, 1);
     let a2 = -1;
-    if (type === 1 || type === 2 || (type === 4 && (cz(0x5d, d) & 1))) { a2 = newPerson(c, h, Math.max(18 * 365, adultAge(0) + censusBell(c, 0xa7, d) * 4), (c.people.sex[a1] + ((cz(0x5f, d) % 10) < 9 ? 1 : 0)) & 1, fam, 0); c.people.partner[a1] = c.people.sin[a2]; c.people.partner[a2] = c.people.sin[a1]; c.hh.joint[h] = 1; }
+    if (type === 1 || type === 2) { a2 = newPerson(c, h, Math.max(18 * 365, pa * 365 + censusBell(c, 0xa7, d) * 4), (c.people.sex[a1] + ((cz(0x5f, d) % 10) < 9 ? 1 : 0)) & 1, fam, 0); c.people.partner[a1] = c.people.sin[a2]; c.people.partner[a2] = c.people.sin[a1]; c.hh.joint[h] = 1; }
     if (type === 2 || type === 3) {
-      const nk = 1 + (cz(0x6d, d) % (type === 2 ? 3 : 2)), pa = ageYears(c, a1, 1);
-      for (let k = 0; k < nk; k++) newPerson(c, h, Math.min(pa - 19, 1 + (cz(0x6e, d, k) % 17)) * 365 + (cz(0x6f, d, k) % 365), cz(0x70, d, k) & 1, fam, 0);
+      const u = cz(0x6d, d) % 100, nk = type === 2 ? (u < 40 ? 1 : u < 80 ? 2 : 3) : (u < 60 ? 1 : u < 90 ? 2 : 3);   // (Everett's families with children have about 1.8)
+      for (let k = 0; k < nk; k++) newPerson(c, h, Math.min(pa - 19, cz(0x6e, d, k) % 18) * 365 + (cz(0x6f, d, k) % 365), cz(0x70, d, k) & 1, fam, 0);
     }
+    // a grown child still at home (a fifth of families whose parents are 42 to 66), or in an other family the second
+    // adult: a grown child, a parent or a sibling
+    if ((type === 1 || type === 2 || type === 3) && pa >= 42 && pa <= 66 && cz(0x6c, d) % 1000 < 200) newPerson(c, h, Math.min(pa - 18, 18 + (cz(0x6b, d) % 9)) * 365 + (cz(0x6a, d) % 365), cz(0x69, d) & 1, fam, 0);
+    if (type === 4) { const w = cz(0x68, d) % 3, age = w === 0 ? Math.max(18, Math.min(pa - 18, 18 + (cz(0x67, d) % 16))) : w === 1 ? Math.min(95, pa + 22 + (cz(0x67, d) % 12)) : Math.max(18, pa - 6 + (cz(0x67, d) % 13)); newPerson(c, h, age * 365 + (cz(0x66, d) % 365), cz(0x65, d) & 1, fam, 0); if (cz(0x64, d) % 1000 < 300 && pa < 60) newPerson(c, h, (cz(0x63, d) % 18) * 365 + (cz(0x62, d) % 365), cz(0x61, d) & 1, fam, 0); }
+    if (type === 5) for (let k = 1; k < 2 + (cz(0x60, d) % 1000 < 300 ? 1 : 0); k++) newPerson(c, h, ageIn(AGE[5], k), cz(0x5c, d, k) & 1, (fam + 7 * k) % 48, 0);
     c.hh.head[h] = a1;
     // a single adult keeps a household on their own means: in the labour force, or, when disabled, on the Social
     // Security Disability Insurance they already draw (the census reads it as history; SSDI averaged about $1,580 in 2025)
-    if ((type === 0 || type === 3) && (c.people.status[a1] === 4 || c.people.status[a1] === 1)) {
+    if ((type === 0 || type === 3 || type === 5) && (c.people.status[a1] === 4 || c.people.status[a1] === 1)) {
       if (c.people.dis[a1] >= 160) { c.people.status[a1] = 4; c.people.ss[a1] = 100000 + (cz(0xd15, d) % 90000); }
-      else { c.people.status[a1] = 3; c.people.occ[a1] = pickW(OCC_BY_EDU[c.people.edu[a1]], cz(0xea5, d)); }
+      // or, as the census reads it, on regular support from family or a former partner (child support, a parent's help
+      // with the rent): enough to keep the home and little more (history: most who live so are below the poverty line)
+      else c.people.pen[a1] = Math.max(105000, Math.min(230000, Math.round(ex(ln(type === 3 ? 150000 : 125000) + (0.3 * censusBell(c, 0x5b9, d)) / 147.8) / 100) * 100));
     }
     // someone in every working-age household earns: a single adult, or one of a couple, is in the labour force
     const earners = [a1, a2].filter((x) => x >= 0);
-    if ((type === 1 || type === 2) && !earners.some((x) => c.people.status[x] === 2 || c.people.status[x] === 3)) { const x = earners[0]; c.people.status[x] = 3; c.people.occ[x] = pickW(OCC_BY_EDU[c.people.edu[x]], cz(0xea4, d)); }
+    if ((type === 1 || type === 2) && pa < 62 && !earners.some((x) => c.people.status[x] === 2 || c.people.status[x] === 3)) { const x = earners[0]; c.people.status[x] = 3; c.people.occ[x] = pickW(OCC_BY_EDU[c.people.edu[x]], cz(0xea4, d)); }
     c.hh.home[h] = d; D.hh[d] = h; T.occupied[b]++;
     // owners and renters
     const own = kind === BK.house ? 680 : kind === BK.townhouse ? 450 : kind === BK.apartments ? 110 : 150;
-    c.hh.tenure[h] = (cz(0x0e7, d) % 1000 < own + (type === 4 ? 150 : 0) - (type === 0 ? 200 : 0)) ? 1 : 0;
+    c.hh.tenure[h] = (cz(0x0e7, d) % 1000 < own + (pa >= 65 ? 150 : pa < 30 ? -250 : 0) - (type === 0 ? 150 : type === 5 ? 350 : 0)) ? 1 : 0;
     c.hh.cars[h] = c.hh.adults[h] === 0 ? 0 : (cz(0xca5, d) % 1000 < (T.hood[b] === 0 ? 450 : 880)) ? Math.min(2, c.hh.adults[h]) - (cz(0xca6, d) % 3 === 0 ? 1 : 0) || 1 : 0;
     c.hh.carBought[h] = 1 - (cz(0xca7, d) % 3600); c.hh.carD[h] = (1 - c.hh.carBought[h]) * 0.000224;   // the wear of its years and miles so far, against 20 years or 400,000 km (law 65.18) c.hh.fuel[h] = 20 + (cz(0xca8, d) % 30);
     c.hh.pantry[h] = c.hh.size[h] * (1000 + (cz(0x9a47, d) % 5000));
@@ -259,7 +288,7 @@ export function morning(c, d, g) {
     if (st === 1 && sd && ageYears(c, i) < 18) t |= 4;
     if (st === 6 && P.leaveTo[i] <= e) { P.status[i] = P.emp[i] >= 0 ? 2 : 3; }
     if (st === 2 && P.emp[i] >= 0) {
-      const days = employerDays(c, P.emp[i]);
+      const days = rota(employerDays(c, P.emp[i]), P.sin[i]);
       if (days & (1 << d.wd) && !(d.holiday && P.emp[i] >= E_CITY) && !P.awayH[i]) {
         if (t & 2) {
           const money = P.need[i * 8 + 7], hours = P.hours[i] * 4;
@@ -272,6 +301,13 @@ export function morning(c, d, g) {
     P.today[i] = t;
     for (let k = 0; k < 3; k++) P.visit[i * 3 + k] = -1;
   }
+}
+// a worker at an employer open more than five days a week works five of them: the employer's rota staggers its staff's
+// two days off in a row by their place on the staff list (their number), so that every open day is covered
+export function rota(days, k) {
+  let n = 0; for (let b = 0; b < 7; b++) if (days & (1 << b)) n++; if (n <= 5) return days;
+  let off = 0, left = n - 5, b = ((k % 7) + 7) % 7; while (left > 0) { if (days & (1 << b) && !(off & (1 << b))) { off |= 1 << b; left--; } b = (b + 1) % 7; }
+  return days & ~off;
 }
 export function employerDays(c, emp) {
   if (emp >= E_F0 && emp < E_B0) return c.SECTORS_DAYS[c.firms.sector[emp - E_F0]];
@@ -451,13 +487,37 @@ function families(c, d) {
       P.fw[i * 4 + k] = Math.min(3, hebb(P.fw[i * 4 + k], met, 0.15, 0.05));
       if (P.fw[i * 4 + k] < 0.05) { P.friend[i * 4 + k] = -1; P.fw[i * 4 + k] = 0; }
     }
-    // a partnership: close friends, both single, of an age, whose temperaments suit
+    // a partnership: close friends, both single, of an age, whose temperaments suit. The wish to share a home builds
+    // (law 57.9) at the rate singles of their age form unions (history: of those in their twenties with such a friend
+    // about half do within a year, fewer with age; in all about eight couples a year form per thousand people)
     if (P.partner[i] < 0 && years >= 22 && years <= 55 && P.status[i] >= 2) {
       for (let k = 0; k < 4; k++) {
         const f = friendOf(c, i, k); if (f < 0 || P.partner[f] >= 0 || P.hh[f] === h || P.fw[i * 4 + k] < 1.8) continue;
         const yf = ageYears(c, f, e); if (yf < 22 || Math.abs(yf - years) > 12) continue;
         const diff = [T_O, T_C, T_E, T_A].reduce((s2, x) => s2 + Math.abs(trait(t, x) - trait(P.traits[f], x)), 0);
-        if (diff <= 12) { c.pairUp(i, f); break; }
+        if (diff <= 12) { if (urgeP(P, i, U_PAIR, (years < 30 ? 0.55 : years < 40 ? 0.4 : years < 50 ? 0.22 : 0.11) / 52)) c.pairUp(i, f); break; }
+      }
+    }
+    // a grown child, or another adult who is not the head or the head's partner, with pay of their own leaves to keep a
+    // home: about one in seven a year of those under 35 (history: the census's young adults in a parent's home), sooner
+    // for the open-minded and where the home is crowded, and when a home their own pay can afford is to be had
+    const H = c.hh;
+    if (years >= 19 && years < 35 && P.partner[i] < 0 && H.head[h] !== i && H.adults[h] >= 2 && P.status[i] === 2 && H.home[h] >= 0) {
+      const crowded = H.size[h] > c.world.dwellings.rooms[H.home[h]] + 1;
+      if (urgeP(P, i, U_LEAVE, (0.14 / 52) * (1 + (trait(t, T_O) - 8) / 16 + (crowded ? 0.5 : 0))) && c.moveOut(i, 0.1) >= 0) { addMemory(c, i, M.moved_out_on_my_own); c.event("household", `${c.who(i)} moves out to a home of their own`, [P.sin[i]]); }
+    }
+    // a couple parts: about one couple in forty a year (history: Washington's divorces, 2.6 per thousand people in 2023,
+    // and the parting of couples who are not married), sooner under strain (stress, money) and later with age and
+    // agreeable temperaments; the partner who is not the head takes a home of their own when one can be afforded
+    if (H.head[h] === i && P.partner[i] >= 0) {
+      const j = c.slotOf(P.partner[i]);
+      if (j >= 0 && j !== i && P.hh[j] === h && ageYears(c, j, e) >= 18) {
+        const strain = (P.stress[i] > 650 ? 0.6 : 0) + (P.stress[j] > 650 ? 0.6 : 0) + (P.need[i * 8 + 7] < 300 ? 0.5 : 0) - (trait(t, T_A) + trait(P.traits[j], T_A) - 16) / 16 - (years >= 50 ? 0.5 : 0);
+        if (urgeP(P, i, U_SPLIT, (0.025 / 52) * Math.max(0.2, 1 + strain)) && c.moveOut(j, 0.5) >= 0) {
+          P.partner[i] = -1; P.partner[j] = -1; H.joint[h] = 0;
+          addMemory(c, i, M.separated_from_a_partner, c.personRef(j)); addMemory(c, j, M.separated_from_a_partner, c.personRef(i));
+          c.event("household", `${c.who(i)} and ${c.who(j)} separate`, [P.sin[i], P.sin[j]]);
+        }
       }
     }
   }

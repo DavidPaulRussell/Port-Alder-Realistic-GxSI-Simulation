@@ -68,7 +68,7 @@ Part 0's classes D1 Fredholm operator, D2 Sturm-Liouville, D3 Dirichlet energy, 
 | 55.16 | Basic Reproduction Number | D2 | Exact linear | health |
 | 55.18 | Next-Generation Matrix | D10 | Exact linear | health |
 | 56.23 | Cox Proportional Hazards Model | D6 | Exact linear in logs | people, periphery |
-| 57.9 | Leaky Integrate-and-Fire Model | D2 | Exact linear between spikes | civic, economy, finance, health, housing, periphery, welfare |
+| 57.9 | Leaky Integrate-and-Fire Model | D2 | Exact linear between spikes | civic, economy, finance, health, housing, people, periphery, welfare |
 | 57.22 | Hebbian Learning Rule | D2 | Exact linear | people |
 | 58.36 | Dijkstra’s Algorithm | D1 | Exact linear | kpis |
 | 59.5 | Median Absolute Deviation | D4 | Exact linear | kpis |

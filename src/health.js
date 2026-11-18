@@ -5,7 +5,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 import { SECTORS, O as OC } from "./citydata.js";
 import { monthDays } from "./rules.js";
-import { E_H0, E_F0, E_ROW, E_CITY, AC, K } from "./books.js";
+import { E_H0, E_F0, E_ROW, E_CITY, E_FEDGOV, AC, K } from "./books.js";
 import { sat } from "./core.js";
 import { lif, relax, erlangC, hill, r0, nextGeneration, relHumidity, interactions, collisions, fourier, premium, cox } from "./laws.js";
 import { members, ageYears, addMemory, M, trait, T_O, T_C, T_A, T_N, friendOf } from "./people.js";
@@ -18,7 +18,7 @@ export const HEALTH_SOURCES = {
   crisisLine: "https://988lifeline.org/",
   everettClimate: "https://www.ncei.noaa.gov/products/land-based-station/us-climate-normals",
 };
-export const COVER = ["uninsured", "employer plan", "Apple Health", "Medicare"];
+export const COVER = ["uninsured", "employer plan", "Apple Health", "Medicare", "Cascade Care"];
 // Everett's (Paine Field) normal daily mean temperature, as a two-harmonic Fourier series of the year (deg C; about
 // 5 C in early January, 17.5 C in early August)
 export const CLIMATE = { a0: 10.9, terms: [[-6.0, -2.4], [0.4, 0.3]] };
@@ -31,7 +31,7 @@ export function attachHealth(c) {
   c.seeksCare = (i, idx, drive) => seeksCare(c, i, idx, drive);
 }
 // a person's coverage: Apple Health, Medicare from 65, an employer plan, or none
-export function coverage(c, i) { const P = c.people, h = P.hh[i]; if (P.ah[i]) return 2; if (ageYears(c, i) >= 65) return 3; if (h >= 0 && c.hh.cover[h]) return 1; return 0; }
+export function coverage(c, i) { const P = c.people, h = P.hh[i]; if (P.ah[i]) return 2; if (ageYears(c, i) >= 65) return 3; if (h >= 0 && c.hh.cover[h]) return 1; if (h >= 0 && c.hh.mkt[h]) return 4; return 0; }
 // the decision to see a clinician: the urge builds by its drive (slower without coverage, where cost holds people
 // back) and when it comes due the person goes, unless the wait is longer than they will put up with
 function seeksCare(c, i, idx, drive) {
@@ -144,6 +144,35 @@ function mentalHealth(c, d) {
 // city, the school district and the banks, and the outer employers in sectors that mostly do
 const OUTER_COVERS = new Set([0, 1, 5, 6, 7, 8, 9, 10, 12, 13]);
 export function employerCovers(c, i) { const P = c.people, E = P.emp[i]; if (E >= E_F0 && E < E_F0 + c.firms.cap) return !!c.firms.cover[E - E_F0]; if (E === E_ROW) { const f = P.away[i] - 1; return f >= 0 && OUTER_COVERS.has(c.outer?.F.sector[f]); } return E >= 0; }
+// Cascade Care, Washington's marketplace: a household with members no other plan covers decides whether to buy a silver
+// plan. The benchmark premium rises with age on the federal 3:1 curve; between 100% and 400% of the poverty line the
+// premium tax credit holds the household's share to 2.10%-9.96% of income (the 2026 applicable percentages, Rev. Proc.
+// 2025-25); the household buys when its share is within what its means, health, age, temper and children make it
+// willing to pay (and keeps it while it stays within a little more)
+const AGE_CURVE = [[0, 0.765], [21, 1.0], [25, 1.004], [30, 1.135], [35, 1.222], [40, 1.278], [45, 1.413], [50, 1.786], [55, 2.23], [60, 2.714], [64, 3.0]];
+const ageFactor = (a) => { for (let k = 1; k < AGE_CURVE.length; k++) if (a < AGE_CURVE[k][0]) { const [a0, f0] = AGE_CURVE[k - 1], [a1, f1] = AGE_CURVE[k]; return f0 + ((f1 - f0) * (a - a0)) / (a1 - a0); } return 3.0; };
+const APPLICABLE = [[1.0, 0.021], [1.33, 0.0314], [1.5, 0.0419], [2.0, 0.066], [2.5, 0.0844], [3.0, 0.0996], [4.0, 0.0996]];
+const applicable = (r) => { for (let k = 1; k < APPLICABLE.length; k++) if (r <= APPLICABLE[k][0]) { const [r0, p0] = APPLICABLE[k - 1], [r1, p1] = APPLICABLE[k]; return p0 + ((p1 - p0) * (r - r0)) / (r1 - r0); } return -1; };
+const BENCHMARK_21 = 44000;                                               // cents a month for a 21-year-old's benchmark silver plan
+export function marketMonth(c) {
+  const P = c.people, H = c.hh, B = c.books; let enrolled = 0;
+  for (const h of H.each()) {
+    if (!H.size[h] || H.cover[h]) { if (H.mkt[h]) { H.mkt[h] = 0; H.mktPrem[h] = 0; } continue; }
+    let bench = 0, sick = false, oldest = 0, kids = 0;
+    for (const i of members(c, h)) { const a = ageYears(c, i); if (P.ah[i] || a >= 65) continue; bench += Math.round(BENCHMARK_21 * ageFactor(a)); if (P.health[i] < 650) sick = true; if (a < 18) kids++; oldest = Math.max(oldest, a); }
+    if (!bench) { H.mkt[h] = 0; H.mktPrem[h] = 0; continue; }
+    const gross = Math.round((H.inc[h] * 12) / 0.82), r = gross / Math.max(1, 1596000 + 568000 * Math.max(0, H.size[h] - 1)), pct = r >= 1 ? applicable(r) : -1;
+    const share = pct >= 0 ? Math.min(bench, Math.round((gross * pct) / 12)) : bench, credit = bench - share;
+    const head = H.head[h], t = head >= 0 ? P.traits[head] : 0x88888888;
+    const willing = Math.max(0.02, Math.min(0.16, 0.06 + (trait(t, T_C) - 8) * 0.004 + (trait(t, T_N) - 8) * 0.004 + (sick ? 0.04 : 0) + (oldest >= 50 ? 0.03 : 0) + (kids ? 0.03 : 0))) * (H.mkt[h] ? 1.3 : 1);
+    if (share > (H.inc[h] * willing) && share > 3000) { H.mkt[h] = 0; H.mktPrem[h] = 0; continue; }
+    const he = E_H0 + h; if (!c.fund(he, share, true)) { H.mkt[h] = 0; H.mktPrem[h] = 0; continue; }
+    B.pay(he, E_ROW, share, AC.X_HEALTH, AC.R_FEES, K.fee); if (credit > 0) B.pay(E_FEDGOV, E_ROW, credit, AC.X_TRANSFER, AC.R_FEES, K.benefit);
+    if (!H.mkt[h]) for (const i of members(c, h)) addMemory(c, i, M.got_health_coverage, E_FEDGOV);
+    H.mkt[h] = 1; H.mktPrem[h] = share; enrolled++;
+  }
+  c.gov.care.marketplace = enrolled;
+}
 export function coverageMonth(c) { const P = c.people, H = c.hh; for (const h of H.each()) { let cov = 0; for (const i of members(c, h)) if ((P.status[i] === 2 || P.status[i] === 6) && employerCovers(c, i)) { cov = 1; break; } H.cover[h] = cov; } }
 
 /* ------------------------------------------------------------------ the month */
@@ -160,6 +189,7 @@ export function healthMonth(c, d) {
   let members = 0; for (const h of H.each()) if (H.cover[h]) members += H.size[h];
   const prem = Math.round(premium(care.claims * 12, Math.max(1, members), 0.12) / 12), share = Math.round(prem * 0.2);
   G.premium = prem; care.claims = 0; care.members = members;
+  marketMonth(c);
   for (const h of H.each()) if (H.cover[h] && share > 0) { const amt = share * H.size[h]; if (c.fund(E_H0 + h, amt, true)) { B.pay(E_H0 + h, E_ROW, amt, AC.X_HEALTH, AC.R_FEES, K.fee); H.prem[h] = amt; } }
   // damp homes: households who cannot keep warm in poor buildings, in the cold months, grow mould (law 46.11)
   if (d.m <= 3 || d.m >= 11) {

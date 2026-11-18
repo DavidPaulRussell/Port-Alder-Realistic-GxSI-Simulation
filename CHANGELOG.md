@@ -1,5 +1,63 @@
 # Changelog
 
+## 1.2.0 — 2026-11-18 (the rates: evictions, migration, poverty, coverage, businesses)
+
+A three-year run (1,095 days, seed 20261117) now ends with 138 evictions (it was about 750), 221 businesses from 210
+(it was 226 falling to 166), 10% uninsured (it was 15–19%), poverty near 6–9% (it was 2–4%; Everett's is 12.9%),
+vacancy between 3% and 8% (it was 13%) and the books balanced on every day.
+
+### Fixed
+- **Evictions that never ended.** A household that left or died keeps its slot until its estate is settled. Such a
+  slot still carried its notice and its arrears, so it was "evicted" again every day, took a cheap empty home and was
+  evicted from that too. A tenancy now ends with the household (`dissolve`), and the daily pass skips slots with no
+  one in them. The count of households is of those with members.
+- **Rents far above what the poorest tenants paid.** The founding census set a tenant's rent to what they could pay
+  but left them in a home whose market rent was up to two and a half times that, and landlords closed the gap at the
+  10% cap every year. The census now finds renters in homes they can afford (the dearest homes hold the highest
+  incomes), and reads a home let well under the market as income-restricted (the housing authority's or a
+  tax-credit building's), whose rent stays what it is.
+- **Homes that stood empty for good.** When a property company closed, its buildings passed to out-of-town owners
+  and were never offered for rent again; they are now let like any others.
+- **Property companies that could not pay.** A building's value was its envelope's floor area, not the homes and
+  premises in it, so property tax and interest came to more than the rents. Values now follow what is built inside;
+  rents follow the yields of houses, townhouses and flats; a property company's founding mortgage is what its rents
+  can carry (debt service covered 1.25 times).
+- **The outer layers' labour market**: separations (1.1% of the employed a month), a search that takes time
+  (matching by the square root of openings per seeker), reservation wages that fall as a search lengthens,
+  openings measured over the commuting zone, a founding unemployment rate that matches each layer's published one,
+  pay and prices that move together, and a national bank whose rule is anchored on its own record.
+
+### Added
+- **The court's part in an eviction (RCW 59.18.410(3))**: partial rent payments, a ninety-day payment plan and stay
+  of the writ for a tenant with fewer than three notices in a year, counsel for the indigent (RCW 59.18.640), and
+  the Landlord Mitigation Program paying the judgment for a tenant the court finds low-income, repaid to the state
+  (RCW 43.31.605(1)(c)).
+- **Households that form and part**: unions at the rates of each age, grown children leaving a parent's home, couples
+  separating; a five-day rota for staff of employers open all week.
+- **A census closer to Everett's** (ACS 2019–2023 as history): households by type, ages, labour-force participation
+  by age, Social Security from 62, pensions, non-working single adults on Social Security Disability or on support
+  from family or a former partner, about 1.8 children in a family with children, births at Washington's rate
+  (51.5 per 1,000 women aged 15–44).
+- **Health coverage**: Cascade Care plans with the 2026 premium tax credit, owners deciding each December whether to
+  offer a plan, prescriptions filled and refilled.
+- **Budgets by Engel's law**: what is left after the home, food, light, the health plan and the car sets how often a
+  household goes out and shops; the food plan (thrifty, moderate, liberal) follows its means.
+- **Migration by degrees**: every household, inside the city or beyond it, moves by the same Boltzmann odds (law
+  27.4) of each place it knows against staying, at its age's readiness to move (law 75.44); a household that would
+  have to find work in the new place weighs its unemployment; a commuter who moves within reach keeps the job. The
+  founding rates (5.5% a year out, as many in) are read once as history.
+- Owners close a business that keeps losing money (a charge of its losses), and open one only in a trade that keeps
+  a tenth of what it takes in. City workers quit or are let go at the rate the CPS flows show, and a search for work
+  takes time in the city as beyond it.
+- `tools/pop_extract.py` cuts small tables out of a WorldPop population GeoTIFF (the Everett area, Washington, the
+  country) for the movement matrix and the full-scale map; the TIFF itself never enters the repository.
+
+### Still wrong
+- Poverty runs 6–9% against Everett's 12.9%, and drifts down as the poorest households leave.
+- Foreclosures run near 1% of owners a year in the second and third years, several times the real rate.
+- Pay-or-vacate notices are frequent (about a thousand a year at this scale): tenants who are a little short each
+  month are served again and again.
+
 ## 1.1.0 — 2026-11-17 (the umbrella, the law book, the registry and the four layers)
 
 ### Added

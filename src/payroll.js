@@ -128,6 +128,10 @@ function benefits(c, d) {
     const wed = Math.floor((d.d - 1) / 7) + 1;
     for (const i of P.each()) { if (!P.ss[i] || P.hh[i] < 0) continue; if (ssPayDay(d.y, d.m, P.bday[i]) !== d.d) continue; B.pay(E_FEDGOV, E_H0 + P.hh[i], P.ss[i], AC.X_TRANSFER, AC.R_TRANSFER, K.benefit); ss += P.ss[i]; }
   }
+  // pensions and annuities from former employers' plans (held outside the city) are paid on the first; most are
+  // modest, and with Social Security they fall within a retiree's standard deduction (with the 2025-28 senior
+  // deduction), so no tax is withheld
+  if (d.d === 1) for (const i of P.each()) if (P.pen[i] && P.hh[i] >= 0) B.pay(E_ROW, E_H0 + P.hh[i], P.pen[i], AC.X_TRANSFER, AC.R_OTHER, K.transfer);
   c.R.benefits = { ui, pfml: pf, ss };
 }
 

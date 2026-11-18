@@ -6,6 +6,17 @@ import { AC, ACCOUNTS, CONS_ACC, K, E_H0, E_F0, E_B0, E_CITY, E_SCHOOL, E_STATE,
 // the units a member of staff serves on a day the firm is open: eight hours at the trade's rate per quarter-hour, shared
 // over the open days when the firm opens more days than a person works (five)
 const openDays = (S) => { let n = 0; for (let k = 0; k < 7; k++) if (S.days & (1 << k)) n++; return Math.max(1, n); };
+// an owner's decision to offer a health plan: required at 50 or more on staff (the ACA's employer rule); below that, as
+// owners decide it: more often the larger the staff, in trades where it is the custom, by the owner's agreeableness and
+// conscientiousness, and not while the year's books lose money (about half of Washington's small employers offer one)
+const COVER_CUSTOM = { software: 6, professional: 6, manufacturing: 6, clinic: 6, logistics: 4, construction: 4, grocery: 3, pharmacy: 3, hardware: 2, childcare: 1, restaurant: -2, cafe: -3, bar: -3, salon: -3, retail: -1 };
+export function offersCover(c, f) {
+  const F = c.firms, S = SECTORS[F.sector[f]], staff = Math.max(F.staff[f], F.want[f]);
+  if (staff >= 50 || S.key === "hospital") return 1;
+  let costs = 0; if (F.ytdGross[f] > 0) for (const a of X_ACC) costs += c.books.get(E_F0 + f, a);
+  if (F.ytdGross[f] > 0 && costs > F.ytdGross[f] * 1.03) return 0;
+  const t = c.ownerTraits(f); return trait(t, T_A) + trait(t, T_C) + Math.min(8, staff / 3) + (COVER_CUSTOM[S.key] ?? 0) >= 18 ? 1 : 0;
+}
 export const perStaffOpen = (S) => ((S.rate * 8 * 4) / 400) * Math.min(1, 5 / openDays(S));
 const X_ACC = ACCOUNTS.map((r, k) => (r[2] === "X" ? k : -1)).filter((k) => k >= 0);
 import { sat, isqrt, TRUST_SPEC, tickTrust, priorTrust, trustScore, admitE1, F_RUNNING } from "./core.js";
@@ -20,7 +31,7 @@ export const FIRM_SPEC = [["alive", Uint8Array], ["sector", Uint8Array], ["owner
   ["staff", Uint16Array], ["want", Uint16Array], ["open", Uint16Array], ["offer", Int32Array], ["unfilled", Uint16Array],
   ["conf", Int16Array], ["expD", Int32Array], ["sold", Int32Array], ["lost", Int32Array], ["capa", Int32Array], ["qh", Int32Array],
   ["mem", Int32Array, 8], ["wk", Int32Array], ["mRev", Float64Array], ["ytdGross", Float64Array], ["lyGross", Float64Array], ["taxDay", Int32Array], ["supplies", Float64Array],
-  ["line", Int32Array], ["lineLim", Int32Array], ["status", Uint8Array], ["distress", Uint16Array], ["uiCharge", Float64Array], ["uiRate", Int32Array], ["cover", Uint8Array],
+  ["line", Int32Array], ["lineLim", Int32Array], ["status", Uint8Array], ["distress", Uint16Array], ["quit", Float32Array], ["uiCharge", Float64Array], ["uiRate", Int32Array], ["cover", Uint8Array],
   ["landlord", Int32Array], ["rentDue", Int32Array], ["capex", Float64Array], ["export", Int32Array], ["lastPrice", Int32Array], ["boClass", Uint8Array]];
 export const FIRM_STATUS = ["open", "closed", "closing"];
 
@@ -46,7 +57,7 @@ export function attach(c) {
 const dist = (a, b) => Math.abs((a & 127) - (b & 127)) + Math.abs((a >> 7) - (b >> 7));
 // an urge to do something builds each day by its drive (what used to be the day's odds) and the person acts when it
 // reaches one (law 57.9, without leak, so the long-run frequency is the drive itself)
-export const URGE = { dine: 0, goods: 1, salon: 2, sickVisit: 3, checkup: 4, hospital: 5, gym: 6, bar: 7, busLate: 8, busPraise: 9, counselling: 10, vaccine: 11 }, URGE_N = 12;
+export const URGE = { dine: 0, goods: 1, salon: 2, sickVisit: 3, checkup: 4, hospital: 5, gym: 6, bar: 7, busLate: 8, busPraise: 9, counselling: 10, vaccine: 11, refill: 12, seek: 13, quit: 14, pair: 15, leave: 16, split: 17 }, URGE_N = 18;
 export const urge = (arr, x, drive) => { const v = lif(arr[x], drive, 0); if (v >= 1) { arr[x] = v - 1; return true; } arr[x] = v; return false; };
 const SPACE_FOR = (sec) => ({ shop: 0, office: 1, industrial: 2, hotel: 3, clinic: 4, hospital: 5 }[SECTORS[sec].space]);
 const PREF_HOOD = { grocery: [2, 3, 4, 5, 7, 1], restaurant: [0, 1, 0, 1, 3, 7], cafe: [0, 1, 1, 3, 2, 7], bar: [1, 0, 1, 6], retail: [0, 1, 1, 0, 5], hardware: [5, 6, 3], pharmacy: [1, 3, 5, 4],
@@ -81,7 +92,7 @@ export function genesisFirms(c) {
       F.price[f] = Math.round((S.price * (900 + (h >>> 8) % 260)) / 1000 / 5) * 5; F.cost[f] = ppm(F.price[f], S.cost);
       F.quality[f] = 400 + ((h >>> 12) % 500); F.conf[f] = 100; F.offer[f] = 1000 + ((h >>> 4) % 120) - 40;
       F.want[f] = S.staff[0] + ((h >>> 3) % (S.staff[1] - S.staff[0] + 1));
-      F.uiRate[f] = 12000; F.cover[f] = F.want[f] >= 50 || ["software", "professional", "hospital", "manufacturing", "clinic"].includes(S.key) ? 1 : 0;
+      F.uiRate[f] = 12000; F.cover[f] = offersCover(c, f);
       F.line[f] = -1; F.landlord[f] = -1; F.boClass[f] = S.bo;
       priorTrust(c.P, F, "cr", f); priorTrust(c.P, F, "kb", f);
       c.books.bankOf[E_F0 + f] = h % 1000 < 420 ? 0 : h % 1000 < 780 ? 1 : 2 % c.cfg.banks;
@@ -103,8 +114,11 @@ export function genesisFirms(c) {
 }
 
 /* ------------------------------------------------------------------ jobs */
+// (a small shop's, kitchen's or front desk's manager is a first-line supervisor: in the region they earn about 45% of
+// what general and operations managers do, BLS OEWS May 2024, Seattle-Tacoma-Bellevue, taken as history)
+const SUPERVISED = new Set(["restaurant", "cafe", "bar", "retail", "grocery", "hardware", "salon", "gym", "fuel", "childcare", "hotel", "auto"]);
 export function wageFor(c, occ, skill, sector, offer) {
-  const base = OCCS[occ].wage || 2000;
+  const base = Math.round((OCCS[occ].wage || 2000) * (occ === O.manager && sector >= 0 && SUPERVISED.has(SECTORS[sector].key) ? 0.45 : 1));
   const prem = sector === SK.software ? 1100 : sector === SK.hospital ? 1040 : sector === SK.manufacturing ? 1030 : sector === SK.restaurant || sector === SK.cafe || sector === SK.bar ? 960 : 1000;
   const w = Math.round((base * (850 + skill * 0.4) * prem * (offer || 1000)) / 1e9 / 5) * 5;
   return Math.max(w, minimumWageNow(c));
@@ -191,7 +205,9 @@ export function employAll(c) {
     const st = P.status[i]; if (st !== 2 && st !== 3) continue;
     const occ = P.occ[i] || O.service, w = st === 2 ? P.wage[i] : wageFor(c, occ, P.skill[i], -1, 1000), hrs = st === 2 ? P.hours[i] : 8;
     for (let k = 0; k < 5; k++) P.qw[i * 5 + k] = st === 3 && k === 4 ? 0 : Math.round(w * hrs * 64);
-    if (st === 3) { P.laidAt[i] = -(census(c, 0x1a1d, i) % 120); c.claimUI(i, -1); P.uiLeft[i] = 1 + (census(c, 0x1a1e, i) % 26); P.uiWait[i] = 0; }
+    // the founding unemployed: those let go within the base period hold a claim (about 40% of the unemployed draw benefits
+    // in Washington, ESD); the rest are new entrants, quit, or exhausted
+    if (st === 3) { P.laidAt[i] = -(census(c, 0x1a1d, i) % 120); if (census(c, 0x1a1f, i) % 1000 < 400) { c.claimUI(i, -1); P.uiLeft[i] = 1 + (census(c, 0x1a1e, i) % 26); P.uiWait[i] = 0; } else P.uiLeft[i] = 0; }
   }
 }
 
@@ -205,9 +221,24 @@ export function laborMarket(c, d, g) {
   const pubCount = new Map(); for (const i of P.each()) if (P.emp[i] === E_CITY || P.emp[i] === E_SCHOOL) pubCount.set(P.emp[i], (pubCount.get(P.emp[i]) || 0) + 1);
   if (!c.gov.cityStaff) { c.gov.cityStaff = pubCount.get(E_CITY) || 0; c.gov.schoolStaff = pubCount.get(E_SCHOOL) || 0; }
   const apps = new Map();
+  // a search takes time: each week a seeker's search charge (law 57.9) fills at a job-finding rate of about 0.3 a month
+  // times the square root of the openings per seeker (as the outer layers' seekers face), more for the
+  // conscientious and the schooled; when it fires they apply. A worker who distrusts the employer looks too, more slowly
+  let seekers = 0; for (const i of P.each()) if (P.status[i] === 3) seekers++;
+  const theta = Math.min(2, Math.max(0.02, (openings + Math.max(0, (c.gov.cityStaff || 0) + (c.gov.schoolStaff || 0) - (pubCount.get(E_CITY) || 0) - (pubCount.get(E_SCHOOL) || 0))) / Math.max(1, seekers)));
   for (const i of P.each()) {
-    const st = P.status[i];
-    const looking = st === 3 || (st === 2 && P.teLv[i] <= 1 && P.emp[i] !== E_ROW);
+    const st = P.status[i], tc = trait(P.traits[i], T_C);
+    const rate = 0.07 * Math.sqrt(theta) * Math.max(0.3, 1 + (tc - 8) / 10 + (P.edu[i] - 2) / 8);
+    const looking = (st === 3 && urge(P.urge, i * URGE_N + URGE.seek, rate)) || (st === 2 && P.teLv[i] <= 1 && P.emp[i] !== E_ROW && urge(P.urge, i * URGE_N + URGE.seek, rate * 0.5));
+    // and jobs end even where firms do not shrink: a contract ends, someone is let go, or quits before having another
+    // (with the layoffs, about 1.1% of the employed a month pass into unemployment, as beyond the city: the CPS flows).
+    // The charge fills faster for a worker who distrusts the employer, is under strain or feels the job is shaky. One
+    // who leaves out of distrust or strain has quit, and a quit without good cause draws no unemployment benefit
+    // (RCW 50.20.050); the others were let go and may claim
+    if (st === 2 && P.emp[i] >= 0 && P.emp[i] !== E_ROW && P.status[i] !== 6 && (P.emp[i] < E_F0 || P.emp[i] >= E_B0 || c.slotOf(F.owner[P.emp[i] - E_F0]) !== i)) {
+      const quits = P.teLv[i] <= 1 || P.stress[i] > 700, wish = 0.0016 * (1 + (P.teLv[i] <= 1 ? 2 : 0) + (P.stress[i] > 700 ? 1 : 0) + (P.jobSec[i] < 300 ? 0.5 : 0));
+      if (urge(P.urge, i * URGE_N + URGE.quit, wish)) { leaveJob(c, i, !quits); continue; }
+    }
     if (!looking) continue;
     applied++;
     // up to three openings matching the occupation, best wage first, nearest next, never where laid off within a year
@@ -252,6 +283,12 @@ export function laborMarket(c, d, g) {
 
 /* ------------------------------------------------------------------ shopping */
 const LUNCH = new Set([1, 2]);
+// necessities first (Engel's law): the home, the food, light and water, the health plan, the car and its loan; what is
+// left of the month's income is what the household spends on choice (at least a twelfth of it)
+function freeOf(c, h, monthly, housing) {
+  const H = c.hh, needs = housing + H.size[h] * 27000 + 8500 + H.size[h] * 3200 + (H.prem[h] || 0) + (H.mktPrem[h] || 0) + H.cars[h] * 18000 + (H.auto[h] >= 0 ? c.loans.pay[H.auto[h]] || 0 : 0);
+  return Math.max(monthly * 0.08, monthly - needs);
+}
 export function shopping(c, d, g) {
   const P = c.people, H = c.hh, F = c.firms, s = c.cfg.seed, e = c.epoch, B = c.books;
   // staff hours present give each firm its capacity today
@@ -267,8 +304,12 @@ export function shopping(c, d, g) {
   const style = new Int32Array(F.top); for (const f of F.each()) { const ot = c.ownerTraits(f); style[f] = trait(ot, T_O) | (trait(ot, T_E) << 4) | (trait(ot, T_A) << 8) | (trait(ot, T_C) << 12); }
   const lsl = (cc) => c.vital[cc * 8 + 1] + c.vital[cc * 8 + 2];
   // the household's two best choices in a category: distance, street life, reputation, quality, price, exploration
+  // a category, or a trade within it ("cat:key"): a car goes to a repair shop, not to the nearest fuel station
+  const byKey = new Map();
   const choose2 = (cat, from, t, salt) => {
-    const list = byCat[cat]; let best = -1, bs = -1e18, second = -1, ss = -1e18;
+    let list = byCat[cat];
+    if (typeof cat === "string") { list = byKey.get(cat); if (!list) { const [cc, key] = cat.split(":"); list = byCat[Number(cc)].filter((ff) => SECTORS[F.sector[ff]].key === key); byKey.set(cat, list); } }
+    let best = -1, bs = -1e18, second = -1, ss = -1e18;
     if (!list.length) return [best, second];
     const explore = trait(t, T_O) >= 11, thrift = trait(t, T_THRIFT);   // the open try the places with room
     for (const f of list) {
@@ -286,29 +327,38 @@ export function shopping(c, d, g) {
   const choose = (cat, from, t, salt) => choose2(cat, from, t, salt)[0];
   // try the first choice, then the second when the first cannot serve
   const shop = (cat, from, t, salt, h, i, units, key = null) => {
-    const [a, b] = choose2(cat, from, t, salt);
-    for (const f of [a, b]) { if (f < 0 || (key && SECTORS[F.sector[f]].key !== key)) continue; const got = buy(c, h, i, f, units, cat); if (got) return [f, got]; }
+    const [a, b] = choose2(key ? `${cat}:${key}` : cat, from, t, salt);
+    for (const f of [a, b]) { if (f < 0) continue; const got = buy(c, h, i, f, units, cat); if (got) return [f, got]; }
     return [-1, 0];
   };
   let txns = 0, served = 0, lost = 0;
+  if (!c.gov.freeMedian) { const fr = []; for (const h of H.each()) if (H.home[h] >= 0 && H.size[h]) fr.push(freeOf(c, h, Math.max(60000, H.inc[h]), H.tenure[h] === 0 ? H.rent[h] - (H.voucher[h] ? H.hap[h] : 0) : H.mort[h] >= 0 ? c.loans.pay[H.mort[h]] : 0)); fr.sort((x, y) => x - y); c.gov.freeMedian = Math.max(50000, Math.round(fr[fr.length >> 1] || 240000)); }
+  // a visit that ends with a prescription is filled at a pharmacy (the sick, and the chronically ill or older at a check-up)
+  const fill = (i, ti) => { const f = choose("4:pharmacy", homeCell(c, P.hh[i]), ti, 0x6ac); if (f >= 0) buy(c, P.hh[i], i, f, 1, 4); };
   for (const h of H.each()) {
     const he = E_H0 + h, mem = members(c, h); if (!mem.length || H.home[h] < 0) continue;
     const hc = homeCell(c, h), head = H.head[h] >= 0 ? H.head[h] : mem[0], t = c.people.traits[head];
     // necessities first (Engel's law): what is left after the home and the food is what the household spends on choice
     const monthly = Math.max(60000, H.inc[h]), housing = H.tenure[h] === 0 ? H.rent[h] - (H.voucher[h] ? H.hap[h] : 0) : H.mort[h] >= 0 ? c.loans.pay[H.mort[h]] : 0;
-    const discretionary = (Math.max(monthly * 0.08, monthly - housing - H.size[h] * 27000) * (0.58 - trait(t, T_THRIFT) * 0.016)) / 30;
+    const free = freeOf(c, h, monthly, housing), discretionary = (free * (0.58 - trait(t, T_THRIFT) * 0.016)) / 30;
     const mood = P.val[head], secure = P.jobSec[head];
-    const means = sat(isqrt(Math.max(0, Math.round(H.inc[h] * 1000 / 450000))) / 31.6, 0.45, 2.4);
+    // how often the household goes out and shops follows what it has left against what the founding city's median
+    // household had left (read once, as history)
+    const means = sat(free / c.gov.freeMedian, 0.2, 2.4);
+    // the food plan its means allow (history: USDA's food plans; the thrifty plan costs about two thirds of the moderate
+    // plan for the same diet, the liberal plan about a quarter more)
+    const plan = sat(0.68 + (means - 0.4) * 0.53, 0.68, 1.25);
     const mult = (mood < -300 ? 0.7 : mood > 300 ? 1.1 : 1) * (secure < 350 ? 0.75 : 1) * means;
-    // what the household can spend: its cash less what it sets aside for the property tax due, rent it owes and the
-    // next mortgage payment (the conscientious set aside more)
-    const liquid = B.get(he, AC.DEPOSITS) + B.get(he, AC.SAVINGS) - Math.round(Math.max(0, -B.get(he, AC.PROP_TAX_PAY)) * (0.4 + trait(t, T_C) / 25)) - H.rArr[h] - (H.mort[h] >= 0 ? Math.round(c.loans.pay[H.mort[h]] * 0.5) : 0);
+    // what the household can spend: its cash less what it sets aside for the property tax due, rent it owes, the next
+    // mortgage payment and, as the month runs on, the next rent (the conscientious set aside more)
+    const rentAside = H.tenure[h] === 0 ? Math.round(housing * Math.min(1, 0.4 + trait(t, T_C) / 20) * Math.min(1, d.d / 30)) : 0;
+    const liquid = B.get(he, AC.DEPOSITS) + B.get(he, AC.SAVINGS) - Math.round(Math.max(0, -B.get(he, AC.PROP_TAX_PAY)) * (0.4 + trait(t, T_C) / 25)) - H.rArr[h] - rentAside - (H.mort[h] >= 0 ? Math.round(c.loans.pay[H.mort[h]] * 0.5) : 0);
     // groceries: the household eats by its members' energy needs (law 51.38), fresh food spoils (law 42.13), and when the
     // pantry falls below two and a half days of need, someone shops for the week (law 68.1)
     let eat = 0; for (const j of mem) eat += kleiber(MASS_BY_AGE(ageYears(c, j, e))); eat = Math.round((eat / kleiber(78)) * 1000);
     H.pantry[h] = Math.max(0, Math.round(balance(H.pantry[h], 0, eat) - (H.pantry[h] * 0.3 - spoil(H.pantry[h] * 0.3, 0.03, 1))));
     if (H.pantry[h] < eat * 2.5) {
-      const [, got] = shop(0, hc, t, 0x6a0, h, head, H.size[h] * (liquid > monthly ? 4 : 3)); if (got) H.pantry[h] += got * 1000;
+      const [, got] = shop(0, hc, t, 0x6a0, h, head, H.size[h] * (liquid > monthly ? 4 : 3)); if (got) H.pantry[h] += Math.round((got * 1000) / plan);
     }
     const discBudget = discretionary * mult * (liquid < monthly * 0.25 ? 0.3 : 1) * 1.6;
     // the day's discretionary budget split by the household's Cobb-Douglas shares (laws 69.11 and 17.15)
@@ -330,26 +380,28 @@ export function shopping(c, d, g) {
       // services: the salon every few weeks; childcare on working days for small children
       if (y >= 16 && urge(P.urge, i * URGE_N + URGE.salon, (55 * mult) / 1000)) shop(3, hc, ti, 0x6a3, h, i, 1, "salon");
       // health: a visit when ill; a prescription now and then
-      if (P.today[i] & 2 && P.sick[i] >= 2 && c.seeksCare(i, URGE.sickVisit, 0.34)) { const f = choose(4, hc, ti, 0x6a4); if (f >= 0) buy(c, h, i, f, 1, 4); }
-      else if (c.seeksCare(i, URGE.checkup, (y > 45 ? 45 : 20) / 1000)) { const f = choose(4, hc, ti, 0x6a5); if (f >= 0 && SECTORS[F.sector[f]].key !== "hospital") buy(c, h, i, f, 1, 4); }
+      if (P.today[i] & 2 && P.sick[i] >= 2 && c.seeksCare(i, URGE.sickVisit, 0.34)) { const f = choose("4:clinic", hc, ti, 0x6a4); if (f >= 0 && buy(c, h, i, f, 1, 4)) fill(i, ti); }
+      else if (c.seeksCare(i, URGE.checkup, (y > 45 ? 45 : 20) / 1000)) { const f = choose("4:clinic", hc, ti, 0x6a5); if (f >= 0 && buy(c, h, i, f, 1, 4) && (P.health[i] < 700 || y >= 55)) fill(i, ti); }
+      // a standing prescription is refilled about monthly: the older and the chronically ill (most adults over 50 take one)
+      if ((y >= 50 || P.health[i] < 720) && urge(P.urge, i * URGE_N + URGE.refill, (y >= 65 ? 2 : 1) / 30)) fill(i, ti);
       if (P.health[i] < 320 && c.seeksCare(i, URGE.hospital, 0.06)) { const hf = byCat[4].find((ff) => SECTORS[F.sector[ff]].key === "hospital"); if (hf !== undefined) buy(c, h, i, hf, 1, 4); }
       // recreation: the gym, a night out
-      if (y >= 16 && urge(P.urge, i * URGE_N + URGE.gym, ((trait(ti, T_C) * 8 + 20) * mult) / 1000)) { const f = choose(6, hc, ti, 0x6a6); if (f >= 0 && SECTORS[F.sector[f]].key === "gym") buy(c, h, i, f, 1, 6); }
-      if (y >= 21 && urge(P.urge, i * URGE_N + URGE.bar, ((trait(ti, T_E) * 9 + (d.wd >= 5 ? 90 : 15)) * mult) / 1000) && spentToday < discBudget * 1.4) { const f = choose(6, hc, ti, 0x6a7); if (f >= 0 && SECTORS[F.sector[f]].key === "bar" && buy(c, h, i, f, 1 + (trait(ti, T_E) >= 10 ? 1 : 0), 6)) spentToday += F.price[f]; }
+      if (y >= 16 && urge(P.urge, i * URGE_N + URGE.gym, ((trait(ti, T_C) * 8 + 20) * mult) / 1000)) { const f = choose("6:gym", hc, ti, 0x6a6); if (f >= 0) buy(c, h, i, f, 1, 6); }
+      if (y >= 21 && urge(P.urge, i * URGE_N + URGE.bar, ((trait(ti, T_E) * 9 + (d.wd >= 5 ? 90 : 15)) * mult) / 1000) && spentToday < discBudget * 1.4) { const f = choose("6:bar", hc, ti, 0x6a7); if (f >= 0 && buy(c, h, i, f, 1 + (trait(ti, T_E) >= 10 ? 1 : 0), 6)) spentToday += F.price[f]; }
     }
     // professional services: tax preparation in season, otherwise now and then
-    if (urge(H.hurge, h * 6, (d.m >= 2 && d.m <= 4 ? 9 : 1) / 1000)) { const f = choose(3, hc, t, 0x6ab); if (f >= 0 && SECTORS[F.sector[f]].key === "professional") buy(c, h, head, f, 1, 3); }
+    if (urge(H.hurge, h * 6, (d.m >= 2 && d.m <= 4 ? 9 : 1) / 1000)) { const f = choose("3:professional", hc, t, 0x6ab); if (f >= 0) buy(c, h, head, f, 1, 3); }
     // childcare for under-fives when every adult is at work
     if (d.workday && H.kids[h] && mem.some((i) => ageYears(c, i, e) < 5) && mem.filter((i) => ageYears(c, i, e) >= 18).every((i) => P.today[i] & 1)) {
-      const f = choose(3, hc, t, 0x6a8); if (f >= 0 && SECTORS[F.sector[f]].key === "childcare") buy(c, h, head, f, mem.filter((i) => ageYears(c, i, e) < 5).length, 3);
+      const f = choose("3:childcare", hc, t, 0x6a8); if (f >= 0) buy(c, h, head, f, mem.filter((i) => ageYears(c, i, e) < 5).length, 3);
     }
     // fuel once a week per car, and the occasional repair
     // fuel: the tank empties by the miles driven and is filled when low (law 68.1); a car wears out by its miles and
     // years (law 65.18) and is replaced when it is spent and the household feels secure; repairs as the urge builds
-    if (H.cars[h]) { let km = 12 * H.cars[h]; for (const j of mem) if (P.mode[j] === 1 && (P.today[j] & 1)) { const wc = c.workCell(j); km += wc >= 0 ? (dist(hc, wc) * 2 * 20) / 1000 : 30; } H.fuel[h] = Math.max(0, H.fuel[h] - km * 0.08); H.carD[h] = miner(miner(H.carD[h], km, 400000), 1, 20 * 365); }
-    if (H.cars[h] && H.fuel[h] < 12 * H.cars[h]) { H.fuel[h] += 45 * H.cars[h]; const f = choose(5, hc, t, 0x6a9); if (f >= 0 && SECTORS[F.sector[f]].key === "fuel") buy(c, h, head, f, H.cars[h], 5); }
+    if (H.cars[h]) { let km = 32 * H.cars[h]; for (const j of mem) if (P.mode[j] === 1 && (P.today[j] & 1)) { const wc = c.workCell(j); km += wc >= 0 ? (dist(hc, wc) * 2 * 20) / 1000 : 30; } H.fuel[h] = Math.max(0, H.fuel[h] - km * 0.08); H.carD[h] = miner(miner(H.carD[h], km, 400000), 1, 20 * 365); }
+    if (H.cars[h] && H.fuel[h] < 12 * H.cars[h]) { H.fuel[h] += 45 * H.cars[h]; const f = choose("5:fuel", hc, t, 0x6a9); if (f >= 0) buy(c, h, head, f, H.cars[h], 5); }
     if (H.cars[h] && H.carD[h] >= 1 && P.jobSec[head] > 400) buyCar(c, h, head, byCat[5].filter((ff) => SECTORS[F.sector[ff]].key === "auto"));
-    if (H.cars[h] && urge(H.hurge, h * 6 + 1, (12 + Math.max(0, e - H.carBought[h]) / 200) / 1000)) { const f = choose(5, hc, t, 0x6aa); if (f >= 0 && SECTORS[F.sector[f]].key === "auto") buy(c, h, head, f, 1, 5); }
+    if (H.cars[h] && urge(H.hurge, h * 6 + 1, (12 + Math.max(0, e - H.carBought[h]) / 200) / 1000)) { const f = choose("5:auto", hc, t, 0x6aa); if (f >= 0) buy(c, h, head, f, 1, 5); }
   }
   // post each firm's day: cost of goods sold, the sales tax accrued to the State (and the city's share)
   const local = c.gov.localSales ?? LOCAL_SALES, total = STATE_SALES + local;
@@ -382,7 +434,7 @@ export function buy(c, h, i, f, units, cat) {
   if (cat === 3 && F.sector[f] === SK.childcare && (c.hh.progs[h] & 16)) { payer2 = E_STATE; part2 = total; total = 0; if (c.gov.wel) c.gov.wel.wcccPaid += part2; }
   if (cat === 4) {
     if (P.ah[i]) { payer2 = E_STATE; part2 = total; total = 0; if (c.gov.wel) { if (P.ah[i] === 1) c.gov.wel.ahSpendAdult += part2; else c.gov.wel.ahSpendOther += part2; } }
-    else if (F.sector[f] !== SK.pharmacy) { if (c.hh.cover[h]) { payer2 = E_ROW; if (c.care) c.care.claims += ppm(total, 800000); } else if (P.status[i] === 5 || ageYears(c, i) >= 65) payer2 = E_FEDGOV; if (payer2 >= 0) { part2 = ppm(total, 800000); total -= part2; } }
+    else if (F.sector[f] !== SK.pharmacy) { if (c.hh.cover[h] || c.hh.mkt[h]) { payer2 = E_ROW; if (c.care) c.care.claims += ppm(total, 800000); } else if (P.status[i] === 5 || ageYears(c, i) >= 65) payer2 = E_FEDGOV; if (payer2 >= 0) { part2 = ppm(total, 800000); total -= part2; } }
   }
   if (total > 0 && !c.fund(he, total)) { F.lost[f] += units; return 0; }
   if (total > 0) B.pay(he, fe, total, CONS_ACC[cat], AC.R_SALES, K.sale);
@@ -543,8 +595,21 @@ export function firmMonth(c, d, g) {
     if (F.staff[f] > F.want[f] * 1.3 + 1 && F.distress[f] < 5 && (trait(c.ownerTraits(f), T_A) < 9 || c.today.d <= 7)) layoff(c, f, 1);   // the owner's temperament, or the month's review
     // an owner short of cash and losing money brings the staff down to what the custom needs, before payroll fails
     { const cash0 = B.get(fe, AC.DEPOSITS), cost0 = F.staff[f] * 2600 * 173 + F.rentDue[f]; let ytdC = 0; for (const a of X_ACC) ytdC += B.get(fe, a);
-      const keep = Math.max(S.staff[0], Math.ceil(F.want[f])); if (cash0 < cost0 * 1.5 && F.ytdGross[f] < ytdC && F.staff[f] > keep) layoff(c, f, F.staff[f] - keep); }
+      // (last month's takings against a month's wages and rent, so the year's tax accruals in January do not alarm it;
+      // and a quarter of the staff at most in a month, the rest as the months go)
+      const keep = Math.max(S.staff[0], Math.ceil(F.want[f])); if (cash0 < cost0 * 1.5 && F.mRev[f] < cost0 && F.staff[f] > keep) layoff(c, f, Math.min(F.staff[f] - keep, Math.max(1, Math.ceil(F.staff[f] / 4)))); }
     const tolerance = 12 + trait(t, T_A) * 2 - trait(t, T_C);
+    // an owner whose business keeps losing money closes it before the money runs out: each month's losses, as a share
+    // of what it takes in this year, fill a charge (law 57.9) that drains in the months it makes money; the
+    // risk-takers hold on longer (property companies and the hospital answer to their lenders and the county instead)
+    // (the owner reckons in cash from the second quarter on: the year's property tax, accrued in January, and the
+    // depreciation of its equipment are left out of the reckoning)
+    if (S.key !== "realty" && S.key !== "hospital" && d.doy > 90 && F.ytdGross[f] > 0) {
+      let ytdCost = 0; for (const a of X_ACC) if (a !== AC.X_TAX_PROP && a !== AC.X_DEPR) ytdCost += B.get(fe, a);
+      const loss = Math.max(-0.3, Math.min(0.6, (ytdCost - F.ytdGross[f]) / F.ytdGross[f]));
+      F.quit[f] = Math.max(0, lif(F.quit[f], Math.max(0, loss) * 1.5 * (1 - (trait(t, T_RISK) - 8) / 24), loss < 0 ? 0.35 : 0.05));
+      if (F.quit[f] >= 1 && F.status[f] === 0) F.status[f] = 2;                     // (closed below, this month)
+    }
     if (S.key === "realty" && F.status[f] === 2 && B.netWorth(fe) > 0) F.status[f] = 0;            // a property company with equity carries on
     if ((F.distress[f] > tolerance && F.staff[f] > S.staff[0]) || F.status[f] === 2) {
       const cut = F.status[f] === 2 ? F.staff[f] : Math.max(1, Math.round(F.staff[f] / 8));
@@ -571,6 +636,7 @@ export function firmMonth(c, d, g) {
       P.wage[i] = nw;
     }
     if (F.mkt[f]) { const t2 = c.ownerTraits(f); F.mkt[f] = Math.max(1, F.mkt[f] - F.short[f] * 0.02 + (F.short[f] === 0 ? (F.mkt[f] * (trait(t2, T_RISK) - 7)) / 800 : 0)); }
+    if (d.m === 12) F.cover[f] = offersCover(c, f);                         // the plan year turns: the owner decides again
     F.short[f] = 0;
     F.mRev[f] = 0;
   }
@@ -607,11 +673,15 @@ export function entrepreneurs(c, d, g) {
   const spare = new Float64Array(SECTORS.length);
   const nBy = new Float64Array(SECTORS.length), revBy = new Float64Array(SECTORS.length);
   for (const f of F.each()) if (F.status[f] === 0) { for (let k = 0; k < 4; k++) soldBy[F.sector[f]] += F.mem[f * 8 + k]; lostBy[F.sector[f]] += (F.lost[f] * 7) / 3; spare[F.sector[f]] += Math.max(0, F.capa[f] - F.sold[f]) * 7; nBy[F.sector[f]]++; revBy[F.sector[f]] += F.lyRev ? F.lyRev[f] : (F.mem[f * 8] + F.mem[f * 8 + 1] + F.mem[f * 8 + 2] + F.mem[f * 8 + 3]) * F.price[f]; }
+  const marginBy = new Float64Array(SECTORS.length), grossBy = new Float64Array(SECTORS.length);
+  for (const f of F.each()) if (F.status[f] === 0 && F.ytdGross[f] > 0) { let ytdCost = 0; for (const a of X_ACC) ytdCost += B.get(E_F0 + f, a); grossBy[F.sector[f]] += F.ytdGross[f]; marginBy[F.sector[f]] += F.ytdGross[f] - ytdCost; }
+  for (let k = 0; k < SECTORS.length; k++) marginBy[k] = grossBy[k] > 0 ? marginBy[k] / grossBy[k] : 0;
   let opened = 0;
   for (let sec = 0; sec < SECTORS.length && opened < 3; sec++) {
     const S = SECTORS[sec]; if (S.cat < 0 && sec !== SK.software) continue;
     const gap = lostBy[sec] / Math.max(1, soldBy[sec] + lostBy[sec]), n = nBy[sec], small = S.staff[0] * 2600 * 173 + 300000;
-    const thriving = n > 0 && revBy[sec] / n > small * 1.6 && (sec !== SK.hospital);   // the average business of the trade takes in well over what a small one costs
+    // the trade is thriving when its businesses, taken together, keep more than a tenth of what they take in this year
+    const thriving = n > 0 && revBy[sec] / n > small * 1.6 && (sec !== SK.hospital) && (d.doy < 60 || marginBy[sec] > 0.1);
     if (!thriving && (gap < 0.06 || spare[sec] > lostBy[sec])) continue;
     // a would-be owner: open, extravert, risk-taking, with savings
     let best = -1, bs = 0;

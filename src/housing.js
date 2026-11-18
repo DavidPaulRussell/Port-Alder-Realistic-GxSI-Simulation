@@ -15,6 +15,7 @@ import { annuity, marketRent, unitValue, chargeOff, BANK_SLOTS, sellLoan, lender
 export function attachHousing(c) {
   c.foreclose = (l) => foreclose(c, l);
   c.pairUp = (i, j) => pairUp(c, i, j);
+  c.moveOut = (i, share) => moveOut(c, i, share);
   c.dissolveHousehold = (h, why) => dissolve(c, h, why);
   c.assessedValue = () => { let v = 0; for (const b of c.world.buildings.each()) v += c.world.buildings.value[b]; return v; };
 }
@@ -27,20 +28,42 @@ function moveInto(c, h, d, own = false) {
   if (!own) { H.tenure[h] = 0; H.rent[h] = D.rent[d]; H.landlord[h] = D.owner[d]; H.lease[h] = c.epoch; D.rentSince[d] = c.epoch; }
   for (const i of members(c, h)) { priorTrust(c.P, c.people, "tl", i); addMemory(c, i, M.moved_home); }
 }
+// who lets homes: the property companies and other firms, a bank holding a home it took back, the city, and the
+// out-of-town owners who bought the buildings of companies that closed (they let them through managers)
+const LETS = (o) => (o >= E_F0 && o < E_CITY) || o === E_CITY || o === E_ROW;
 // the best vacant home a household can afford: rent under 35% of income, enough rooms, near work
 function findHome(c, h, maxRent) {
-  const D = c.world.dwellings, H = c.hh, W = c.world, P = c.people;
-  const mem = members(c, h), wc = mem.map((i) => (P.today[i] & 1 ? c.workCell(i) : -1)).find((x) => x >= 0) ?? -1;
+  const H = c.hh, P = c.people, mem = members(c, h), wc = mem.map((i) => (P.today[i] & 1 ? c.workCell(i) : -1)).find((x) => x >= 0) ?? -1;
+  return bestHome(c, H.inc[h], H.size[h], wc, maxRent);
+}
+// (the same search for a household of `size` people with income `inc`, someone working at cell `wc`)
+function bestHome(c, inc, size, wc, maxRent) {
+  const D = c.world.dwellings, W = c.world;
   let best = -1, bs = -1e18;
   for (const d of D.each()) {
-    if (D.hh[d] >= 0 || D.forSale[d] || D.owner[d] < E_F0 || D.owner[d] >= E_B0 + 4 || W.buildings.stage[D.bld[d]]) continue;
-    if (D.afford[d] && H.inc[h] > (c.gov.affordLimit || 0)) continue;                        // income-restricted homes go to those who qualify
+    if (D.hh[d] >= 0 || D.forSale[d] || !LETS(D.owner[d]) || W.buildings.stage[D.bld[d]]) continue;
+    if (D.afford[d] && inc > (c.gov.affordLimit || 0)) continue;                              // income-restricted homes go to those who qualify
     const r = D.rent[d]; if (r > maxRent) continue;
     const fc = W.frontCell(D.bld[d]), dd = wc >= 0 ? Math.abs((fc & 127) - (wc & 127)) + Math.abs((fc >> 7) - (wc >> 7)) : 20;
-    const sc = -(r / 1000) - dd * 8 + Math.min(D.rooms[d], H.size[h]) * 60 + c.vital[fc * 8] * 4 - c.vital[fc * 8 + 7] * 10;
+    const sc = -(r / 1000) - dd * 8 + Math.min(D.rooms[d], size) * 60 + c.vital[fc * 8] * 4 - c.vital[fc * 8 + 7] * 10;
     if (sc > bs) { bs = sc; best = d; }
   }
   return best;
+}
+// someone leaves a household to keep a home of their own (a grown child, a partner after a parting): a home their own
+// pay can afford (rent within two fifths of it), a share of the household's ready money, a bank card of their own
+function moveOut(c, i, share) {
+  const P = c.people, H = c.hh, B = c.books, h0 = P.hh[i]; if (h0 < 0 || H.adults[h0] < 2 || ageYears(c, i) < 18) return -1;
+  const pay = Math.round((P.emp[i] >= 0 ? P.wage[i] * P.hours[i] * 21.7 : P.ss[i] + P.pen[i]) * 0.82); if (pay < 100000) return -1;
+  const d = bestHome(c, pay, 1, P.today[i] & 1 ? c.workCell(i) : -1, Math.round(pay * 0.4)); if (d < 0) return -1;
+  const bank = B.bankOf[E_H0 + h0], h = newHousehold(c, bank); if (h < 0) return -1;
+  removeFromHousehold(c, i); joinHousehold(c, i, h); H.head[h] = i;
+  if (H.head[h0] >= 0 && ageYears(c, H.head[h0]) < 18) { const a = members(c, h0).find((j) => ageYears(c, j) >= 18); if (a !== undefined) H.head[h0] = a; }
+  const dep = Math.floor(Math.max(0, B.get(E_H0 + h0, AC.DEPOSITS)) * share); if (dep > 0) B.pay(E_H0 + h0, E_H0 + h, dep, AC.EQUITY, AC.EQUITY, K.transfer);
+  H.inc[h] = pay; H.exp[h] = Math.round(pay * 0.85); H.pantry[h] = 3000;
+  const card = c.originate(3, bank, E_H0 + h, 0, c.banks[bank].rates.card, 0, -1); H.card[h] = card; if (card >= 0) { c.loans.lim[card] = 300000; H.cardLim[h] = 300000; }
+  moveInto(c, h, d);
+  return h;
 }
 
 export function housingDay(c, d, g) {
@@ -54,18 +77,26 @@ export function housingDay(c, d, g) {
       if (H.tenure[h] !== 0 || H.home[h] < 0 || !H.rent[h] || H.landlord[h] < 0) continue;
       const he = E_H0 + h, hap = H.voucher[h] ? Math.min(H.rent[h], H.hap[h]) : 0, share = H.rent[h] - hap;
       if (hap > 0) B.pay(E_FEDGOV, H.landlord[h], hap, AC.X_TRANSFER, AC.R_RENT, K.rent);
-      if (share > 0 && c.fund(he, share, true)) B.pay(he, H.landlord[h], share, AC.X_RENT, AC.R_RENT, K.rent);
-      else if (share > 0) { H.rArr[h] += share; H.rMo[h] = Math.min(255, H.rMo[h] + 1); for (const i of members(c, h)) P.lDe[i]++; }
-      H.lPat[h] = lif(H.lPat[h], H.rMo[h] / landlordPatience(c, H.landlord[h]), 0.3);
-      if (H.lPat[h] >= 1 && H.rMo[h] && !H.ntc[h]) serveNotice(c, h);
+      // rent comes first: a household short of its share pays what it has (keeping a few days' food), and owes the rest
+      let paid = 0; if (share > 0) paid = c.fund(he, share, true) ? share : Math.max(0, Math.min(share, B.get(he, AC.DEPOSITS) - H.size[h] * 5000));
+      if (paid > 0) B.pay(he, H.landlord[h], paid, AC.X_RENT, AC.R_RENT, K.rent);
+      if (paid < share) { H.rArr[h] += share - paid; H.rMo[h] = Math.min(255, H.rMo[h] + 1); for (const i of members(c, h)) P.lDe[i]++; }
+      if (H.udStay[h]) planMonth(c, h);
+      // what the state paid for the household under the Landlord Mitigation Program is repaid a twentieth of the month's
+      // income at a time, in months when the rent is paid and the money is there
+      if (H.lmp[h] > 0 && paid >= share && !H.rArr[h]) { const back = Math.min(H.lmp[h], Math.round(H.inc[h] / 20)); if (back > 0 && B.get(he, AC.DEPOSITS) >= back + 20000) { B.pay(he, E_STATE, back, AC.X_OTHER, AC.R_FEES, K.fee); H.lmp[h] -= back; } }
+      // the landlord's patience fills with the months of rent owed (a part-month owed fills it partly)
+      H.lPat[h] = lif(H.lPat[h], H.rArr[h] / Math.max(1, H.rent[h]) / landlordPatience(c, H.landlord[h]), 0.3);
+      if (H.lPat[h] >= 1 && H.rArr[h] > 0 && !H.ntc[h] && !H.udStay[h]) serveNotice(c, h);
     }
     for (const f of F.each()) { if (F.status[f] === 1 || !F.rentDue[f] || F.landlord[f] < 0) continue; if (c.fund(E_F0 + f, F.rentDue[f], true)) B.pay(E_F0 + f, F.landlord[f], F.rentDue[f], AC.X_RENT, AC.R_RENT, K.rent); else F.distress[f] += 5; }
   }
   // notices take effect; tenants decide whether to stay
   for (const h of H.each()) {
+    if (!H.size[h] || H.home[h] < 0) continue;                             // (an estate still being settled keeps its slot, not a tenancy)
     if (H.noticeAt[h] && H.noticeAt[h] === e) { H.rent[h] = H.notice[h]; D.rent[H.home[h]] = H.notice[h]; D.rentSince[H.home[h]] = e; H.noticeAt[h] = 0; }
     if (H.rArr[h] > 0) cure(c, h);
-    if (H.evictAt[h] && H.evictAt[h] <= e) { if (H.rArr[h] > 0) evict(c, h); else { H.evictAt[h] = 0; H.ntc[h] = 0; } }
+    if (H.evictAt[h] && H.evictAt[h] <= e) { if (H.rArr[h] > 0) hearing(c, h); else { H.evictAt[h] = 0; H.ntc[h] = 0; } }
   }
   if (g.housing && d.wd === 6) market(c, d, g);
   if (d.wd === 4 && c.outer) c.cityMigration(d);
@@ -87,25 +118,89 @@ function landlordPatience(c, ent) {
 // serves the writ about ten days after the judgment. Paying everything owed before then ends it (RCW 59.18.410)
 function serveNotice(c, h) {
   const H = c.hh, e = c.epoch; H.ntc[h] = e; H.evictAt[h] = e + 14 + 21 + 10;
+  let old = 0; for (let k = 1; k < 3; k++) if (H.ntcs[h * 3 + k] < H.ntcs[h * 3 + old]) old = k; H.ntcs[h * 3 + old] = e;   // the year's notices, for the court
   for (const i of members(c, h)) addMemory(c, i, M.got_an_eviction_notice, H.landlord[h]);
   c.event("notice", `The ${c.names.person(H.head[h] >= 0 ? H.head[h] : members(c, h)[0]).split(" ")[1]} household is served a 14-day notice`);
 }
 // a tenant behind pays it off when the money is there; with a notice served, the head asks a friend who can spare it
 // (their own agreeableness, trust and means decide), before the writ comes
+// (a tenant under a court-ordered plan pays by its installments instead)
 function cure(c, h) {
-  const H = c.hh, B = c.books, P = c.people, he = E_H0 + h, owed = H.rArr[h];
-  if (B.get(he, AC.DEPOSITS) + B.get(he, AC.SAVINGS) >= owed + 20000 && c.fund(he, owed)) { B.pay(he, H.landlord[h], owed, AC.X_RENT, AC.R_RENT, K.rent); H.rArr[h] = 0; H.rMo[h] = 0; return; }
+  const H = c.hh, B = c.books, P = c.people, he = E_H0 + h, owed = H.rArr[h]; if (H.udStay[h]) return;
+  const cash = B.get(he, AC.DEPOSITS) + B.get(he, AC.SAVINGS);
+  if (cash >= owed + 20000 && c.fund(he, owed)) { B.pay(he, H.landlord[h], owed, AC.X_RENT, AC.R_RENT, K.rent); H.rArr[h] = 0; H.rMo[h] = 0; return; }
+  // each payday week what can be spared goes toward what is owed: all but a week's food and the coming rent's part
+  // that the household's own care sets aside
+  if ((c.epoch + h) % 7 === 0) { const head = H.head[h], keep = 20000 + H.size[h] * 6300 + Math.round(H.rent[h] * (head >= 0 ? Math.min(1, 0.4 + trait(P.traits[head], T_C) / 20) : 0.8) * Math.min(1, c.today.d / 30)), part = Math.min(owed - 1, cash - keep);
+    if (part >= 5000 && c.fund(he, part)) { B.pay(he, H.landlord[h], part, AC.X_RENT, AC.R_RENT, K.rent); H.rArr[h] -= part; } }
   const head = H.head[h]; if (!H.ntc[h] || head < 0 || (c.epoch - H.ntc[h]) % 7 !== 3) return;
+  if (friendHelps(c, h, H.rArr[h])) { B.pay(he, H.landlord[h], H.rArr[h], AC.X_RENT, AC.R_RENT, K.rent); H.rArr[h] = 0; H.rMo[h] = 0; }
+}
+// a friend who can spare it lends the household `amt` (their own agreeableness, the friendship and their means decide)
+function friendHelps(c, h, amt) {
+  const H = c.hh, B = c.books, P = c.people, he = E_H0 + h, head = H.head[h]; if (head < 0 || amt <= 0) return false;
   for (let k = 0; k < 4; k++) {
     const j = c.friendOf(head, k); if (j < 0 || P.hh[j] < 0 || P.hh[j] === h) continue;
     const fh = P.hh[j], fe = E_H0 + fh, spare = B.get(fe, AC.DEPOSITS) + B.get(fe, AC.SAVINGS) - c.hh.inc[fh] * 2;
-    if (spare < owed || trait(P.traits[j], T_A) + Math.min(4, P.fw[head * 4 + k] / 64) < 10 || !c.fund(fe, owed)) continue;
-    B.pay(fe, he, owed, AC.X_OTHER, AC.R_OTHER, K.transfer); B.pay(he, H.landlord[h], owed, AC.X_RENT, AC.R_RENT, K.rent);
-    H.rArr[h] = 0; H.rMo[h] = 0; for (const i of members(c, h)) addMemory(c, i, M.a_friend_helped_with_the_rent, E_H0 + fh); return;
+    if (spare < amt || trait(P.traits[j], T_A) + Math.min(4, P.fw[head * 4 + k] / 64) < 10 || !c.fund(fe, amt)) continue;
+    B.pay(fe, he, amt, AC.X_OTHER, AC.R_OTHER, K.transfer);
+    for (const i of members(c, h)) addMemory(c, i, M.a_friend_helped_with_the_rent, E_H0 + fh); return true;
   }
+  return false;
+}
+// the writ's day for a tenant still behind. At the show-cause hearing (or any time before the sheriff comes) a tenant
+// may ask the court for a payment plan: the judge may stay the writ for up to ninety days if the tenant pays a month's
+// rent within five court days and the rest of the judgment within the stay, weighing whether the tenant has had three
+// or more pay-or-vacate notices in the past twelve months (RCW 59.18.410(3)). Tenants who are indigent (on public
+// assistance, or under twice the poverty line) have appointed counsel, who makes the motion (RCW 59.18.640); others
+// ask if they answer the summons. The court finds whether the tenant is low-income, for the Landlord Mitigation Program
+function hearing(c, h) {
+  const H = c.hh, B = c.books, P = c.people, e = c.epoch, he = E_H0 + h, head = H.head[h];
+  if (H.udStay[h]) { evict(c, h); return; }                                             // a default on the plan: the writ is served
+  let notices = 0; for (let k = 0; k < 3; k++) if (H.ntcs[h * 3 + k] && e - H.ntcs[h * 3 + k] < 365) notices++;
+  const indigent = (H.progs[h] & 3) !== 0 || H.inc[h] / 0.82 <= (c.fpl(c.today.y, H.size[h]) * 2) / 12;
+  const answers = indigent || (head >= 0 && trait(P.traits[head], T_C) >= 6);
+  const first = Math.min(H.rArr[h], H.rent[h]);
+  if (notices < 3 && answers && (c.fund(he, first, true) || (friendHelps(c, h, first) && c.fund(he, first)))) {
+    B.pay(he, H.landlord[h], first, AC.X_RENT, AC.R_RENT, K.rent); H.rArr[h] -= first; H.evictAt[h] = 0; H.lPat[h] = 0;
+    if (H.rArr[h] <= 0) { H.rArr[h] = 0; H.rMo[h] = 0; H.ntc[h] = 0; return; }                // a month's rent was all it owed
+    H.udStay[h] = e + 90; H.udLow[h] = indigent ? 1 : 0; H.rMo[h] = 1;
+    for (const i of members(c, h)) addMemory(c, i, M.the_court_gave_us_time_to_pay, H.landlord[h]);
+    c.event("notice", `The court stays the writ against the ${c.names.person(head >= 0 ? head : members(c, h)[0]).split(" ")[1]} household on a ninety-day payment plan`);
+    return;
+  }
+  // a tenant the court finds low-income who cannot make the first payment: the landlord is paid the judgment (up to
+  // $5,000) from the state's Landlord Mitigation Program and the tenancy goes on; the tenant repays the state as they
+  // can (RCW 59.18.410(3)(e), 43.31.605(1)(c)). Once in twelve months
+  if (notices < 3 && answers && indigent && H.rArr[h] <= 500000 && H.landlord[h] >= 0 && (!H.lmpAt[h] || e - H.lmpAt[h] > 365) && c.fund(E_STATE, H.rArr[h])) {
+    B.pay(E_STATE, H.landlord[h], H.rArr[h], AC.X_TRANSFER, AC.R_RENT, K.benefit); c.gov.wel.lmpPaid += H.rArr[h];
+    H.lmp[h] += H.rArr[h]; H.lmpAt[h] = e; H.rArr[h] = 0; H.rMo[h] = 0; H.evictAt[h] = 0; H.ntc[h] = 0; H.lPat[h] = 0;
+    for (const i of members(c, h)) addMemory(c, i, M.the_state_paid_what_we_owed_in_rent, E_STATE);
+    c.event("notice", `The court finds the ${c.names.person(head >= 0 ? head : members(c, h)[0]).split(" ")[1]} household low-income; the Landlord Mitigation Program pays the judgment and the tenancy goes on`);
+    return;
+  }
+  evict(c, h);
+}
+// the first of each month under a plan: the installment is the judgment left over the months left of the stay. A tenant
+// who cannot pay it is in default; the landlord serves a notice of default and the sheriff serves the writ
+function planMonth(c, h) {
+  const H = c.hh, B = c.books, e = c.epoch, he = E_H0 + h;
+  if (H.rArr[h] <= 0) { H.rArr[h] = 0; H.rMo[h] = 0; H.udStay[h] = 0; H.udLow[h] = 0; H.ntc[h] = 0; H.lPat[h] = 0; return; }
+  const months = Math.max(1, Math.ceil((H.udStay[h] - e) / 30)), inst = Math.min(H.rArr[h], Math.ceil(H.rArr[h] / months));
+  if (e < H.udStay[h] && c.fund(he, inst, true)) {
+    B.pay(he, H.landlord[h], inst, AC.X_RENT, AC.R_RENT, K.rent); H.rArr[h] -= inst;
+    if (H.rArr[h] <= 0) { H.rArr[h] = 0; H.rMo[h] = 0; H.udStay[h] = 0; H.udLow[h] = 0; H.ntc[h] = 0; H.lPat[h] = 0; }
+    return;
+  }
+  H.evictAt[h] = e + 3;
 }
 function evict(c, h) {
   const H = c.hh, mem = members(c, h);
+  if (!mem.length) { H.evictAt[h] = 0; H.rArr[h] = 0; H.rMo[h] = 0; H.ntc[h] = 0; H.udStay[h] = 0; return; }
+  // after a default on a court-ordered plan, the state reimburses the landlord the judgment left for a tenant the court
+  // found low-income (the Landlord Mitigation Program, RCW 43.31.605(1)(c))
+  if (H.udStay[h] && H.udLow[h] && H.rArr[h] > 0 && H.landlord[h] >= 0 && c.fund(E_STATE, H.rArr[h])) c.books.pay(E_STATE, H.landlord[h], H.rArr[h], AC.X_TRANSFER, AC.R_RENT, K.benefit);
+  H.udStay[h] = 0; H.udLow[h] = 0;
   for (const i of mem) addMemory(c, i, M.was_evicted, H.landlord[h]);
   c.event("eviction", `The ${c.names.person(H.head[h] >= 0 ? H.head[h] : mem[0]).split(" ")[1]} household is evicted`);
   const cheaper = findHome(c, h, Math.max(80000, Math.round(H.inc[h] * 0.3)));
@@ -217,6 +312,8 @@ function dissolve(c, h, why) {
   const d = H.home[h];
   if (d >= 0) { D.hh[d] = -1; c.world.buildings.occupied[D.bld[d]] = Math.max(0, c.world.buildings.occupied[D.bld[d]] - 1); if (D.owner[d] === he) { D.forSale[d] = 1; D.price[d] = Math.round(D.value[d] / 100000) * 100000; } }
   H.home[h] = -1;
+  // the tenancy is over: what was owed in rent is the landlord's loss, and no notice, plan or voucher outlives it
+  H.rArr[h] = 0; H.rMo[h] = 0; H.lPat[h] = 0; H.ntc[h] = 0; H.evictAt[h] = 0; H.udStay[h] = 0; H.udLow[h] = 0; H.notice[h] = 0; H.noticeAt[h] = 0; H.voucher[h] = 0; H.hap[h] = 0; H.vWait[h] = 0; H.lmp[h] = 0; H.landlord[h] = -1; H.rent[h] = 0;
   const sav = B.get(he, AC.SAVINGS); if (sav > 0) B.fromSavings(he, sav);
   const inv = B.get(he, AC.INVEST); if (inv > 0) B.pay(E_ROW, he, inv, AC.FUND_SHARES, AC.INVEST, K.investment);
   for (const l of L.each()) {
@@ -236,15 +333,15 @@ function dissolve(c, h, why) {
 function leaveCity(c, h, why, place = -1) {
   const P = c.people, H = c.hh, mem = members(c, h);
   c.event("departure", `The ${c.names.person(H.head[h] >= 0 ? H.head[h] : mem[0]).split(" ")[1]} household leaves Port Alder ${why}`);
-  for (const i of mem) { if (P.emp[i] >= 0) c.leaveJob(i, false); }
-  // the household goes on in the outer layers, its people keeping their numbers; their friends here remember them
+  // the household goes on in the outer layers, its people keeping their numbers (and a commuter the job, where the
+  // new home is within its reach); their friends here remember them
   if (c.emigrate) c.emigrate(h, place); else for (const i of mem) relocate(c, P.sin[i], -1, -1, place);
+  for (const i of mem) { if (P.emp[i] >= 0) c.leaveJob(i, false); }
   for (const i of mem) for (let k = 0; k < 4; k++) { const f = c.slotOf(P.friend[i * 4 + k]); if (f >= 0 && P.hh[f] !== h) addMemory(c, f, M.a_friend_moved_away, c.personRef(i)); }
   for (const i of mem) { scrubPerson(c, i); removeFromHousehold(c, i); P.release(i); }
   dissolve(c, h, why);
 }
 // people move in and out of Port Alder through the outer layers: see periphery.js (cityMigration)
-const D_ok = (c, d) => { const D = c.world.dwellings; return D.hh[d] < 0 && !D.forSale[d] && D.owner[d] >= E_F0 && D.owner[d] < E_B0 && !c.world.buildings.stage[D.bld[d]]; };
 // new floors on apartment buildings when homes run short: a property company contracts a builder
 function build(c, d) {
   const W = c.world, T = W.buildings, D = W.dwellings, F = c.firms, B = c.books, s = c.cfg.seed, e = c.epoch, G = c.gov;
@@ -292,7 +389,7 @@ export function housingMonth(c, d, g) {
     const anniv = H.lease[h] + 365 * Math.max(1, Math.ceil((e + RENT_NOTICE_DAYS - H.lease[h]) / 365));
     if (anniv - e > RENT_NOTICE_DAYS + 31 || anniv - e < RENT_NOTICE_DAYS) continue;
     if (c.world.dwellings.afford[H.home[h]] || c.world.buildings.stage[c.world.dwellings.bld[H.home[h]]]) continue;   // capped homes, and homes on notice, get no increase
-    const f = H.landlord[h] - E_F0, A = trait(c.ownerTraits(f), T_A), market = marketRent(c, H.home[h]);
+    const L = H.landlord[h], A = trait(L < E_B0 ? c.ownerTraits(L - E_F0) : ownerTraitsOf(c, L), T_A), market = marketRent(c, H.home[h]);
     const ov = own.get(H.landlord[h]) || [1, 0], soft = Math.max(0, 1 - (ov[1] / Math.max(1, ov[0])) * 8);
     const want = Math.round(H.rent[h] * (1 + Math.max(0, (market - H.rent[h]) / H.rent[h]) * (1 - A / 20) * soft));
     const capped = Math.min(want, Math.floor(H.rent[h] * (1e6 + cap) / 1e6 / 500) * 500);

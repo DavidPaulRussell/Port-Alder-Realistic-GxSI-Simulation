@@ -10,7 +10,6 @@ import { ageYears, members, friendOf } from "./people.js";
 import { coverage } from "./health.js";
 
 export const KPI_VERSION = "1.0.0";
-const fplMonthly = (n) => Math.round((1596000 + 568000 * Math.max(0, n - 1)) / 12);
 // Everett's cloudiness by month as a base-ten absorbance of daylight (illustrative climatology of a cloudy coast)
 const CLOUD = [0.55, 0.5, 0.45, 0.35, 0.3, 0.25, 0.15, 0.18, 0.25, 0.4, 0.55, 0.6];
 
@@ -58,7 +57,8 @@ export function measureMonth(c) {
 export function cityBoard(c) {
   const P = c.people, H = c.hh, F = c.firms, B = c.books, W = c.world, D = W.dwellings, T = W.buildings, G = c.gov, o = c.outer, wC = (o?.cityWeight ?? 7600) / 1000;
   const e = c.epoch, k = c.nation.monthIndex(Math.max(1, e));
-  const people = { citizens: P.count, households: H.count, represented: Math.round(P.count * wC) };
+  let living = 0; for (const h of H.each()) if (H.size[h]) living++;
+  const people = { citizens: P.count, households: living, represented: Math.round(P.count * wC) };
   // work
   let emp = 0, un = 0, nilf = 0, away = 0, ret = 0, kids = 0; const flows = [[0, 0, 0], [0, 0, 0], [0, 0, 0]], now = new Map();
   const cls = (st) => (st === 2 || st === 6 ? 0 : st === 3 ? 1 : 2);
@@ -76,7 +76,7 @@ export function cityBoard(c) {
   for (const h of H.each()) { inc.push(H.inc[h] * 12); }
   const sorted = [...inc].sort((a, b) => a - b), median = sorted.length ? sorted[sorted.length >> 1] : 0;
   for (const h of H.each()) {
-    const n = H.size[h]; persons += n; if (H.inc[h] < fplMonthly(n)) personsPoor += n;
+    const n = H.size[h]; persons += n; if (H.inc[h] < c.fpl(c.today.y, n) / 12) personsPoor += n;       // the year's poverty line (indexed to prices)
     if (H.home[h] >= 0) { const hood = T.hood[D.bld[H.home[h]]] ?? 0; if (H.inc[h] * 12 < median * 0.5) low[hood]++; if (H.inc[h] * 12 > median * 1.5) rich[hood]++; }
     if (H.tenure[h] === 0 && H.home[h] >= 0 && H.inc[h] > 0) { renters++; const bu = (H.rent[h] * 1000) / H.inc[h]; if (bu > 300) burden30++; if (bu > 500) burden50++; }
   }
@@ -89,10 +89,10 @@ export function cityBoard(c) {
   const programs = { snapHouseholds: inter[1], snapPersons: snapP, tanf: inter[2], appleHealth: ahP, wic: inter[8], childCare: inter[16], ssi, abd, vouchers: vouch, voucherWaitlist: wait, anyProgram: unionSize(inter, 5),
     applications: G.wel?.applications || 0, denials: G.wel?.denials || 0, schoolMealsFree: G.wel?.mealsFree || 0 };
   // health and care
-  const cov = [0, 0, 0, 0]; let distress = 0, episodes = 0, inTx = 0, sessions = 0, crisis = 0, forgone = 0, visits = 0, sick = 0, vax = 0;
+  const cov = [0, 0, 0, 0, 0]; let distress = 0, episodes = 0, inTx = 0, sessions = 0, crisis = 0, forgone = 0, visits = 0, sick = 0, vax = 0;
   for (const i of P.each()) { cov[coverage(c, i)]++; if (P.mh[i] > 700) distress++; if (P.mhEp[i]) episodes++; if (P.mhTx[i]) inTx++; sessions += P.mhYtd[i]; crisis += P.crisis[i]; forgone += P.forgone[i]; visits += P.visits[i]; if (P.sick[i]) sick++; if (P.vax[i] && e - P.vax[i] < 200) vax++; }
   const n = Math.max(1, P.count), care = c.care || {}, gc = G.care || {};
-  const health = { uninsured: Math.round((cov[0] * 1000) / n), employerPlan: Math.round((cov[1] * 1000) / n), appleHealth: Math.round((cov[2] * 1000) / n), medicare: Math.round((cov[3] * 1000) / n),
+  const health = { uninsured: Math.round((cov[0] * 1000) / n), employerPlan: Math.round((cov[1] * 1000) / n), appleHealth: Math.round((cov[2] * 1000) / n), medicare: Math.round((cov[3] * 1000) / n), cascadeCare: Math.round((cov[4] * 1000) / n),
     careVisitsYear: visits, wentWithoutCare: forgone, clinicWaitDays: Math.round((care.waitGP || 0) * 10) / 10, ill: sick, fluPrevalence: Math.round((care.prevalence || 0) * 10000), reproduction: care.r || 0, vaccinated: Math.round((vax * 1000) / n),
     deathsYear: G.deathsYear || 0, birthsYear: G.birthsYear || 0, dampHomes: gc.damp || 0, premiumPerMember: gc.premium || 0 };
   const mental = { distressed: Math.round((distress * 1000) / n), episodes, inCounselling: inTx, sessionsYear: sessions, counsellingWaitDays: Math.round((care.waitMH || 0) * 10) / 10, crisisContacts: crisis, mobileCrisis: gc.mobile || 0,
@@ -126,7 +126,7 @@ export function cityBoard(c) {
   const flags = []; for (const key of ["unemployment", "mood", "rent", "pop"]) { const series = (c.months || []).slice(-12).map((m) => m[key] ?? 0); if (series.length >= 6) { const { median: md, mad: dv } = mad(series), last = series[series.length - 1]; if (dv > 0 && Math.abs(last - md) > 3 * dv) flags.push(key); } }
   const board = { epoch: e, people, work, income, programs, health, mental, housing, fabric, mood, business, city, transit, safety, prices, elections, flags };
   // the city's entry in the Matryoshka
-  if (o) o.kpi.city = { pop: Math.round(P.count * wC), households: Math.round(H.count * wC), unemployment: work.unemployment, poverty: income.poverty, uninsured: health.uninsured, snap: Math.round((snapP * 1000) / n), medicaid: health.appleHealth, mood: mood.mean, stress: mood.stress, distress: mental.distressed, trust: Math.round(fabric.trustCity[2] + fabric.trustCity[3]), income: median };
+  if (o) o.kpi.city = { pop: Math.round(P.count * wC), households: Math.round(living * wC), unemployment: work.unemployment, poverty: income.poverty, uninsured: health.uninsured, snap: Math.round((snapP * 1000) / n), medicaid: health.appleHealth, mood: mood.mean, stress: mood.stress, distress: mental.distressed, trust: Math.round(fabric.trustCity[2] + fabric.trustCity[3]), income: median };
   c.board = board;
   return board;
 }

@@ -45,7 +45,7 @@ export function genesisBanks(c) {
 // income tax in Washington). It is an aggregate of the agents' states, refreshed at every month's end.
 export function householdIncome(c, h) {
   const P = c.people, H = c.hh; let gross = H.tanf ? H.tanf[h] || 0 : 0;
-  for (const i of members(c, h)) { if (P.emp[i] >= 0) gross += P.wage[i] * P.hours[i] * 21.7; gross += P.ss[i] + (P.ssi ? P.ssi[i] : 0) + (P.abd ? P.abd[i] : 0); if (P.status[i] === 3 && P.uiLeft[i] > 0) gross += P.ui[i] * 4.33; }
+  for (const i of members(c, h)) { if (P.emp[i] >= 0) gross += P.wage[i] * P.hours[i] * 21.7; gross += P.ss[i] + (P.pen ? P.pen[i] : 0) + (P.ssi ? P.ssi[i] : 0) + (P.abd ? P.abd[i] : 0); if (P.status[i] === 3 && P.uiLeft[i] > 0) gross += P.ui[i] * 4.33; }
   return Math.round(gross * 0.82);
 }
 export function setRates(c, e) {
@@ -164,10 +164,13 @@ export function chargeOff(c, l) {
 }
 
 /* ------------------------------------------------------------------ opening balance sheets */
+// a home's gross rent yield by its kind (the market's, as history: single-family rentals in Snohomish County rent for
+// about 5.3% of their value a year, townhouses about 6%, flats about 7.6%, multifamily trading near a 5.25% cap rate)
+export const GROSS_YIELD = (kind) => (kind === BK.house ? 53 : kind === BK.townhouse ? 60 : 76);   // per mille a year
 export function marketRent(c, d) {
   const W = c.world, D = W.dwellings, T = W.buildings, b = D.bld[d];
   const unit = unitValue(c, d), rooms = D.rooms[d];
-  const base = (unit * 62 / 1000 / 12) * (0.8 + rooms * 0.08) * ((c.gov.rentScale || 1e6) / 1e6), comps = c.rentComps;
+  const base = (unit * GROSS_YIELD(T.kind[b]) / 1000 / 12) * (0.8 + rooms * 0.08) * ((c.gov.rentScale || 1e6) / 1e6), comps = c.rentComps;
   // landlords price against nearby comparable rents (law 76.39), half and half with the unit's value
   const near = comps && comps.length ? idw(comps, T.x[b], T.y[b]) * rooms : base;
   return Math.max(95000, Math.round(((base + near) / 2) / 500) * 500);
@@ -190,8 +193,19 @@ export function openingBooks(c) {
   for (const d of D.each()) { D.value[d] = unitValue(c, d); D.owner[d] = T.owner[D.bld[d]]; }
   // the founding rent level: the census reads the city's median rent (about $1,850 a month for Everett's renters, ACS
   // 2023) as history, and the asking rents are the units' yields scaled to it
-  { const yields = []; for (const d of D.each()) { const h = D.hh[d]; if (h >= 0 && H.tenure[h] === 0) yields.push(D.value[d] * 62 / 1000 / 12 * (0.8 + D.rooms[d] * 0.08)); } yields.sort((a, b) => a - b); c.gov.rentScale = yields.length ? Math.round((185000 * 1e6) / yields[yields.length >> 1]) : 1e6; }   // ppm
+  { const yields = []; for (const d of D.each()) { const h = D.hh[d]; if (h >= 0 && H.tenure[h] === 0) yields.push(D.value[d] * GROSS_YIELD(T.kind[D.bld[d]]) / 1000 / 12 * (0.8 + D.rooms[d] * 0.08)); } yields.sort((a, b) => a - b); c.gov.rentScale = yields.length ? Math.round((185000 * 1e6) / yields[yields.length >> 1]) : 1e6; }   // ppm
   for (const d of D.each()) D.rent[d] = marketRent(c, d);
+  // the census finds renters in homes they can afford: the dearest homes hold the households with the highest incomes
+  // (in a home with a room for every two of them where one is free), the cheapest the poorest
+  { const renters = [...H.each()].filter((h) => H.tenure[h] === 0 && H.home[h] >= 0), homes = renters.map((h) => H.home[h]).sort((a, b) => D.rent[b] - D.rent[a] || a - b);
+    const inc = new Map(renters.map((h) => [h, householdIncome(c, h)])); renters.sort((a, b) => inc.get(b) - inc.get(a) || a - b);
+    const taken = new Uint8Array(homes.length); let lo = 0;
+    for (const d of homes) { T.occupied[D.bld[d]] = Math.max(0, T.occupied[D.bld[d]] - 1); D.hh[d] = -1; }
+    for (const h of renters) {
+      let pick = -1; for (let k = lo; k < homes.length && k < lo + 400; k++) { if (taken[k]) continue; if (pick < 0) pick = k; if (D.rooms[homes[k]] * 2 >= H.size[h]) { pick = k; break; } }
+      taken[pick] = 1; while (lo < homes.length && taken[lo]) lo++;
+      const d = homes[pick]; H.home[h] = d; D.hh[d] = h; T.occupied[D.bld[d]]++;
+    } }
   // households: homes, rents, savings, investments, vehicles, mortgages, auto loans and cards
   const rates0 = c.banks[0].rates;
   for (const h of H.each()) {
@@ -199,7 +213,10 @@ export function openingBooks(c) {
     const net = householdIncome(c, h), gross = Math.round(net / 0.82); H.inc[h] = net; H.exp[h] = Math.round(net * 0.85);
     const thrift = trait(t, T_THRIFT), age = ageYears(c, head, 1), r = (j) => census(c, 0x0b5, h, j);
     if (H.tenure[h] === 1) { D.owner[d] = he; B.openAsset(he, AC.HOME, D.value[d]); }
-    else { H.rent[h] = Math.max(65000, Math.min(D.rent[d], Math.round(gross * 0.36 / 500) * 500)); H.landlord[h] = D.owner[d]; H.lease[h] = 1 - (r(1) % 365); D.rentSince[d] = H.lease[h]; }
+    else { H.rent[h] = Math.max(65000, Math.min(D.rent[d], Math.round(gross * 0.36 / 500) * 500)); H.landlord[h] = D.owner[d]; H.lease[h] = 1 - (r(1) % 365); D.rentSince[d] = H.lease[h];
+      // a household paying well under the market for its home is read as living in an income-restricted home (the housing
+      // authority's, or a tax-credit building's: about a sixth of Everett's rentals), whose rent stays what it is
+      if (H.rent[h] * 10 < D.rent[d] * 8) { D.afford[d] = 1; D.rent[d] = H.rent[h]; T.afford[D.bld[d]]++; } }
     const dep = Math.round(net * (0.4 + thrift / 10 + (r(2) % 100) / 100)), sav = Math.round(net * Math.max(0, thrift * 0.7 + (age - 30) / 12 + (r(3) % 300) / 100 - 3));
     const inv = Math.round(gross * 12 * Math.max(0, age - 25) * 0.012 * (0.4 + thrift / 12));
     B.openDeposit(he, Math.max(20000, dep)); if (sav > 0) B.openDeposit(he, sav, AC.SAVINGS); if (inv > 0) B.openClaim(he, AC.INVEST, E_ROW, AC.FUND_SHARES, inv);
@@ -221,6 +238,11 @@ export function openingBooks(c) {
   const ownLand = new Map(); for (const b of T.each()) { const o = T.owner[b]; if (o >= E_F0 && o < E_B0) ownLand.set(o, (ownLand.get(o) || 0) + T.land[b]); }
   // owner-occupied units are not the landlord's
   const ooValue = new Map(); for (const d of D.each()) { const o = D.owner[d]; if (o < E_F0) { const bo = T.owner[D.bld[d]]; ooValue.set(bo, (ooValue.get(bo) || 0) + D.value[d]); } }
+  // the rents each owner's buildings bring at the founding, its homes' and its premises' (a year, in cents): lenders size
+  // a mortgage on income property by what that income can carry
+  const rentRoll = new Map(), roll = (o, v) => rentRoll.set(o, (rentRoll.get(o) || 0) + v * 12);
+  for (const h of H.each()) if (H.tenure[h] === 0 && H.landlord[h] >= E_F0 && H.landlord[h] < E_B0) roll(H.landlord[h], H.rent[h]);
+  for (const p of SP.each()) { const ten = SP.tenant[p], b = SP.bld[p]; if (ten >= E_F0 && ten < E_B0 && T.owner[b] !== ten && T.owner[b] >= E_F0 && T.owner[b] < E_B0) roll(T.owner[b], Math.round((T.value[b] / Math.max(1, T.spaces[b] + T.units[b] / 2)) * 70 / 1000 / 12 / 100) * 100); }
   for (const f of F.each()) {
     const fe = E_F0 + f, S = SECTORS[F.sector[f]], k = B.bankOf[fe], r = (j) => census(c, 0xf0b, f, j);
     const perHead = S.space === "industrial" ? 6000000 : S.space === "office" ? 2200000 : S.space === "hospital" ? 9000000 : 1500000;
@@ -231,7 +253,11 @@ export function openingBooks(c) {
     if (bv) { B.openAsset(fe, AC.BUILDINGS, bv - land); B.openAsset(fe, AC.LAND, land); }
     const monthCost = F.want[f] * 3000 * 173, stock = F.inv[f] * F.cost[f];
     B.openDeposit(fe, Math.round(monthCost * (2 + (r(2) % 150) / 100)) + stock + 500000);
-    const debt = Math.round((capex * 0.35 + bv * 0.35) / 100) * 100;
+    // what it borrowed: about 35% of what it owns; a property company no more than its rents can carry, the net
+    // operating income (rents less about 35% for upkeep, tax and vacancy) covering the payments 1.25 times over, the
+    // underwriting rule lenders apply to income property (history)
+    const carry = S.key === "realty" ? Math.round(((rentRoll.get(fe) || 0) * 0.65) / 1.25 / (annuity(1e8, c.banks[k].rates.business - 150, 360) * 12 / 1e8)) : Infinity;
+    const debt = Math.round((capex * 0.35 + Math.min(bv * 0.35, carry)) / 100) * 100;
     if (debt > 0) { if (bv) { const local = Math.round(debt * 0.25 / 100) * 100; openLoan(c, 1, k, fe, local, c.banks[k].rates.business - 150 + (r(3) % 200), 360, -1, r(4) % 2000); openLoan(c, 1, ROW_LENDER, fe, debt - local, c.banks[k].rates.business - 250 + (r(3) % 200), 360, -1, r(5) % 2000); } else openLoan(c, 1, k, fe, debt, c.banks[k].rates.business - 100 + (r(3) % 200), 84, -1, r(4) % 2000); }
     F.lineLim[f] = Math.round(monthCost * 3 + stock * 1.5);
   }

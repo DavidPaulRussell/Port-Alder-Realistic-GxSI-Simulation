@@ -32,14 +32,14 @@ const hireOwner = (c, owner, f) => hire(c, owner, E_F0 + f, 11, 1080);
 import { World } from "./world.js";
 import { PEOPLE_SPEC, HOUSEHOLD_SPEC, genesisPeople, morning, minds, lifeEvents, activities, addMemory, trait, schoolDay, friendOf, fertilityMod, ageYears, T_C, T_E } from "./people.js";
 import { asfr } from "./laws.js";
-import { FIRM_SPEC, genesisFirms, employAll, laborMarket, shopping, firmDay, firmMonth, entrepreneurs, SPACE_FOR, hire as hireIn, URGE_N } from "./economy.js";
+import { FIRM_SPEC, genesisFirms, employAll, laborMarket, shopping, firmDay, firmMonth, entrepreneurs, SPACE_FOR, hire as hireIn, URGE_N, offersCover } from "./economy.js";
 import { LOAN_SPEC, genesisBanks, openingBooks, financeDay, financeMonth, BANK_SLOTS } from "./finance.js";
 import { payrollDay, taxesDay, taxesMonth, taxesYear, attachPayroll } from "./payroll.js";
 import { civicDay, civicMonth, civicYear, civicGenesis, election } from "./civic.js";
 import { housingDay, housingMonth, attachHousing } from "./housing.js";
 import { attachDevelop, developDay, developMonth } from "./develop.js";
 
-export const CITY_VERSION = "1.1.0";
+export const CITY_VERSION = "1.2.0";
 export const SAVE_FORMAT = "PLUME-CITY/1";
 export const PCAP = 24576, LCAP = 32768;
 
@@ -152,8 +152,10 @@ export class City {
     const P = this.people, H = this.hh, Q = 4294967296;
     for (const i of P.each()) for (let k = 0; k < URGE_N; k++) P.urge[i * URGE_N + k] = census(this, 0x7a50 + k, i) / Q;
     for (const h of H.each()) { for (let k = 0; k < 6; k++) H.hurge[h * 6 + k] = census(this, 0x4a50 + k, h) / Q; for (let k = 0; k < 10; k++) H.apply[h * 10 + k] = census(this, 0x5a50 + k, h) / Q / 2; H.leave[h] = census(this, 0x1ea7, h) / Q; }
-    { let wsum = 0, msum = 0; for (const i of P.each()) { const h = P.hh[i], y = ageYears(this, i, 1); if (P.sex[i] !== 1 || y < 15 || y > 49 || h < 0 || H.home[h] < 0) continue; const w = asfr(y); wsum += w; msum += w * fertilityMod(this, i, h); }
-      this.gov.fertScale = msum > 0 ? Math.round((wsum / msum) * 1e6) : 1e6; }   // ppm: the founding women's circumstances average one
+    // the founding city's births come out at Washington's general fertility rate (history: 51.5 births per 1,000 women
+    // aged 15-44 in 2024, WA DOH); each woman's own circumstances then lean her rate up or down from there
+    { let w1544 = 0, msum = 0; for (const i of P.each()) { const h = P.hh[i], y = ageYears(this, i, 1); if (P.sex[i] !== 1 || y < 15 || y > 49 || h < 0 || H.home[h] < 0) continue; if (y <= 44) w1544++; msum += asfr(y) * fertilityMod(this, i, h); }
+      this.gov.fertScale = msum > 0 ? Math.round(((0.0515 * w1544) / msum) * 1e6) : 1e6; }   // ppm
     censusClose(this);                                                    // from here on nothing is drawn
     activities(this, d, true);
     this.stampFrame(d);
@@ -317,7 +319,7 @@ export class City {
     F.sector[f] = sec; F.space[f] = sp; F.nspace[f] = 1; W.spaces.tenant[sp] = E_F0 + f; F.name[f] = P.family[owner] * 257 + P.given[owner] * 7; F.founded[f] = this.epoch; F.owner[f] = P.sin[owner];
     F.price[f] = Math.round(S.price * (950 + (trait(t, 5) - 8) * 12 + 50) / 1000 / 5) * 5; F.cost[f] = Math.round(S.price * S.cost / 1e6);
     F.quality[f] = Math.max(300, Math.min(950, 450 + (P.skill[owner] >> 2) + (trait(t, T_C) - 8) * 20)); F.offer[f] = 1040; F.want[f] = S.staff[0]; F.uiRate[f] = 12000; F.line[f] = -1; F.boClass[f] = S.bo; F.expD[f] = Math.round(S.staff[0] * 7 * S.rate / 10);
-    F.landlord[f] = W.buildings.owner[W.spaces.bld[sp]]; F.rentDue[f] = W.spaces.rent[sp];
+    F.landlord[f] = W.buildings.owner[W.spaces.bld[sp]]; F.rentDue[f] = W.spaces.rent[sp]; F.cover[f] = offersCover(this, f);
     priorTrust(this.P, F, "cr", f); priorTrust(this.P, F, "kb", f);
     const hh = P.hh[owner], he = E_H0 + hh, k = B.bankOf[he]; B.bankOf[E_F0 + f] = k; B.resetEntity(E_F0 + f);
     const stake = Math.min(Math.round((B.get(he, AC.DEPOSITS) + B.get(he, AC.SAVINGS)) * 0.6), 6000000);
@@ -344,10 +346,11 @@ export class City {
     let dep = 0, loans = 0; for (let k = 0; k < this.banks.length; k++) { dep -= B.get(E_B0 + k, AC.DEP_PAY) + B.get(E_B0 + k, AC.SAV_PAY); loans += B.get(E_B0 + k, AC.LOAN_MORT) + B.get(E_B0 + k, AC.LOAN_BIZ) + B.get(E_B0 + k, AC.LOAN_AUTO) + B.get(E_B0 + k, AC.LOAN_CARD); }
     const rate = this.nation.rate(this.epoch || 1), cityCash = B.get(E_CITY, AC.DEPOSITS) + B.get(E_CITY, AC.SAVINGS);
     const u = lf ? Math.round((unemployed * 10000) / lf) : 0;
-    const series = { pop, households: H.count, firms, employed, unemployment: u, mood: pop ? Math.round(val / pop) : 0, stress: pop ? Math.round(stress / pop) : 0,
+    let living = 0; for (const h of H.each()) if (H.size[h]) living++;        // households with someone in them (an estate being settled keeps its slot)
+    const series = { pop, households: living, firms, employed, unemployment: u, mood: pop ? Math.round(val / pop) : 0, stress: pop ? Math.round(stress / pop) : 0,
       deposits: dep, loans, cityCash, cpi: this.gov.cpi || 1000000, policy: rate.hi, trustCity: pop ? Math.round((lv[2] + lv[3]) * 1000 / pop) : 0 };
     return { series, needs: Array.from(need, (v) => (pop ? Math.round(v / pop) : 0)), trustLevels: lv, adults, kids, retired, firmStaff,
-      digestable: { pop, households: H.count, firms, employed, unemployed, deposits: dep, loans, mood: series.mood } };
+      digestable: { pop, households: living, firms, employed, unemployed, deposits: dep, loans, mood: series.mood } };
   }
   monthStats(d) {
     const s = this.stats().series;

@@ -343,7 +343,7 @@ document.addEventListener("click", (ev) => { const t = ev.target.closest?.("[dat
 function drawEvents() {
   const c = S.city, list = c.events.slice(-80).reverse();
   $("events").innerHTML = list.map((x) => { const d = dayInfo(Math.max(1, x.epoch)), sins = (x.ids || []).filter((g) => Number.isInteger(g) && g >= 0 && g < c.reg.n && x.kind !== "layoff" && x.kind !== "closure").slice(0, 3);
-    return `<li><span class="k">${esc(d.iso)} · ${esc(x.kind)}</span> ${esc(x.text)} ${["arrival", "birth", "death", "partners", "couple"].includes(x.kind) ? sins.map(sinLink).join(" ") : ""}</li>`; }).join("");
+    return `<li><span class="k">${esc(d.iso)} · ${esc(x.kind)}</span> ${esc(x.text)} ${["arrival", "birth", "death", "partners", "couple", "household"].includes(x.kind) ? sins.map(sinLink).join(" ") : ""}</li>`; }).join("");
 }
 function drawProof() {
   const c = S.city, R = c.last;

@@ -74,6 +74,12 @@ const EITC_INVEST = 1195000;                                  // investment inco
 const WFTC_2025 = [33500, 66000, 99500, 133000];
 
 const fyOf = (d) => (d.m >= 10 ? d.y + 1 : d.y);
+// the housing assistance payment: the tenant pays 30% of adjusted income (at least 10% of gross), HUD pays the landlord
+// the rest of the rent up to the payment standard (110% of the fair market rent for the home's size; 24 CFR 982.505)
+function hapOf(c, h, comp, inc) {
+  const H = c.hh, G = c.gov, adjInc = Math.max(0, inc.gross - comp.kids * 4000), share = Math.max(Math.round(adjInc * 0.3), Math.round(inc.gross * 0.1));
+  return Math.max(0, Math.min(H.rent[h], Math.round((G.rentBy?.[Math.min(4, c.world.dwellings.rooms[H.home[h]] || 1)] || H.rent[h]) * 1.1)) - share);
+}
 export function fpl(c, y, n) {
   let v = FPL_2026[0] + FPL_2026[1] * Math.max(0, n - 1);
   if (y > 2026) v = Math.round((v * c.nation.cpiRatio(2026, y - 1)) / 65536);
@@ -142,7 +148,7 @@ export function incomeOf(c, h, comp = composition(c, h)) {
   for (const i of comp.mem) {
     if (P.status[i] === 2 || P.status[i] === 6) earned += Math.round((P.wage[i] * P.hours[i] * 217) / 10);
     if (P.status[i] === 3 && P.uiLeft[i] > 0) unearned += Math.round((P.ui[i] * 433) / 100);
-    unearned += P.ss[i] + P.ssi[i] + P.abd[i];
+    unearned += P.ss[i] + P.pen[i] + P.ssi[i] + P.abd[i];
   }
   unearned += H.tanf[h];
   return { earned, unearned, gross: earned + unearned };
@@ -236,16 +242,18 @@ function wcccCopay(comp, inc) {
 }
 
 export function attachWelfare(c) {
-  c.gov.wel = { denials: 0, snapIssued: 0, tanfPaid: 0, wicIssued: 0, sunIssued: 0, ssiPaid: 0, abdPaid: 0, hapPaid: 0, wcccPaid: 0, wftcPaid: 0, eitcPaid: 0, mealsFree: 0, mealsReduced: 0, mealsPaid: 0, ahSpendAdult: 0, ahSpendOther: 0, crisisCost: 0, applications: 0 };
+  c.gov.wel = { denials: 0, snapIssued: 0, tanfPaid: 0, wicIssued: 0, sunIssued: 0, ssiPaid: 0, abdPaid: 0, hapPaid: 0, wcccPaid: 0, wftcPaid: 0, eitcPaid: 0, mealsFree: 0, mealsReduced: 0, mealsPaid: 0, ahSpendAdult: 0, ahSpendOther: 0, crisisCost: 0, applications: 0, lmpPaid: 0 };
   c.gov.measures = MEASURES.map(() => ({ until: 0, fund: 0, spent: 0, passed: 0, votes: 0 }));
   c.gov.ballot = []; c.gov.lastBallot = null;
+  c.fpl = (y, n) => fpl(c, y, n);                                      // the year's poverty line for a household of n (annual cents)
 }
 // the first of the month: eligibility and benefits for everyone enrolled; applications for those who decide to apply
 export function welfareMonth(c, d) {
   const H = c.hh, P = c.people, B = c.books, G = c.gov, W = G.wel, e = c.epoch, s = c.cfg.seed;
   const abawdOn = e >= 32;                                       // statewide ABAWD time limits from February 1, 2026
   if (d.m === 1 && d.y % 3 === 0) for (const i of P.each()) P.abawd[i] = 0;   // a new 36-month period (January 2027, 2030, ...)
-  const vouchers = Math.ceil((H.count * 25) / 1000); let inUse = 0; for (const h of H.each()) if (H.voucher[h]) inUse++;
+  // vouchers for about 7% of households (the Everett Housing Authority housed 3,247 voucher households at the start of 2024)
+  const vouchers = Math.ceil((H.count * 70) / 1000); let inUse = 0; for (const h of H.each()) if (H.voucher[h]) inUse++;
   const waiting = [];
   for (const h of H.each()) {
     if (!H.size[h] || H.home[h] < 0 && !H.progs[h]) continue;
@@ -269,7 +277,7 @@ export function welfareMonth(c, d) {
           const keep = cat > 0 && paperworkOk(c, h, "ah") && !(d.y >= AH_WORK_FROM && cat === 1 && !meetsWorkRule(c, i, comp));
           if (keep) { P.ah[i] = cat; P.ahRenew[i] = e + (d.y >= AH_WORK_FROM && cat === 1 ? 182 : 365); } else { P.ah[i] = 0; if (cat) deny(c, h, "ah"); }
         }
-      } else if (cat > 0 && willApply(c, h, "ah")) { W.applications++; if (paperworkOk(c, h, "ah") && !(d.y >= AH_WORK_FROM && cat === 1 && !meetsWorkRule(c, i, comp))) { P.ah[i] = cat; P.ahRenew[i] = e + (d.y >= AH_WORK_FROM && cat === 1 ? 182 : 365); addMemory(c, i, M.got_health_coverage, E_STATE); } else deny(c, h, "ah"); }
+      } else if (cat > 0 && willApply(c, h, "ah", 50000)) { W.applications++; if (paperworkOk(c, h, "ah") && !(d.y >= AH_WORK_FROM && cat === 1 && !meetsWorkRule(c, i, comp))) { P.ah[i] = cat; P.ahRenew[i] = e + (d.y >= AH_WORK_FROM && cat === 1 ? 182 : 365); addMemory(c, i, M.got_health_coverage, E_STATE); } else deny(c, h, "ah"); }
       if (P.ah[i] === 3 && !anyAH) { const prem = inc.gross <= (comp.size <= 5 ? AH.chip1[comp.size] : AH.chip1[5]) ? 2000 : 3000; if (c.fund(he, prem)) B.pay(he, E_STATE, prem, AC.X_HEALTH, AC.R_FEES, K.fee); }
       if (P.ah[i]) anyAH = true;
     }
@@ -300,7 +308,7 @@ export function welfareMonth(c, d) {
     const veryLow = inc.gross <= Math.round((G.medianInc || 500000) * 0.5 * 1.18) && H.tenure[h] === 0 && H.home[h] >= 0;
     if (H.voucher[h]) {
       if (!veryLow && inc.gross > (G.medianInc || 500000) * 0.8 * 1.18 || H.tenure[h] !== 0 || H.home[h] < 0) { H.voucher[h] = 0; H.hap[h] = 0; }
-      else { inUse++; const adjInc = Math.max(0, inc.gross - comp.kids * 4000), share = Math.max(Math.round(adjInc * 0.3), Math.round(inc.gross * 0.1)); H.hap[h] = Math.max(0, Math.min(H.rent[h], Math.round((G.rentBy?.[Math.min(4, c.world.dwellings.rooms[H.home[h]] || 1)] || H.rent[h]) * 1.1)) - share); }
+      else { inUse++; H.hap[h] = hapOf(c, h, comp, inc); }
     } else if (veryLow && !H.vWait[h] && willApply(c, h, "voucher", Math.max(0, H.rent[h] - Math.round(inc.gross * 0.3)))) H.vWait[h] = e;
     if (H.vWait[h] && !H.voucher[h]) waiting.push([Math.min(4000, Math.round((H.rent[h] * 1000) / Math.max(1, inc.gross))), Math.min(4000, e - H.vWait[h]), comp.kids, h]);
     // the city's own additions, if the voters passed them
@@ -311,7 +319,8 @@ export function welfareMonth(c, d) {
   }
   // vouchers that turn over go to those on the waiting list, by E1: the heaviest rent burden first, then the longest wait
   const free = Math.max(0, vouchers - inUse);
-  if (free && waiting.length) { const { admitted } = admitE1(waiting, free); for (const h of admitted) { H.voucher[h] = 1; H.vWait[h] = 0; for (const i of members(c, h)) addMemory(c, i, M.got_help_with_rent, E_FEDGOV); } }
+  // (the payment starts with the voucher: the housing authority sets it from the household's income at the lease-up)
+  if (free && waiting.length) { const { admitted } = admitE1(waiting, free); for (const h of admitted) { const comp = composition(c, h); H.voucher[h] = 1; H.vWait[h] = 0; H.hap[h] = hapOf(c, h, comp, incomeOf(c, h, comp)); for (const i of members(c, h)) addMemory(c, i, M.got_help_with_rent, E_FEDGOV); } }
   // the federal government's share: Apple Health (90% for adults in the expansion group, 50% otherwise), WorkFirst's block grant
   const fed = Math.round(W.ahSpendAdult * 0.9 + W.ahSpendOther * 0.5) + Math.round((P.count * 378987702 * 100) / 7958000 / 12);
   if (fed > 0) B.pay(E_FEDGOV, E_STATE, fed, AC.X_TRANSFER, AC.R_INTERGOV, K.transfer);

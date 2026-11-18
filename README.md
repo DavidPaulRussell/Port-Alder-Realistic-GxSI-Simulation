@@ -1,9 +1,9 @@
-# Port Alder 1.1.0
+# Port Alder 1.2.0
 
 A sentient, deterministic city on the Plume XPU, modelled on Everett, Washington.
 
-Port Alder runs one day per epoch on a real calendar from Thursday 1 January 2026. About 12,700 citizens in 5,600
-households (standing for Everett's 114,700 people) work, shop, rent, borrow, fall ill, seek care, apply for help,
+Port Alder runs one day per epoch on a real calendar from Thursday 1 January 2026. About 11,900 citizens in 5,600
+households (standing for Everett's 115,000 people) work, shop, rent, borrow, fall ill, seek care, apply for help,
 vote, redevelop their city, have children, grow old and move away. Every person, household, business, bank and
 public body keeps integer-cent double-entry books, audited after every day. The same configuration and the same
 interventions give the same city, bit for bit, and the same chain of daily SHA-256 digests.
@@ -41,7 +41,7 @@ To put it on GitHub as one repository:
     git init
     git config core.hooksPath tools/git-hooks      # the size gatekeeper runs before every commit
     git add -A
-    git commit -m "Port Alder 1.1.0"
+    git commit -m "Port Alder 1.2.0"
 
 The repository is a few megabytes, far under GitHub's 25 MB per file and 1 GB per repository
 (`python3 tools/check_github_limits.py` checks).
