@@ -32,14 +32,14 @@ const hireOwner = (c, owner, f) => hire(c, owner, E_F0 + f, 11, 1080);
 import { World } from "./world.js";
 import { PEOPLE_SPEC, HOUSEHOLD_SPEC, genesisPeople, morning, minds, lifeEvents, activities, addMemory, trait, schoolDay, friendOf, fertilityMod, ageYears, T_C, T_E } from "./people.js";
 import { asfr } from "./laws.js";
-import { FIRM_SPEC, genesisFirms, employAll, laborMarket, shopping, firmDay, firmMonth, entrepreneurs, SPACE_FOR, hire as hireIn, URGE_N, offersCover } from "./economy.js";
+import { FIRM_SPEC, genesisFirms, employAll, laborMarket, shopping, firmDay, firmMonth, entrepreneurs, SPACE_FOR, hire as hireIn, hireArriving, firmYearEnd, URGE_N, offersCover } from "./economy.js";
 import { LOAN_SPEC, genesisBanks, openingBooks, financeDay, financeMonth, BANK_SLOTS } from "./finance.js";
 import { payrollDay, taxesDay, taxesMonth, taxesYear, attachPayroll } from "./payroll.js";
 import { civicDay, civicMonth, civicYear, civicGenesis, election } from "./civic.js";
 import { housingDay, housingMonth, attachHousing } from "./housing.js";
 import { attachDevelop, developDay, developMonth } from "./develop.js";
 
-export const CITY_VERSION = "1.2.0";
+export const CITY_VERSION = "1.3.0";
 export const SAVE_FORMAT = "PLUME-CITY/1";
 export const PCAP = 24576, LCAP = 32768;
 
@@ -151,6 +151,7 @@ export class City {
     // in step: the charges that integrate a rate without a leak (law 57.9) start at their census phase
     const P = this.people, H = this.hh, Q = 4294967296;
     for (const i of P.each()) for (let k = 0; k < URGE_N; k++) P.urge[i * URGE_N + k] = census(this, 0x7a50 + k, i) / Q;
+    for (const i of P.each()) P.search[i] = census(this, 0x5ea2, i) / Q;        // (and how far along a search for work beyond the city was)
     for (const h of H.each()) { for (let k = 0; k < 6; k++) H.hurge[h * 6 + k] = census(this, 0x4a50 + k, h) / Q; for (let k = 0; k < 10; k++) H.apply[h * 10 + k] = census(this, 0x5a50 + k, h) / Q / 2; H.leave[h] = census(this, 0x1ea7, h) / Q; }
     // the founding city's births come out at Washington's general fertility rate (history: 51.5 births per 1,000 women
     // aged 15-44 in 2024, WA DOH); each woman's own circumstances then lean her rate up or down from there
@@ -164,6 +165,7 @@ export class City {
   // over the sequence of births so the population's ratio (512 boys in 1,000 births) is kept exactly (law 12.42)
   birthSex() { lawUse("12.42"); const n = (this.gov.birthSeq = (this.gov.birthSeq || 0) + 1), x = ((n * (ROTATION_Q32[3] / 4294967296)) % 1 + ((this.cfg.seed % 997) / 997)) % 1; return x < 0.512 ? 0 : 1; }
   // a citizen takes a job outside the city (with an outer firm), commuting from home
+  hireArriving(i) { return hireArriving(this, i); }
   hireAway(i, f, wage) { hireIn(this, i, E_ROW, this.people.occ[i] || 1, 1000); this.people.wage[i] = wage; this.people.away[i] = f + 1; }
   event(kind, text, ids = []) { this.events.push({ epoch: this.epoch, kind, text, ids }); if (this.events.length > 800) this.events.splice(0, this.events.length - 800); }
   nextSerial() { return this.serial++; }
@@ -211,7 +213,7 @@ export class City {
     lifeEvents(this, d, g);
     minds(this, d, g);
     activities(this, d, false);
-    if (d.yearEnd) { taxesYear(this, d, g); civicYear(this, d, g); this.closeYear(d); this.gov.deathsYear = 0; this.gov.birthsYear = 0; }
+    if (d.yearEnd) { taxesYear(this, d, g); civicYear(this, d, g); firmYearEnd(this); this.closeYear(d); this.gov.deathsYear = 0; this.gov.birthsYear = 0; }
     // J. audit and seal
     const audit = this.audit(); R.audit = { ok: audit.ok, problems: audit.problems.slice(0, 6), checks: audit.checks.length };
     // the identities the audit rests on: every posting balances (law 53.32), and a stock is its opening plus its flows (law 4.31)
@@ -366,6 +368,8 @@ export { RULE_SOURCES, SECTORS, CATS, NCAT, CITY_NAME, E_H0, E_F0, E_B0, E_CITY,
 export { LAWS, LAW_ROWS, LAW_USES, CORPUS, PART0, faithful } from "./laws.js";
 export { OFFICES, OFFICE_NAMES, CAUSES, SIN_STATUS, lookup as lookupSin, sinText, registryRows } from "./registry.js";
 export { LAYERS, PLACES, SECTORS_OUT, STATE_MEASURES } from "./periphery.js";
+export { MOVE_UNITS, M_CITY, M_ABROAD, movedLastYear, topMoves } from "./movement.js";
+export { MOVE_SOURCE } from "./movement_data.js";
 export { COVER, coverage } from "./health.js";
 export { MEASURES } from "./welfare.js";
 export { VARIABLES, TABLE_GROUPS } from "./variables.js";

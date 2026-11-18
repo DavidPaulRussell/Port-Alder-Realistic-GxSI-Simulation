@@ -10,3 +10,6 @@
 *.zip binary
 # Zarr chunks and shards have no extension
 shards/zarr/**/c/** binary
+*.edhx binary
+*.f32 binary
+*.gz binary

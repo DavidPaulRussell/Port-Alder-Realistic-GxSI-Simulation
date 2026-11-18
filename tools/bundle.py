@@ -9,7 +9,7 @@ SPDX-License-Identifier: GPL-3.0-only
 import base64, json, pathlib, re, sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-VERSION = "1.2.0"
+VERSION = "1.3.0"
 
 
 def _declarators(src: str, i: int) -> list:
@@ -110,7 +110,7 @@ def main():
     # the city's modules in the order of their imports (each after everything it imports)
     SIM = ['src/simmy.js', 'src/tables.js', 'src/laws.js', 'src/rules.js', 'src/citydata.js', 'src/books.js', 'src/core.js', 'src/nation.js', 'src/world.js',
            'src/registry.js', 'src/people.js', 'src/finance.js', 'src/economy.js', 'src/payroll.js', 'src/housing.js', 'src/welfare.js', 'src/health.js',
-           'src/civic.js', 'src/develop.js', 'src/kpis.js', 'src/periphery.js', 'src/variables.js', 'src/city.js']
+           'src/civic.js', 'src/develop.js', 'src/kpis.js', 'src/movement_data.js', 'src/movement.js', 'src/periphery.js', 'src/variables.js', 'src/city.js']
     VIEW3D = ['src/gl.js', 'src/atmos.js', 'src/perf.js', 'src/motion.js', 'src/city3d_shaders.js', 'src/city3d.js']
     common = {'%%VERSION%%': VERSION, '%%CSS%%': css, '%%TEMPLATES%%': templates, '%%CITY_TEMPLATES%%': city_templates,
               '%%XPU_B64%%': xpu, '%%XPU_MT_B64%%': xpu_mt, '%%SIMMY_CELLS%%': js_string(cells), '%%SIMMY_WORKLOAD%%': js_string(workload)}

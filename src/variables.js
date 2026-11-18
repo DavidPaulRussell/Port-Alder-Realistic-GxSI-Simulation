@@ -64,7 +64,7 @@ export const VARIABLES = {
     ["crA crB crRel crLv crLife crRev kbA kbB kbRel kbLv kbLife kbRev crCo crDe", "customers' and the bank's trust in the firm (the rails law on their dealings)", ["13.5", "9.3"]],
     ["staff want open offer unfilled", "the owner's staffing from expected custom, layoffs when distressed or short of cash; hiring by E1 admission", ["57.9", "59.44"]],
     ["conf expD sold lost capa qh mem wk", "the owner's expectations from what came; sales from customers' choices (distance, street life, reputation, quality, price, taste); capacity from the staff present", ["59.44", "60.7", "70.2"]],
-    ["mRev ytdGross lyGross taxDay", "aggregates of the firm's sales in the books; B&O and sales tax by Washington law", ["53.32", "4.31"]],
+    ["mRev ytdGross lyGross lyCost taxDay", "aggregates of the firm's sales in the books; B&O and sales tax by Washington law", ["53.32", "4.31"]],
     ["line lineLim status distress quit uiCharge uiRate", "the bank's credit line; payroll met or missed; the owner's decision to close a business that keeps losing money (a charge of its losses); ESD's experience rating from benefits charged", ["14.58", "4.31", "57.9"]],
     ["cover landlord rentDue", "the owner's offer of a health plan; the lease with the property's owner", ["72.22"]],
   ],

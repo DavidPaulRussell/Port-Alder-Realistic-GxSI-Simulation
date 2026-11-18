@@ -1,0 +1,226 @@
+{
+  "schema": "plume-xpu-mini/loader-config/1",
+  "place": "Everett, WA",
+  "loadingVerb": "Loading",
+  "readyMessage": "Simulation ready. Welcome to Everett!",
+  "welcome": {
+    "kicker": "Welcome to",
+    "title": "Everett, WA",
+    "button": "Enter Simulation"
+  },
+  "phases": [
+    {
+      "id": "boot",
+      "label": "Simulated city sequence",
+      "steps": [
+        "Verifying the EDHX cartridge",
+        "Decoding hologram pages",
+        "Allocating the {size} × {size} world grid",
+        "Seeding the generator · seed {seed}"
+      ]
+    },
+    {
+      "id": "coast",
+      "label": "Tracing the Port Gardner coastline",
+      "steps": [
+        "Tracing {coastKm} km of shoreline",
+        "Filling Possession Sound",
+        "Raising the island",
+        "Settling the tide flats"
+      ]
+    },
+    {
+      "id": "terrain",
+      "label": "Generating Cascade mountains & waterways",
+      "steps": [
+        "Sampling elevation",
+        "Carving the Snohomish River",
+        "Raising the Cascade peaks",
+        "Growing {trees} trees"
+      ]
+    },
+    {
+      "id": "streets",
+      "label": "Assembling city streets & downtown",
+      "steps": [
+        "Paving {roadKm} km of streets",
+        "Zoning downtown blocks",
+        "Raising {built} structures",
+        "Wiring traffic signals"
+      ]
+    },
+    {
+      "id": "port",
+      "label": "Building the Port of Everett",
+      "steps": [
+        "Laying the piers",
+        "Rigging gantry cranes",
+        "Stacking containers",
+        "Scheduling ferry runs"
+      ]
+    },
+    {
+      "id": "aviation",
+      "label": "Finalizing aviation & industrial districts",
+      "steps": [
+        "Paving the Paine Field runway",
+        "Raising the assembly hangar",
+        "Firing up the industrial district",
+        "Clearing the skies"
+      ]
+    },
+    {
+      "id": "present",
+      "label": "Present day · {year}",
+      "steps": [
+        "Starting traffic",
+        "Forming cloud cover",
+        "Opening the director's timeline"
+      ]
+    },
+    {
+      "id": "era1",
+      "label": "{year} · Renewal",
+      "steps": [
+        "Green roofs and solar canopies",
+        "Timber mid-rises replace the old blocks",
+        "{rebuilds} rebuilds so far"
+      ]
+    },
+    {
+      "id": "era2",
+      "label": "{year} · Vertical City",
+      "steps": [
+        "Supertalls rise downtown",
+        "Forest towers take the hills",
+        "{rebuilds} rebuilds so far"
+      ]
+    },
+    {
+      "id": "era3",
+      "label": "{year} · Tidewater",
+      "steps": [
+        "The sea rises; the port goes up on stilts",
+        "Ground broken for Paine Spaceport beside the airfield",
+        "Floating districts anchor in the bay",
+        "{rebuilds} rebuilds so far"
+      ]
+    },
+    {
+      "id": "era4",
+      "label": "{year} · Arcology Age",
+      "steps": [
+        "Stepped arcologies",
+        "First orbital launch from Paine Spaceport",
+        "Dome habitats",
+        "{rebuilds} rebuilds so far"
+      ]
+    },
+    {
+      "id": "era5",
+      "label": "{year} · Luminous",
+      "steps": [
+        "Crystal spires and light columns",
+        "Paine Spaceport expands to three pads",
+        "Hover decks over the old runway",
+        "{rebuilds} rebuilds so far"
+      ]
+    },
+    {
+      "id": "era6",
+      "label": "{year} · Verdant Return",
+      "steps": [
+        "Forests take back the suburbs",
+        "Tree towers and bio-domes",
+        "{rebuilds} rebuilds so far"
+      ]
+    },
+    {
+      "id": "era7",
+      "label": "{year} · Hologram",
+      "steps": [
+        "Data monoliths and halo spires",
+        "The space elevator tether rises from Paine Spaceport",
+        "The city becomes its own hologram",
+        "{rebuilds} rebuilds so far"
+      ]
+    },
+    {
+      "id": "finalize",
+      "label": "Arriving in {year}",
+      "steps": [
+        "Verifying the simulation state",
+        "Syncing agents",
+        "Compiling the welcome sequence"
+      ]
+    }
+  ],
+  "eraNames": [
+    "Present Day",
+    "Renewal",
+    "Vertical City",
+    "Tidewater",
+    "Arcology Age",
+    "Luminous",
+    "Verdant Return",
+    "Hologram"
+  ],
+  "eraTaglines": [
+    "The city as it stands today.",
+    "Green roofs, solar sheds and timber mid-rises replace the old blocks.",
+    "Supertalls and forest towers; the skyline doubles.",
+    "The sea rises. The port goes up on stilts, new districts float in the bay, and ground is broken for a spaceport beside the airfield.",
+    "Stepped arcologies and dome habitats; the first rockets lift off from Paine Spaceport.",
+    "Crystal spires and light columns; the city glows all night.",
+    "Forests take back the suburbs. What remains grows like trees.",
+    "Data monoliths and halo spires; a space elevator rises from the spaceport."
+  ],
+  "tips": [
+    {
+      "label": "Did you know?",
+      "text": "Everett was incorporated on May 4, 1893."
+    },
+    {
+      "label": "Did you know?",
+      "text": "The city is named for Everett Colby, the 15-year-old son of investor Charles L. Colby."
+    },
+    {
+      "label": "Did you know?",
+      "text": "The Boeing Everett Factory, on the north side of Paine Field, is the world's largest building by volume: about 472 million cubic feet."
+    },
+    {
+      "label": "Did you know?",
+      "text": "Everett sits on Port Gardner Bay at the mouth of the Snohomish River, across from Whidbey Island."
+    },
+    {
+      "label": "Tip",
+      "text": "Drag to orbit the city while it rebuilds. Scroll or pinch to zoom."
+    },
+    {
+      "label": "How this works",
+      "text": "Every building is placed by the cartridge's EDHX director program, one tick at a time. The console only draws what it writes."
+    },
+    {
+      "label": "Tip",
+      "text": "Press L to open the tape. Every build and rebuild the director emits is logged there."
+    }
+  ],
+  "milestones": {
+    "spaceport|1": {
+      "title": "Ground broken for Paine Spaceport",
+      "text": "Launch pads are poured beside the airfield."
+    },
+    "spaceport|2": {
+      "title": "First orbital launch from Paine Spaceport",
+      "text": "Rockets now lift off next to the old runway."
+    },
+    "spaceport|3": {
+      "title": "Paine Spaceport expands",
+      "text": "Three launch pads and two landing rings, lit all night."
+    },
+    "spaceport|4": {
+      "title": "The space elevator reaches orbit",
+      "text": "A tether climbs from the spaceport into the sky."
+    }
+  }
+}

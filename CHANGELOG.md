@@ -1,5 +1,65 @@
 # Changelog
 
+## 1.3.0 — 2026-11-18 (the movement matrix, the layer files, snapshots)
+
+### Fixed
+- **Nobody ever chose to leave.** The rate at which households leave the city is calibrated once, at the founding,
+  from their own odds. Thirty-two founding tenants had no income on record on the first Thursday, which made their
+  rent burden a division by nearly zero and their odds infinite, so the calibrated rate came out as zero. In 1.2.0
+  the only households that left were those forced out. A burden is now at most all of a household's income, and the
+  calibration leaves out what is not finite. Households now leave at about 5.5% a year, by their own decision.
+- **City seekers were never hired beyond the city.** An outer employer took its ranked applicants in order and
+  stopped at the first who stood for more households than it had openings, so a citizen of Port Alder, who stands
+  for about ten, was never reached. Lighter applicants are now considered. A city seeker's search beyond the city
+  fills at the commuting zone's rate less the rate the city's own openings already give (a city seeker is a county
+  resident too).
+- **Arrivals all began unemployed.** An earner who held a job where they came from, and cannot keep it, takes the
+  best opening for their occupation on arrival, if there is one.
+- **Closures came in one wave each spring.** An owner's reckoning of a losing business restarted every January and
+  waited for April, so every chronically losing business closed in the same month. The owner now reckons over the
+  last twelve months (this year so far, and last year's results for the part of the year not yet lived).
+- The city's job-finding rate is the outer layers' (0.4 a month at one opening per seeker).
+
+A three-year run (1,095 days, seed 20261117, digest `4728797f94327ae1…`): the books balance on every day. City
+unemployment runs from 3.7% to 7.0% (3.7% to 5.2% in the second and third years, when the county's is 2.9% to
+4.1%); 818 households leave and 719 arrive; 177 evictions; 225 businesses from 210; poverty 8.7% falling to 5.4%;
+8.7% to 11.4% uninsured; vacancy 3.9% rising to 6.6%.
+
+### Added
+- **The movement matrix** (`src/movement.js`). Moves between Port Alder, the 26 places around it and the world
+  beyond are counted origin by destination, month by month, and shown on the page. Where a place's movers look first
+  follows a prior measured from where people actually live: the gravity law's kernel (law 75.41) averaged over both
+  places' populations, and the mean distance between them, from a 100 m population raster (WorldPop R2025A v1, CC BY
+  4.0; `tools/make_movement.mjs`). The masses are the simulation's own populations, refreshed every month. A
+  household now knows every place of the nation, not only its own layer's; a place in the news comes to mind half
+  again as readily.
+- **Exact snapshots** (`src/snapshot.js`). Everything a running city knows that is not in its code, as a tree and a
+  list of tables; a city restored from one lives on to the same digests and the same state, byte for byte
+  (`test/city.test.mjs`). Timings are left out; they are not state.
+- **The layer files** (`layers/*.edhx`): one EDHX container per layer of the Matryoshka, holding the law book as
+  the functions that run, the rules by year, the places, the movement geography, the city's tables and variables,
+  the engine itself, and where the city's people live. `tools/make_layers.mjs` builds them with the EDHX runtime
+  (`tools/edhx_pack.py`), and `src/edhx.js` reads them: pages (Reed-Solomon over GF(65537)), frames, the state
+  root, records, SHA-512 throughout.
+- **Running through the files** (`tools/edhx_run.mjs`): the engine is taken out of `city.edhx` and checked, the
+  state the last run sealed is restored exactly, the days are lived, and the new state is written back as the next
+  generation, spread over as many files as it needs so that none passes 24 MB. What a run writes is what the next
+  run starts from.
+- `tools/map_fetch.py`: fetches the full-scale map's sources on your own machine (OpenStreetMap through Overpass;
+  USGS 1 arc-second elevation) and cuts them down to small files. `tools/pop_extract.py` gained nothing new; the
+  Everett cut it makes is now in `city.edhx`.
+- `loader/everett/`: the loading sequence's cartridge and its sources (not yet wired to the page: its player,
+  `plume-xpu-mini.html`, is not in the kit).
+
+### Still wrong, or not yet done
+- Poverty drifts down (8.7% to 5.4% over three years; Everett's is 12.9%), and vacancy drifts up (3.9% to 6.6%).
+- The first year still sheds about a tenth of the founding businesses (the founding does not size a business to
+  its market), which is most of why city unemployment peaks at 7.0% in 2026.
+- Where the city's leavers go (about a quarter to the county, two thirds to the rest of the state) has not been
+  checked against the Census Bureau's county-to-county flows.
+- The full-scale city (all 391,000 people of the map's area, on real streets) is not built yet; this release
+  carries its groundwork (snapshots, layer files, the population cut, the map fetcher).
+
 ## 1.2.0 — 2026-11-18 (the rates: evictions, migration, poverty, coverage, businesses)
 
 A three-year run (1,095 days, seed 20261117) now ends with 138 evictions (it was about 750), 221 businesses from 210

@@ -91,6 +91,12 @@ pre.save { margin: 0; max-height: 200px; overflow: auto; background: var(--sunk)
       <div class="label">Matryoshka · the city inside its county, state and nation</div>
       <div class="scroll"><table class="tbl" id="layers"></table></div>
       <p class="note">Each outer layer is a sample of households and employers, each standing for many like it; the city's row counts its citizens, scaled to the people they represent. Everyone in every layer decides for themselves.</p>
+      <div class="group">movement · who moved where in the last twelve months</div>
+      <div class="row" style="align-items:flex-start; gap:14px; flex-wrap:wrap">
+        <canvas id="movemap" width="336" height="336" style="width:336px; max-width:100%; border-radius:8px" role="img" aria-label="The movement matrix: a square for every pair of places, darker where more people moved"></canvas>
+        <div class="scroll" style="flex:1; min-width:260px"><table class="tbl" id="moves"></table></div>
+      </div>
+      <p class="note" id="movenote"></p>
       <div class="group">the day</div>
       <div class="card" id="today"></div>
     </section>
@@ -293,7 +299,7 @@ function drawHud(minutes) {
 const tile = (v, k) => `<div><b>${v}</b><span>${esc(k)}</span></div>`;
 function drawAll(monthly) {
   drawStats(); drawToday(); drawEvents(); drawProof(); drawCharts();
-  if (monthly) { drawLayers(); drawBoard(); drawPrograms(); drawDev(); drawLaws(); }
+  if (monthly) { drawLayers(); drawMoves(); drawBoard(); drawPrograms(); drawDev(); drawLaws(); }
   if (S.sin >= 0) drawPerson(); if (S.bld >= 0) drawBuilding();
 }
 function drawStats() {
@@ -311,6 +317,23 @@ function drawLayers() {
   const rows = [["Port Alder", K.city], [LAYERS[1]?.name || "Pilchuck County", K.county], [LAYERS[2]?.name || "State of Puget", K.state], [LAYERS[3]?.name || "United North American States", K.nation]];
   const cols = [["people", (k) => int(k.pop)], ["unemployed", (k) => bp(k.unemployment)], ["in poverty", (k) => pm(k.poverty)], ["uninsured", (k) => pm(k.uninsured)], ["Basic Food", (k) => pm(k.snap)], ["Medicaid", (k) => pm(k.medicaid)], ["mood", (k) => k.mood], ["distress", (k) => pm(k.distress)], ["household income", (k) => money(k.income)], ["net migration ‰", (k) => k.netMigration ?? "—"]];
   $("layers").innerHTML = `<tr><th></th>${rows.map(([n]) => `<th class="num">${esc(n)}</th>`).join("")}</tr>` + cols.map(([label, f]) => `<tr><td>${esc(label)}</td>${rows.map(([, k]) => `<td class="num">${k ? esc(f(k)) : "—"}</td>`).join("")}</tr>`).join("");
+}
+// the movement matrix: a row for each place people left, a column for each place they went to (the city is one of them)
+function drawMoves() {
+  const mv = S.city.outer?.move, cv = $("movemap"); if (!mv || !cv) return;
+  const m = movedLastYear(mv), n = MOVE_UNITS, x = cv.getContext("2d"), css = getComputedStyle(document.documentElement), cell = cv.width / n;
+  const name = (u) => (u === M_CITY ? "Port Alder" : u === M_ABROAD ? "abroad" : PLACES[u][1]);
+  let hi = 1; for (let k = 0; k < n * n; k++) if (m[k] > hi) hi = m[k];
+  x.clearRect(0, 0, cv.width, cv.height); x.fillStyle = css.getPropertyValue("--accent") || "#2a6";
+  for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) { const v = m[i * n + j]; if (v < 0.5) continue; x.globalAlpha = 0.12 + 0.88 * (Math.log(1 + v) / Math.log(1 + hi)); x.fillRect(j * cell + 0.5, i * cell + 0.5, cell - 1, cell - 1); }
+  x.globalAlpha = 1; x.strokeStyle = css.getPropertyValue("--two") || "#c60"; x.lineWidth = 1.5;
+  x.strokeRect(0.75, M_CITY * cell + 0.75, cv.width - 1.5, cell - 1.5); x.strokeRect(M_CITY * cell + 0.75, 0.75, cell - 1.5, cv.height - 1.5);
+  const out = [], inn = []; let outAll = 0, inAll = 0;
+  for (let j = 0; j < n; j++) { const o = m[M_CITY * n + j], i = m[j * n + M_CITY]; if (o >= 0.5) { out.push([j, o]); outAll += o; } if (i >= 0.5) { inn.push([j, i]); inAll += i; } }
+  const by = (a) => a.sort((p, q) => q[1] - p[1] || p[0] - q[0]).slice(0, 6), list = (a) => by(a).map(([u, v]) => `${esc(name(u))} ${int(v)}`).join("<br>") || "—";
+  $("moves").innerHTML = `<tr><th>left Port Alder for (${int(outAll)} people)</th><th>came to Port Alder from (${int(inAll)} people)</th><th>largest flows anywhere</th></tr>` +
+    `<tr><td>${list(out)}</td><td>${list(inn)}</td><td>${topMoves(mv, 6).map(([i, j, v]) => `${esc(name(i))} → ${esc(name(j))} ${int(v)}`).join("<br>") || "—"}</td></tr>`;
+  $("movenote").textContent = `Each square is a pair of places: its row is where people left, its column where they went; Port Alder's row and column are outlined. Where a place's movers look first follows its neighbours' people and how near they live (${MOVE_SOURCE}); where they go is theirs to decide.`;
 }
 function drawBoard() {
   const b = S.city.board; if (!b) return;

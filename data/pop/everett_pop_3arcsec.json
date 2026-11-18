@@ -1,0 +1,14 @@
+{
+ "what": "people per raster pixel in the Everett area",
+ "source": "",
+ "source_credit": "WorldPop (www.worldpop.org), R2025A v1, CC BY 4.0",
+ "rows": 228,
+ "cols": 339,
+ "north": 48.034166810529996,
+ "west": -122.3250002307,
+ "cell_degrees_lat": 0.00083333333,
+ "cell_degrees_lon": 0.00083333333,
+ "pixels_per_cell": 1,
+ "order": "float32 little-endian, row by row from the north-west corner",
+ "people": 391415
+}

@@ -15,12 +15,13 @@ import { CPI_2026, FOMC_LAST_KNOWN, meetingDays, rentCap } from "./rules.js";
 import { O as OC } from "./citydata.js";
 import { AC, K, E_H0, E_ROW } from "./books.js";
 import { sat, Slots, TRUST_SPEC, priorTrust, tickTrust, F_RUNNING, admitE1 } from "./core.js";
-import { lawUse, lif, smooth, census, censusBell, breeder, boltzmann, rogersCastro, gravity, haversine, nash, phillips, taylor, okun, kalman, softmax, urbanScale, spectral2, contract, leslie, netMigrationRate, causal, lamport, expectation, gini, functorial, ln, ex, mortality, MORTALITY, asfr, cox, bellman, fromLogit } from "./laws.js";
+import { lawUse, lif, smooth, census, censusBell, breeder, boltzmann, rogersCastro, nash, phillips, taylor, okun, kalman, softmax, urbanScale, spectral2, contract, leslie, netMigrationRate, causal, lamport, expectation, gini, functorial, ln, ex, mortality, MORTALITY, asfr, cox, bellman, fromLogit } from "./laws.js";
 import { issue, relocate, retire as retireSin } from "./registry.js";
 import { members, ageYears, addMemory, M, trait, newHousehold, newPerson, removeFromHousehold, T_O, T_C, T_E, T_A, T_N, T_RISK, T_THRIFT, T_CIVIC } from "./people.js";
 import { findHome, moveInto, leaveCity } from "./housing.js";
+import { newMovement, movePrior, countMove, rollMovement, moveKm, moveUnit, topMoves, movedLastYear, MOVE_UNITS, M_CITY, M_ABROAD } from "./movement.js";
 
-export const PERIPHERY_VERSION = "1.1.0";
+export const PERIPHERY_VERSION = "1.2.0";
 export const PERIPHERY_SOURCES = {
   populationWA: "https://ofm.wa.gov/pop/april1/",
   populationUS: "https://www.census.gov/newsroom/press-releases/2026/population-growth-slows.html",
@@ -45,7 +46,7 @@ const BASE_WAGE = [4800, 3000, 3300, 1800, 1600, 3000, 2900, 3300, 4600, 3900, 2
 const UNION = [800, 120, 130, 40, 20, 120, 350, 330, 20, 20, 150, 30, 150, 450];                            // union share, thousandths
 const SPEND = [0, 100, 40, 220, 120, 140, 30, 0, 50, 80, 50, 120, 50, 0];                                    // household spending by sector, thousandths
 const TRADED = [true, true, false, false, false, false, false, false, true, true, true, false, true, false];
-const MIX = {
+export const MIX = {
   aero: [300, 80, 60, 90, 80, 90, 60, 90, 60, 30, 40, 20, 0, 0], suburb: [30, 60, 90, 120, 100, 140, 80, 110, 110, 50, 60, 50, 0, 0], metro: [20, 50, 60, 90, 90, 120, 70, 120, 230, 70, 50, 30, 0, 0],
   port: [20, 80, 80, 110, 90, 140, 70, 140, 80, 50, 100, 40, 0, 0], rural: [5, 110, 80, 110, 90, 130, 80, 150, 50, 40, 70, 85, 0, 0], nation: [5, 85, 60, 100, 95, 145, 80, 140, 125, 60, 50, 40, 15, 0],
   world: [0, 200, 80, 120, 100, 80, 60, 100, 60, 40, 60, 80, 0, 20],
@@ -81,14 +82,11 @@ export const PLACES = [
   [4, "Abroad", "the world beyond the nation", 0, "world", 450, 60000, 15000000, 300, 0],
 ];
 const WORLD = PLACES.length - 1, DUWAMISH = 9, KESTREL = 0;
-// where each place is (latitude, longitude of its centre); Port Alder is Everett's city centre; abroad is far
+// Everett's city centre (latitude, longitude)
 export const CITY_AT = [47.979, -122.202];
-const COORDS = [[47.945, -122.304], [48.052, -122.177], [47.821, -122.315], [47.811, -122.377], [47.860, -122.205], [48.015, -122.064], [47.913, -122.098], [48.199, -122.125], [47.800, -122.220],
-  [47.606, -122.332], [47.253, -122.444], [47.567, -122.633], [47.038, -122.900], [45.639, -122.661], [48.750, -122.478], [46.602, -120.506], [47.659, -117.426],
-  [42.360, -71.058], [40.713, -74.006], [41.878, -87.630], [39.100, -94.579], [33.749, -84.388], [36.163, -86.781], [32.777, -96.797], [39.739, -104.990], [34.052, -118.244], [0, 0]];
-// distances (km) between the places and from Port Alder (law 76.5)
-let DIST = null;
-const distKm = (p, q) => { if (!DIST) { const n = PLACES.length + 1, at = (k) => (k === n - 1 ? CITY_AT : COORDS[k]); DIST = new Float64Array(n * n); for (let x = 0; x < n; x++) for (let y = 0; y < n; y++) DIST[x * n + y] = x === WORLD || y === WORLD ? (x === y ? 0 : 9000) : haversine(at(x)[0], at(x)[1], at(y)[0], at(y)[1]); } const n = PLACES.length + 1; return DIST[(p < 0 ? n - 1 : p) * n + (q < 0 ? n - 1 : q)]; };
+// distances (km) between the places and from Port Alder: the mean distance between a person of one and a person of the
+// other, from where their people live (movement.js)
+const distKm = (p, q) => moveKm(p, q);
 const NEWS_KM_PER_DAY = 1500;
 export const OUTER_SPEC = [["alive", Uint8Array], ["layer", Uint8Array], ["place", Uint8Array], ["w", Float64Array], ["size", Uint8Array], ["kids", Uint8Array], ["u5", Uint8Array],
   ["seniors", Uint8Array], ["age", Uint8Array], ["bmon", Uint8Array], ["traits", Uint32Array], ["edu", Uint8Array], ["sector", Uint8Array], ["status", Uint8Array], ["firm", Int32Array],
@@ -112,7 +110,7 @@ const EDU_PAY = [750, 880, 1000, 1280, 1580];
 /* ------------------------------------------------------------------ genesis: the founding state (the seed's only use) */
 export function attachOuter(c) {
   const s = c.cfg.seed, A = new Slots(12288, OUTER_SPEC), F = new Slots(512, OFIRM_SPEC), PL = new Slots(32, PLACE_SPEC);
-  const o = { A, F, PL, news: [], kpi: {}, nat: { unemp: 410, mood: 0, prevMood: 0, attract: 0 }, flows: { cityIn: 0, cityOut: 0, immigrants: 0 }, toCity: [], visas: 0 };
+  const o = { A, F, PL, news: [], kpi: {}, nat: { unemp: 410, mood: 0, prevMood: 0, attract: 0 }, flows: { cityIn: 0, cityOut: 0, immigrants: 0 }, toCity: [], visas: 0, move: newMovement() };
   c.outer = o; c.gov.puget = { tanfMul: 1000, ahAdultPct: 138, wftcMul: 1000, mealsAll: 0, wcccPct: 60, rentCap: 0 }; c.gov.stateBallot = []; c.gov.stateDone = [];
   o.cityWeight = Math.round((LAYERS[0].pop * 1000) / Math.max(1, c.people.count));          // Everett residents per citizen, x1000
   PLACES.forEach(([layer, , , pop, mix, wm, rent, home, mw], p) => {
@@ -470,11 +468,15 @@ function matching(c, k) {
     A.search[a] = lif(A.search[a], 0.4 * Math.sqrt(Math.max(0.02, th)) * (1 + (trait(A.traits[a], T_C) - 8) / 10 + (A.edu[a] - 2) / 8), 0);
     if (A.search[a] >= 1) { A.search[a] -= 1; seekers.push(["a", a]); }
   }
-  let openAll = 0, seekAll = 0; for (const f of F.each()) if (F.layer[f] === 1 || F.place[f] === DUWAMISH) openAll += Math.max(0, F.want[f] - F.emp[f]); for (const a of A.each()) if (A.status[a] === 3 && (A.layer[a] === 1 || A.place[a] === DUWAMISH)) seekAll += A.w[a];
-  const tight = Math.min(1.5, openAll / Math.max(1, seekAll));
+  // a city seeker is a county resident too, and finds work at the rate any county seeker does: what the city's own
+  // openings do not give (its weekly market, economy.js), the county's and Duwamish's do. The search beyond the city
+  // fills at the zone's rate less the rate the city's openings already give
+  let cOpen = 0, cSeek = 0; for (const f of c.firms.each()) if (c.firms.status[f] === 0) cOpen += Math.max(0, c.firms.want[f] - c.firms.staff[f]); for (const i of P.each()) if (P.status[i] === 3) cSeek++;
+  const thZone = Math.min(3, (openC + 0.16 * openQ[DUWAMISH]) / Math.max(1, seekC + 0.16 * seekQ[DUWAMISH])), thCity = Math.min(2, Math.max(0.02, cOpen / Math.max(1, cSeek)));
+  const beyond = Math.max(0, 0.4 * (Math.sqrt(Math.max(0.02, thZone)) - Math.sqrt(thCity)));
   for (const i of P.each()) {
     if (P.status[i] !== 3 || P.hh[i] < 0 || ageYears(c, i) < 18 || ageYears(c, i) >= 65) continue;
-    P.search[i] = lif(P.search[i], 0.3 * tight * (1 + (trait(P.traits[i], T_C) - 8) / 10 + (P.edu[i] - 2) / 8), 0.1);
+    P.search[i] = lif(P.search[i], beyond * Math.max(0.3, 1 + (trait(P.traits[i], T_C) - 8) / 10 + (P.edu[i] - 2) / 8), 0);
     if (P.search[i] >= 1) { P.search[i] -= 1; seekers.push(["p", i]); }
   }
   const taken = new Set(), firms = [...F.each()].filter((f) => F.layer[f] !== 4 && F.want[f] > F.emp[f]).sort((x, y) => F.wage[y] - F.wage[x] || x - y);
@@ -493,11 +495,15 @@ function matching(c, k) {
     }
     if (!cands.length) continue;
     const ranked = admitE1(cands.map((x, n) => [x[0], x[1], x[2], n]), cands.length).admitted;
+    // (an applicant who stands for more households than are open waits for the openings to gather; one who stands for
+    // fewer, a citizen of Port Alder say, can still be taken on)
+    let waits = 0;
     for (const n of ranked) {
-      const [, , , , kind, id, w] = cands[n]; if (open < w / 2) { F.carry[f] = Math.min(open, w); break; } open -= w; taken.add(kind + id); F.hired[f] += w;
+      const [, , , , kind, id, w] = cands[n]; if (open < w / 2) { if (!waits) waits = w; continue; } open -= w; taken.add(kind + id); F.hired[f] += w;
       if (kind === "a") { A.status[id] = 2; A.firm[id] = f; A.sector[id] = F.sector[f]; A.earners[id] = Math.max(1, A.earners[id]); A.jobM[id] = 0; A.wage[id] = Math.max(o.PL.mw[q], Math.round((F.wage[f] * EDU_PAY[A.edu[id]]) / 1000)); remember(A, id, M.was_hired, 90, c.epoch); }
       else { c.hireAway(id, f, Math.max(o.PL.mw[q], Math.round((F.wage[f] * EDU_PAY[P.edu[id]]) / 1000))); P.away[id] = f + 1; }
     }
+    if (waits) F.carry[f] = Math.max(0, Math.min(open, waits));
   }
   for (const f of F.each()) F.emp[f] = Math.max(1, F.emp[f] - F.fired[f] + F.hired[f]);
 }
@@ -590,21 +596,32 @@ function attractiveness(c, q) {
 // distance (law 75.41), valued over the years the household looks ahead (law 61.34). The odds are gentle (most moves
 // answer lives, not conditions), so flows shift by degrees as places change. `pull` is Port Alder's standing.
 const MOVE_T = 6;
+// the movement matrix's prior follows the places' people as they are now, and the city's own
+function refreshMovement(c) {
+  const o = c.outer, PL = o.PL, pop = new Float64Array(MOVE_UNITS);
+  for (let q = 0; q < M_CITY; q++) pop[q] = PL.pop[q];
+  pop[M_CITY] = (c.people.count * o.cityWeight) / 1000; movePrior(o.move, pop);
+}
 function moveOdds(c, a, pull, inNews) {
   const o = c.outer, A = o.A, PL = o.PL, q = A.place[a], t = A.traits[a], age = A.age[a], lay = A.layer[a], seeker = A.status[a] === 3, works = A.status[a] === 2, renter = !A.own[a];
-  const known = []; for (let p = 0; p < PL.top; p++) if (PL.layer[p] === lay && p !== q) known.push(p);
-  for (const p of inNews) if (!known.includes(p) && p !== q) known.push(p);
-  if (lay >= 1 && lay <= 3) known.push(-1);                               // Port Alder is known across the state and the nation (its value falls with the distance)
+  // a household of the nation knows every place of it and Port Alder (how likely each is to come to mind is the
+  // movement matrix's prior: its people, and how near they live); one beyond the nation knows the places in the news
+  const known = [];
+  if (lay === 4) { for (const p of inNews) if (p !== q) known.push(p); }
+  else { for (let p = 0; p < PL.top; p++) if (p !== q && PL.layer[p] >= 1 && PL.layer[p] <= 3) known.push(p); known.push(-1); }
   const horizon = Math.max(3, Math.round((85 - age) / 4)), gamma = 0.86 + (trait(t, T_C) - 8) / 200;
   // a job the move would end has to be found again there: a working household weighs the place's unemployment at half
   // a seeker's weight (within the county, and from Duwamish to Port Alder, the job is kept and commuted to)
   const keeps = (p) => p === q || (p < 0 ? lay === 1 || q === DUWAMISH : lay === 1 && PL.layer[p] === 1);
-  const year = (p) => { const at = p < 0 ? o.cityView : PL.attract[p], un = p < 0 ? o.cityUnempView : PL.unemp[p], rent = p < 0 ? (o.cityRent || 180000) : PL.rent[p], pop = p < 0 ? LAYERS[0].pop : PL.pop[p];
-    return at / 400 - (seeker ? un / 1000 : works && !keeps(p) ? un / 2000 : 0) - (renter ? rent / 400000 : 0) + gravity(pop, p === q ? 0 : distKm(q, p)) / 8 + (p < 0 ? pull : 0); };
+  const year = (p) => { const at = p < 0 ? o.cityView : PL.attract[p], un = p < 0 ? o.cityUnempView : PL.unemp[p], rent = p < 0 ? (o.cityRent || 180000) : PL.rent[p];
+    return at / 400 - (seeker ? un / 1000 : works && !keeps(p) ? un / 2000 : 0) - (renter ? rent / 400000 : 0) + (p < 0 ? pull : 0); };
   // leaving costs more for owners, families and the settled, and with the distance; the open-minded mind it less
   const cost = (p) => 4 + (A.own[a] ? 6 : 0) + A.kids[a] * 1.5 + Math.min(3, A.jobM[a] / 24) + distKm(q, p) / 500 - (trait(t, T_O) - 8) / 4;
   const stay = bellman(year(q), gamma, horizon), sh = boltzmann([0, ...known.map((p) => bellman(year(p), gamma, horizon) - stay - cost(p))], MOVE_T);
-  let sum = 0; const odds = known.map((_, j) => { const x = sh[j + 1] / sh[0]; sum += x; return x; });
+  // each place's odds: its share of the movement matrix's row (a place in the news comes to mind half again as
+  // readily) times what the household makes of a year there
+  const row = moveUnit(q) * MOVE_UNITS, n = known.length;
+  let sum = 0; const odds = known.map((p, j) => { const x = (sh[j + 1] / sh[0]) * (lay === 4 ? 1 : o.move.prior[row + moveUnit(p)] * n * (inNews.includes(p) ? 1.5 : 1)); sum += x; return x; });
   return { known, odds, sum, rc: rogersCastro(age) };                     // the young move readily (law 75.44)
 }
 // how many households a month the outer layers would send to Port Alder if the city stood `pull` higher in their eyes
@@ -627,6 +644,7 @@ function migrate(c, d, k) {
   o.cityView = o.cityView === undefined ? o.cityAttract : smooth(o.cityView, o.cityAttract, 1 / 12);
   o.cityUnempView = o.cityUnempView === undefined ? (o.cityUnemp || 450) : smooth(o.cityUnempView, o.cityUnemp || 450, 1 / 6);
   const inNews = [...PL.attract.subarray(0, PL.top)].map((v, q) => [v, q]).filter(([, q]) => PL.layer[q] >= 1 && PL.layer[q] <= 3).sort((x, y) => y[0] - x[0] || x[1] - y[1]).slice(0, 3).map(([, q]) => q);
+  o.inNews = inNews; rollMovement(o.move); refreshMovement(c);
   // the rate at which the outer households move between places, fixed once at the founding from their own odds: about
   // 5.5% of households a year (history: the ACS flows between counties and cities)
   if (o.moveScale === undefined) {
@@ -674,7 +692,7 @@ function migrate(c, d, k) {
     let pipe = 0; for (let j = 0; j < 12; j++) pipe += PL.pipe[p * 12 + j];
     const room = Math.max(0, (PL.units[p] + pipe) * 2.5 - PL.pop[p] + (outBy[p] || 0)), scale = Math.min(1, room / Math.max(1, wantBy[p])), m = m0 * scale, persons = m * A.size[a];
     if (m <= 0) continue;
-    PL.pop[q] -= persons; PL.migOut[q] += persons; PL.pop[p] += persons; PL.migIn[p] += persons;
+    PL.pop[q] -= persons; PL.migOut[q] += persons; PL.pop[p] += persons; PL.migIn[p] += persons; countMove(o.move, q, p, persons);
     let recv = -1, rd = 1e9; for (const b of samplesAt[p]) { const dd = Math.abs(A.size[b] - A.size[a]) * 20 + Math.abs(A.age[b] - A.age[a]) + (A.status[b] === A.status[a] ? 0 : 15); if (dd < rd) { rd = dd; recv = b; } }
     if (recv >= 0) { A.w[recv] += (m * A.size[a]) / Math.max(1, A.size[recv]); A.w[a] -= m; }
   }
@@ -687,7 +705,7 @@ function migrate(c, d, k) {
   for (const a of admitted) {
     const persons = Math.min(o.visas, A.w[a] * A.size[a] * 0.05); if (persons < 1) break;
     o.visas -= persons; o.flows.immigrants += persons; A.w[a] = Math.max(1000, A.w[a] - persons / Math.max(1, A.size[a]));
-    dests.forEach((q, j) => { const v = persons * dshare[j]; PL.pop[q] += v; PL.migIn[q] += v; });
+    dests.forEach((q, j) => { const v = persons * dshare[j]; PL.pop[q] += v; PL.migIn[q] += v; countMove(o.move, WORLD, q, v); });
   }
   // natural change, counted where it happened
   for (let q = 0; q < PL.top; q++) { const v = PL.births[q] - (o.lastB?.[q] ?? 0) - (PL.deaths[q] - (o.lastD?.[q] ?? 0)); if (PL.layer[q] !== 4) PL.pop[q] += v; }
@@ -716,32 +734,35 @@ export function cityMigration(c, d) {
   const P = c.people, H = c.hh, PL = o.PL, A = o.A, e = c.epoch, wC = o.cityWeight / 1000;
   if (o.cityAttract === undefined) o.cityAttract = cityAttract(c);                   // the city's standing, before the first decisions
   if (o.cityView === undefined) { o.cityView = o.cityAttract; o.cityUnempView = o.cityUnemp || 450; }
+  if (!o.move.pop[M_CITY]) refreshMovement(c);
+  const inNews = o.inNews || [], rowC = M_CITY * MOVE_UNITS;
   let left = 0; const plans = [], F = o.F;
   for (const h of [...H.each()]) {
     const head = H.head[h]; if (head < 0 || H.home[h] < 0 || !H.alive[h]) continue;
     const t = P.traits[head], age = ageYears(c, head), seeker = P.status[head] === 3, works = P.status[head] === 2, renter = H.tenure[h] === 0;
     let friends = 0; for (let k = 0; k < 4; k++) if (c.slotOf(P.friend[head * 4 + k]) >= 0) friends++;
-    const burden = renter ? (H.rent[h] * 1000) / Math.max(1, H.inc[h]) : 300;
-    const here = o.cityView / 400 - (seeker ? o.cityUnempView / 1000 + 0.3 : 0) - (renter ? H.rent[h] / 400000 : 0) - Math.max(0, burden - 400) / 600 - (H.demoAt[h] > e ? 1 : 0) + P.val[head] / 2000 + (P.tcLv[head] - 1.5) / 8 + gravity(LAYERS[0].pop, 0) / 8;
+    const burden = renter ? Math.min(1000, (H.rent[h] * 1000) / Math.max(1, H.inc[h])) : 300;   // rent per 1000 of income (a household with no income yet: all of it)
+    const here = o.cityView / 400 - (seeker ? o.cityUnempView / 1000 + 0.3 : 0) - (renter ? H.rent[h] / 400000 : 0) - Math.max(0, burden - 400) / 600 - (H.demoAt[h] > e ? 1 : 0) + P.val[head] / 2000 + (P.tcLv[head] - 1.5) / 8;
     const horizon = Math.max(3, Math.round((85 - age) / 4)), gamma = 0.86 + (trait(t, T_C) - 8) / 200, stay = bellman(here, gamma, horizon);
     // what the move would cost: a home it owns, children in school, friends here, a job here, the distance
     const ties = 4 + (H.tenure[h] === 1 ? 6 : 0) + Math.min(3, H.kids[h]) * 1.5 + friends * 0.7 + (works ? 1.5 : 0) - (trait(t, T_O) - 8) / 4;
     // a head who commutes to an employer beyond the city keeps that job in a place within its reach
     const f0 = works && P.emp[head] === E_ROW ? P.away[head] - 1 : -1, qs = [], xs = [];
     for (let q = 0; q < PL.top; q++) {
-      if (PL.layer[q] === 4 || (PL.layer[q] === 3 && q !== 25)) continue;
+      if (PL.layer[q] === 4) continue;
       const keeps = f0 >= 0 && F.alive[f0] && (F.place[f0] === q || (PL.layer[q] === 1 && F.layer[f0] === 1));
-      const yr = PL.attract[q] / 400 - (seeker ? PL.unemp[q] / 1000 : works && !keeps ? PL.unemp[q] / 2000 : 0) - (renter ? PL.rent[q] / 400000 : 0) + gravity(PL.pop[q], distKm(-1, q)) / 8;
+      const yr = PL.attract[q] / 400 - (seeker ? PL.unemp[q] / 1000 : works && !keeps ? PL.unemp[q] / 2000 : 0) - (renter ? PL.rent[q] / 400000 : 0);
       qs.push(q); xs.push(bellman(yr, gamma, horizon) - stay - ties - distKm(-1, q) / 500);
     }
-    const sh = boltzmann([0, ...xs], MOVE_T); let sum = 0; const odds = xs.map((_, j) => { const x = sh[j + 1] / sh[0]; sum += x; return x; });
+    // each place's odds: its share of the city's row of the movement matrix times what the household makes of a year there
+    const sh = boltzmann([0, ...xs], MOVE_T); let sum = 0; const odds = xs.map((_, j) => { const x = (sh[j + 1] / sh[0]) * o.move.prior[rowC + qs[j]] * xs.length * (inNews.includes(qs[j]) ? 1.5 : 1); sum += x; return x; });
     plans.push([h, rogersCastro(age) * sum, qs, odds, sum]);
   }
   // the decision to go is a charge that integrates a weekly rate with no leak (law 57.9, as an urge): the household's
   // odds of moving, as for any household beyond the city (its age's readiness to move, law 75.44, times its Boltzmann
   // odds for the places it knows against staying, law 27.4), scaled once, from the founding households' own odds, so
   // that the founding city loses households at the rate cities of its kind do (about 5.5% a year, ACS flows)
-  if (o.leaveScale === undefined) { let m = 0; for (const p of plans) m += p[1]; o.leaveScale = 0.055 / 52 / Math.max(1e-9, m / Math.max(1, plans.length)); }
+  if (o.leaveScale === undefined) { let m = 0, n = 0; for (const p of plans) if (p[1] < 1e9) { m += p[1]; n++; } o.leaveScale = 0.055 / 52 / Math.max(1e-9, m / Math.max(1, n)); }
   if (!o.destQ) o.destQ = new Float64Array(PL.top);
   for (const [h, wish, qs, odds, sum] of plans) {
     H.leave[h] = lif(H.leave[h], o.leaveScale * wish, 0); if (H.leave[h] < 1 || !qs.length || sum <= 0) continue;
@@ -763,7 +784,7 @@ export function cityMigration(c, d) {
     if (!A.alive[a] || A.place[a] === WORLD || entry[1] < wC * 0.999) { o.toCity.shift(); continue; }
     const q = A.place[a], size = A.size[a], whole = A.w[a] <= wC * 1.01;
     const h = arrive(c, a); entry[1] -= wC; if (h < 0) continue;
-    arrived++; PL.pop[q] -= size * wC; PL.migOut[q] += size * wC; o.flows.cityIn += H.size[h];
+    arrived++; PL.pop[q] -= size * wC; PL.migOut[q] += size * wC; o.flows.cityIn += H.size[h]; countMove(o.move, q, -1, H.size[h] * wC);
     if (!whole) A.w[a] = Math.max(1, A.w[a] - wC);
   }
   if (o.toCity.length > 400) o.toCity.splice(0, o.toCity.length - 400);
@@ -799,6 +820,9 @@ function arrive(c, a) {
   // earners beyond that look for work here
   const f0 = A.firm[a], F = o.F;
   if (A.status[a] === 2 && f0 >= 0 && F.alive[f0] && (F.layer[f0] === 1 || F.place[f0] === DUWAMISH)) for (let j = 0; j < Math.min(made.length, Math.max(1, A.earners[a])); j++) { const i = made[j]; if (ageYears(c, i) >= 18 && P.status[i] === 3) c.hireAway(i, f0, Math.max(o.PL.mw[F.place[f0]], A.wage[a])); }
+  // an earner who held a job where they came from and cannot keep it has usually arranged the next before moving:
+  // each takes the best opening for their occupation, if there is one; the others, and the seekers, look for work here
+  if (A.status[a] === 2) for (let j = 0; j < Math.min(made.length, Math.max(1, A.earners[a])); j++) { const i = made[j]; if (ageYears(c, i) >= 18 && P.status[i] === 3) c.hireArriving(i); }
   if (same) { for (let m = 0; m < 6; m++) A.sin[a * 6 + m] = -1; A.release(a); }
   c.event("arrival", `The ${c.names.person(made[0]).split(" ")[1]} household (${c.sinText(P.sin[made[0]])}) moves to Port Alder from ${PLACES[A.place[a] ?? 0]?.[1] ?? "outside"}`, made.map((i) => P.sin[i]));
   return h;
@@ -825,7 +849,7 @@ export function emigrate(c, h, place) {
   priorTrust(c.P, A, "tg", a, Math.max(0, Math.min(3, P.tcLv[head]))); priorTrust(c.P, A, "te", a, Math.max(0, Math.min(3, P.teLv[head])));
   mem.forEach((i, k) => { if (k < 6) { A.sin[a * 6 + k] = P.sin[i]; relocate(c, P.sin[i], -1, a * 8 + k, q); } else relocate(c, P.sin[i], -1, -1, q); });
   for (let k = mem.length; k < 6; k++) A.sin[a * 6 + k] = -1;
-  A.moved[a] = c.epoch; A.plan[a] = 0;
+  A.moved[a] = c.epoch; A.plan[a] = 0; countMove(o.move, -1, q, (mem.length * o.cityWeight) / 1000);
   return a;
 }
 // Mondays: strikes stop the pay of the city's commuters who work for the struck employer; settlements restore it

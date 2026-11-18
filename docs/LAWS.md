@@ -100,10 +100,10 @@ Part 0's classes D1 Fredholm operator, D2 Sturm-Liouville, D3 Dirichlet energy, 
 | 75.19 | Gompertz–Makeham Mortality | D6 | Exact linear in logs | people, periphery |
 | 75.27 | Age-Specific Fertility Rate | D1 | Exact linear | city, people, periphery |
 | 75.39 | Net Migration Rate | D4 | Exact linear | periphery |
-| 75.41 | Gravity Model of Migration | D6 | Exact linear in logs | periphery |
+| 75.41 | Gravity Model of Migration | D6 | Exact linear in logs | movement |
 | 75.44 | Migration Age Schedule (Rogers–Castro) | D4 | Exact linear | periphery |
 | 75.45 | Leslie Matrix Projection | D4 | Exact linear | periphery |
-| 76.5 | Great Circle Distance (Haversine) | D9 | Exact linear | periphery |
+| 76.5 | Great Circle Distance (Haversine) | D9 | Exact linear | movement |
 | 76.39 | Inverse Distance Weighting | D9 | Exact linear | finance |
 | 77.19 | Eigenvector Centrality | D10 | Exact linear | kpis |
 | 78.6 | Urban Scaling Laws | D6 | Exact linear in logs | periphery |

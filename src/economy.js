@@ -30,7 +30,7 @@ export const FIRM_SPEC = [["alive", Uint8Array], ["sector", Uint8Array], ["owner
   ...TRUST_SPEC("cr"), ...TRUST_SPEC("kb"), ["crCo", Uint16Array], ["crDe", Uint16Array],
   ["staff", Uint16Array], ["want", Uint16Array], ["open", Uint16Array], ["offer", Int32Array], ["unfilled", Uint16Array],
   ["conf", Int16Array], ["expD", Int32Array], ["sold", Int32Array], ["lost", Int32Array], ["capa", Int32Array], ["qh", Int32Array],
-  ["mem", Int32Array, 8], ["wk", Int32Array], ["mRev", Float64Array], ["ytdGross", Float64Array], ["lyGross", Float64Array], ["taxDay", Int32Array], ["supplies", Float64Array],
+  ["mem", Int32Array, 8], ["wk", Int32Array], ["mRev", Float64Array], ["ytdGross", Float64Array], ["lyGross", Float64Array], ["lyCost", Float64Array], ["taxDay", Int32Array], ["supplies", Float64Array],
   ["line", Int32Array], ["lineLim", Int32Array], ["status", Uint8Array], ["distress", Uint16Array], ["quit", Float32Array], ["uiCharge", Float64Array], ["uiRate", Int32Array], ["cover", Uint8Array],
   ["landlord", Int32Array], ["rentDue", Int32Array], ["capex", Float64Array], ["export", Int32Array], ["lastPrice", Int32Array], ["boClass", Uint8Array]];
 export const FIRM_STATUS = ["open", "closed", "closing"];
@@ -221,14 +221,14 @@ export function laborMarket(c, d, g) {
   const pubCount = new Map(); for (const i of P.each()) if (P.emp[i] === E_CITY || P.emp[i] === E_SCHOOL) pubCount.set(P.emp[i], (pubCount.get(P.emp[i]) || 0) + 1);
   if (!c.gov.cityStaff) { c.gov.cityStaff = pubCount.get(E_CITY) || 0; c.gov.schoolStaff = pubCount.get(E_SCHOOL) || 0; }
   const apps = new Map();
-  // a search takes time: each week a seeker's search charge (law 57.9) fills at a job-finding rate of about 0.3 a month
-  // times the square root of the openings per seeker (as the outer layers' seekers face), more for the
+  // a search takes time: each week a seeker's search charge (law 57.9) fills at a job-finding rate of 0.4 a month
+  // times the square root of the openings per seeker (the rate the outer layers' seekers face), more for the
   // conscientious and the schooled; when it fires they apply. A worker who distrusts the employer looks too, more slowly
   let seekers = 0; for (const i of P.each()) if (P.status[i] === 3) seekers++;
   const theta = Math.min(2, Math.max(0.02, (openings + Math.max(0, (c.gov.cityStaff || 0) + (c.gov.schoolStaff || 0) - (pubCount.get(E_CITY) || 0) - (pubCount.get(E_SCHOOL) || 0))) / Math.max(1, seekers)));
   for (const i of P.each()) {
     const st = P.status[i], tc = trait(P.traits[i], T_C);
-    const rate = 0.07 * Math.sqrt(theta) * Math.max(0.3, 1 + (tc - 8) / 10 + (P.edu[i] - 2) / 8);
+    const rate = 0.0923 * Math.sqrt(theta) * Math.max(0.3, 1 + (tc - 8) / 10 + (P.edu[i] - 2) / 8);
     const looking = (st === 3 && urge(P.urge, i * URGE_N + URGE.seek, rate)) || (st === 2 && P.teLv[i] <= 1 && P.emp[i] !== E_ROW && urge(P.urge, i * URGE_N + URGE.seek, rate * 0.5));
     // and jobs end even where firms do not shrink: a contract ends, someone is let go, or quits before having another
     // (with the layoffs, about 1.1% of the employed a month pass into unemployment, as beyond the city: the CPS flows).
@@ -279,6 +279,27 @@ export function laborMarket(c, d, g) {
     else F.unfilled[f] = 0;
   }
   R.labor = { openings, applied, hired };
+}
+
+// A worker who moves to the city for work has usually arranged it first: an arriving earner who held a job where they
+// came from takes the best opening for their occupation, if there is one (at the employer's offer, as for any hire).
+export function hireArriving(c, i) {
+  const P = c.people, F = c.firms, occ = P.occ[i] || O.service; let best = -1;
+  for (const f of F.each()) {
+    if (F.status[f] !== 0 || F.open[f] <= 0 || F.want[f] - F.staff[f] <= 0) continue;
+    const mix = SECTORS[F.sector[f]].occ; if (!mix.some(([o]) => o === occ) && !(occ === O.service && mix.some(([o]) => o === O.food))) continue;
+    if (best < 0 || F.offer[f] > F.offer[best]) best = f;
+  }
+  if (best < 0) return false;
+  hire(c, i, E_F0 + best, occ, F.offer[best]); F.open[best]--; addMemory(c, i, M.was_hired, E_F0 + best);
+  return true;
+}
+
+// the last day of the year, before the books close: what each business spent in cash this year (its owner's reckoning
+// goes on over the turn of the year)
+export function firmYearEnd(c) {
+  const F = c.firms, B = c.books;
+  for (const f of F.each()) { let cost = 0; for (const a of X_ACC) if (a !== AC.X_TAX_PROP && a !== AC.X_DEPR) cost += B.get(E_F0 + f, a); F.lyCost[f] = cost; }
 }
 
 /* ------------------------------------------------------------------ shopping */
@@ -600,13 +621,16 @@ export function firmMonth(c, d, g) {
       const keep = Math.max(S.staff[0], Math.ceil(F.want[f])); if (cash0 < cost0 * 1.5 && F.mRev[f] < cost0 && F.staff[f] > keep) layoff(c, f, Math.min(F.staff[f] - keep, Math.max(1, Math.ceil(F.staff[f] / 4)))); }
     const tolerance = 12 + trait(t, T_A) * 2 - trait(t, T_C);
     // an owner whose business keeps losing money closes it before the money runs out: each month's losses, as a share
-    // of what it takes in this year, fill a charge (law 57.9) that drains in the months it makes money; the
-    // risk-takers hold on longer (property companies and the hospital answer to their lenders and the county instead)
-    // (the owner reckons in cash from the second quarter on: the year's property tax, accrued in January, and the
-    // depreciation of its equipment are left out of the reckoning)
-    if (S.key !== "realty" && S.key !== "hospital" && d.doy > 90 && F.ytdGross[f] > 0) {
+    // of what it takes in, fill a charge (law 57.9) that drains in the months it makes money; the risk-takers hold on
+    // longer (property companies and the hospital answer to their lenders and the county instead). The owner reckons
+    // in cash over the last twelve months: this year so far, and last year's results for the part of the year not
+    // yet lived (a business without a last year waits for its first quarter). The year's property tax, accrued in
+    // January, and the depreciation of its equipment are left out of the reckoning
+    const hasLast = F.lyGross[f] > 0 && F.lyCost[f] > 0;                             // a last year on its own books
+    if (S.key !== "realty" && S.key !== "hospital" && F.ytdGross[f] > 0 && (hasLast || d.doy > 90)) {
       let ytdCost = 0; for (const a of X_ACC) if (a !== AC.X_TAX_PROP && a !== AC.X_DEPR) ytdCost += B.get(fe, a);
-      const loss = Math.max(-0.3, Math.min(0.6, (ytdCost - F.ytdGross[f]) / F.ytdGross[f]));
+      const rest = hasLast ? Math.max(0, 1 - d.doy / 365) : 0, gross = F.ytdGross[f] + F.lyGross[f] * rest, cost = ytdCost + F.lyCost[f] * rest;
+      const loss = Math.max(-0.3, Math.min(0.6, (cost - gross) / gross));
       F.quit[f] = Math.max(0, lif(F.quit[f], Math.max(0, loss) * 1.5 * (1 - (trait(t, T_RISK) - 8) / 24), loss < 0 ? 0.35 : 0.05));
       if (F.quit[f] >= 1 && F.status[f] === 0) F.status[f] = 2;                     // (closed below, this month)
     }
