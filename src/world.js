@@ -9,7 +9,9 @@ let DRAW = () => { throw new Error("the land is surveyed only at the founding");
 export { cellOf };
 export const inside = (x, y) => x >= 0 && y >= 0 && x < N && y < N;
 export const ROAD = { NONE: 0, LOCAL: 1, ARTERIAL: 2, BRIDGE: 3, PROMENADE: 4 };
-export const ARTERIAL_X = [16, 40, 64, 88, 112], ARTERIAL_Y = [12, 36, 60, 84, 108];
+// the invented map's main streets: every 24 cells (on the one-in-ten map, x = 16, 40, 64, 88, 112 and y = 12, 36, 60, 84, 108)
+const every24 = (first) => { const a = []; for (let v = first; v < N - 8; v += 24) a.push(v); return a; };
+export const ARTERIAL_X = every24(16), ARTERIAL_Y = every24(12);
 export const isStreetLine = (v, art) => art.includes(v) || art.some((a) => (v - a) % 6 === 0 && v > 2 && v < N - 3);
 
 // integer value noise in [0, 1000): smoothstep interpolation of a lattice drawn from the founding census

@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.3.2 — 2026-11-18 (street life on a larger map)
+
+The one-in-ten city is unchanged, digest for digest.
+
+### Fixed
+- **Street life covered only a corner of a larger map.** The street-life law runs on the XPU's frame of 128 by 128
+  cells, and the city wrote its cells into that one frame whatever the map's size, so beyond the first rows there
+  was no street life at all. A larger map is now as many frames side by side as it needs (16 at 512 cells, 64 at
+  1,024), each run through the XPU in turn. Street life still wraps at the edge of each frame, as it does at the
+  edge of the one-in-ten map.
+- The invented map's main streets stopped at 128 cells; they now run every 24 cells across a map of any size.
+- The map's side must be at least 128 cells (the XPU's frame).
+
+At sixteen times the area the invented city is now 212,020 citizens in 96,343 households with 2,940 businesses; it
+founds at 4.6% unemployment and 8.2% poverty, and a day takes about 5 s.
+
 ## 1.3.1 — 2026-11-18 (the engine at any size)
 
 The first step of the full-scale city (`docs/STAGE2.md`). The one-in-ten city is unchanged: the same digests, day

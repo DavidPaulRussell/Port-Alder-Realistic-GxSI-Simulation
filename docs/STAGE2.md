@@ -1,7 +1,8 @@
 # Stage 2: the full-scale city
 
-Status on 18 November 2026 (release 1.3.1): **step 1 of 6 done** (the engine runs at any size; 214,951 citizens
-founded and audited on the invented map at sixteen times the area). The real map waits for its sources. This note is the plan and the record of what is decided, so the
+Status on 18 November 2026 (release 1.3.2): **step 1 of 6 done** (the engine runs at any size; 212,020 citizens
+founded and audited on the invented map at sixteen times the area, street life included). The real map waits for
+its sources: `tools/map_fetch.py` has not been run yet, and the loader's player (`plume-xpu-mini.html`) is not here. This note is the plan and the record of what is decided, so the
 work can be picked up without rereading the conversation that led to it.
 
 ## What it is
@@ -85,8 +86,8 @@ street grid and buildings sized so each block holds the raster's people.
 ## The order of work
 
 1. **Done (1.3.1).** Scale object (`src/scale.js`) and grid arithmetic, with the one-in-ten city passing every test
-   and its digests unchanged; shopping indexed by squares; the engine founds 214,951 citizens at `n = 512` and
-   balances its books (4.6 s a day).
+   and its digests unchanged; shopping indexed by squares; the street-life law on as many XPU frames as the map
+   needs; the engine founds 212,020 citizens at `n = 512` and balances its books (about 5 s a day).
 2. The map builder (`tools/make_map.mjs`): OpenStreetMap and terrain into `layers/city.map-*.edhx`.
 3. `World` from the map; the founding census on real buildings; jurisdictions.
 4. Indexes and the worker; a full-scale founding and a first audited month.

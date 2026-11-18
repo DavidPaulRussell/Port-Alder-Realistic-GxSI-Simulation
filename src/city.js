@@ -40,9 +40,12 @@ import { civicDay, civicMonth, civicYear, civicGenesis, election } from "./civic
 import { housingDay, housingMonth, attachHousing } from "./housing.js";
 import { attachDevelop, developDay, developMonth } from "./develop.js";
 
-export const CITY_VERSION = "1.3.1";
+export const CITY_VERSION = "1.3.2";
 export const SAVE_FORMAT = "PLUME-CITY/1";
 export const PCAP = SCALE.people, LCAP = SCALE.loans;
+// the XPU frames a map takes (one of 128 x 128 cells each), and where a cell's lanes are in them
+const TSIDE = Math.max(1, N >> 7), TILES = TSIDE * TSIDE;
+export const frameAt = (c) => (TILES === 1 ? c * LANES : (((c >> NSHIFT) >> 7) * TSIDE + ((c & (N - 1)) >> 7)) * WORDS + ((((c >> NSHIFT) & 127) << 7) | (c & 127)) * LANES);
 
 /* ------------------------------------------------------------------ the street-life law (LCUF-A) */
 // P' = Life(P) + 2·nsum(P mod 2) + 16·(P - P mod 2). Bit 0: the lane is alive in the cell (enough people
@@ -121,7 +124,8 @@ export class City {
     this.people = new Slots(PCAP, PEOPLE_SPEC); this.hh = new Slots(HCAP, HOUSEHOLD_SPEC); this.firms = new Slots(FCAP, FIRM_SPEC); this.loans = new Slots(LCAP, LOAN_SPEC);
     this.banks = []; this.gov = {}; this.serial = 1;
     this.epoch = 0; this.events = []; this.interventions = []; this.history = []; this.months = []; this.last = null;
-    this.frame = new Uint32Array(WORDS); this.xout = new Uint32Array(WORDS); this.vital = new Uint8Array(CELLS * LANES); this.act = new Uint16Array(CELLS * LANES);
+    // the street-life law runs on the XPU's frame of 128 x 128 cells: a larger map is as many frames side by side
+    this.frame = new Uint32Array(WORDS * TILES); this.xout = new Uint32Array(WORDS * TILES); this.vital = new Uint8Array(CELLS * LANES); this.act = new Uint16Array(CELLS * LANES);
     this.C = { transitions: 0 };
     this.rules = { y: 0 };
     this.genesis();
@@ -166,6 +170,7 @@ export class City {
   // over the sequence of births so the population's ratio (512 boys in 1,000 births) is kept exactly (law 12.42)
   birthSex() { lawUse("12.42"); const n = (this.gov.birthSeq = (this.gov.birthSeq || 0) + 1), x = ((n * (ROTATION_Q32[3] / 4294967296)) % 1 + ((this.cfg.seed % 997) / 997)) % 1; return x < 0.512 ? 0 : 1; }
   // a citizen takes a job outside the city (with an outer firm), commuting from home
+  frameAt(cell) { return frameAt(cell); }
   hireArriving(i) { return hireArriving(this, i); }
   hireAway(i, f, wage) { hireIn(this, i, E_ROW, this.people.occ[i] || 1, 1000); this.people.wage[i] = wage; this.people.away[i] = f + 1; }
   event(kind, text, ids = []) { this.events.push({ epoch: this.epoch, kind, text, ids }); if (this.events.length > 800) this.events.splice(0, this.events.length - 800); }
@@ -189,8 +194,9 @@ export class City {
     // B. the street-life law
     const season = seasonOf(d.m), rule = DAY_RULES[season][d.workday ? 0 : 1], gens = 2;
     const frameIn = this.frame, frameInSha = await digest(u8(frameIn));
-    const r = await engine.run(this.law, frameIn, gens, rule); R.ms.xpu = r.ms;
-    this.xout = r.out; this.lastRule = rule; this.vitality(d);
+    R.ms.xpu = 0; if (this.xout.length !== frameIn.length) this.xout = new Uint32Array(frameIn.length);
+    for (let t = 0; t < TILES; t++) { const r = await engine.run(this.law, TILES === 1 ? frameIn : frameIn.slice(t * WORDS, (t + 1) * WORDS), gens, rule); R.ms.xpu += r.ms; this.xout.set(r.out, t * WORDS); }
+    this.lastRule = rule; this.vitality(d);
     // C-I
     lightDay(this, d);
     healthDay(this, d);
@@ -250,9 +256,10 @@ export class City {
     const X = this.xout, V = this.vital, W = this.world;
     for (let c = 0; c < CELLS; c++) {
       const dead = W.water[c] || (c >> NSHIFT) < 2 || (c >> NSHIFT) > N - 3;
+      const f0 = frameAt(c);
       for (let k = 0; k < LANES; k++) {
-        const q = c * LANES + k; let w = X[q];
-        if (dead) { w = 0; X[q] = 0; }
+        const q = c * LANES + k; let w = X[f0 + k];
+        if (dead) { w = 0; X[f0 + k] = 0; }
         V[q] = ((w & 1) << 3) + ((w >>> 1) & 15) + (((w >>> 5) & 15) >>> 1);
       }
     }
@@ -260,10 +267,10 @@ export class City {
   // set bit 0 of each lane where enough people did that thing yesterday; keep the memory bits
   stampFrame(d) {
     const F = this.frame, X = this.xout, A = this.act, W = this.world;
-    for (let c = 0; c < CELLS; c++) for (let k = 0; k < LANES; k++) {
+    for (let c = 0; c < CELLS; c++) { const f0 = frameAt(c); for (let k = 0; k < LANES; k++) {
       const q = c * LANES + k, on = A[q] >= LANE_THRESHOLD[k] && !W.water[c] ? 1 : 0;
-      F[q] = (X[q] & 0xffffe) | on;
-    }
+      F[f0 + k] = (X[f0 + k] & 0xffffe) | on;
+    } }
     A.fill(0);
   }
   addAct(cell, lane, n = 1) { if (cell >= 0) { const q = cell * LANES + lane; this.act[q] = Math.min(65535, this.act[q] + n); } }

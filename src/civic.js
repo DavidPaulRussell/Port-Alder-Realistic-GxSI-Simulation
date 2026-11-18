@@ -36,7 +36,7 @@ export function civicDay(c, d, g) {
   const hot = []; for (let cc = 0; cc < W.land.length; cc++) { const v = c.vital[cc * 8 + 7]; if (v) hot.push([v, cc]); }
   hot.sort((a, b) => b[0] - a[0] || a[1] - b[1]);
   c.patrol = hot.slice(0, patrols).map((x) => x[1]);
-  for (const cc of c.patrol) for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) { const x = (cc & NMASK) + dx, y = (cc >> NSHIFT) + dy; if (x < 0 || y < 0 || x > N - 1 || y > N - 1) continue; const q = (((y << NSHIFT) | x) << 3) + 7; c.frame[q] &= ~1; }
+  for (const cc of c.patrol) for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) { const x = (cc & NMASK) + dx, y = (cc >> NSHIFT) + dy; if (x < 0 || y < 0 || x > N - 1 || y > N - 1) continue; const q = c.frameAt((y << NSHIFT) | x) + 7; c.frame[q] &= ~1; }
   let crimes = 0;
   for (const [v, cc] of hot.slice(patrols, patrols + 40)) {
     const life = c.vital[cc * 8] + c.vital[cc * 8 + 1] + c.vital[cc * 8 + 2];

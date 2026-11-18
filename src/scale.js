@@ -16,7 +16,7 @@ const PRESETS = {
 const fromEnv = () => { const v = typeof process !== "undefined" && process.env ? process.env.PLUME_SCALE : undefined; return v && v.trim().startsWith("{") ? JSON.parse(v) : v || undefined; };
 const asked = globalThis.PLUME_SCALE ?? fromEnv(), base = typeof asked === "string" ? PRESETS[asked] : asked ? { ...PRESETS.tenth, ...asked } : PRESETS.tenth;
 if (!base) throw new Error(`unknown scale "${asked}" (tenth or full)`);
-if (!Number.isInteger(base.n) || base.n < 64 || base.n > 2048 || (base.n & (base.n - 1))) throw new Error("the map's side must be a power of two from 64 to 2048 cells");
+if (!Number.isInteger(base.n) || base.n < 128 || base.n > 2048 || (base.n & (base.n - 1))) throw new Error("the map's side must be a power of two from 128 to 2048 cells (the XPU's frame is 128 cells wide)");
 export const SCALE = Object.freeze({ name: typeof asked === "string" ? asked : asked ? asked.name || "custom" : "tenth", ...base });
 export const N = SCALE.n, CELLS = N * N, NSHIFT = 31 - Math.clz32(N), NMASK = N - 1;
 // a cell's index from its column and row, and back

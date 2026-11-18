@@ -1,4 +1,4 @@
-# Port Alder 1.3.1
+# Port Alder 1.3.2
 
 A sentient, deterministic city on the Plume XPU, modelled on Everett, Washington.
 
@@ -43,7 +43,7 @@ The repository is https://github.com/DavidPaulRussell/Port-Alder-Realistic-GxSI-
     git init
     git config core.hooksPath tools/git-hooks      # the size gatekeeper runs before every commit
     git add -A
-    git commit -m "Port Alder 1.3.1"
+    git commit -m "Port Alder 1.3.2"
 
 The repository is about ten megabytes, far under GitHub's 25 MB per file and 1 GB per repository
 (`python3 tools/check_github_limits.py` checks; every tool that writes a layer file refuses to pass 24 MB).
