@@ -1,0 +1,468 @@
+<title>Plume XPU Console</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@400;500;600&display=swap">
+<style>
+/* Layout: a signal chain across the top (R0 → BF1 → R1 → BF2 → R2), the frame scope and the LCUF-A bench below. */
+:root {
+  --bg: #e9ecf1; --panel: #ffffff; --sunk: #f3f5f8; --ink: #141922; --muted: #586174; --line: #d3d9e2;
+  --accent: #b5600c; --accent-soft: #b5600c1f; --on-accent: #ffffff;
+  --two: #4c5fc2; --five: #1f8577; --good: #1f8577; --bad: #c0392b; --warn: #a66a00;
+  --scope: #0e1016;
+  --f-ui: "IBM Plex Sans Condensed", "Roboto Condensed", "Arial Narrow", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0d1117; --panel: #151a23; --sunk: #10141b; --ink: #e4e8ef; --muted: #8a94a7; --line: #263042;
+  --accent: #f0a23b; --accent-soft: #f0a23b24; --on-accent: #1a1206;
+  --two: #8d9cf0; --five: #4cc4b2; --good: #4cc4b2; --bad: #ff7a6b; --warn: #e2b04a; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0d1117; --panel: #151a23; --sunk: #10141b; --ink: #e4e8ef; --muted: #8a94a7; --line: #263042;
+  --accent: #f0a23b; --accent-soft: #f0a23b24; --on-accent: #1a1206;
+  --two: #8d9cf0; --five: #4cc4b2; --good: #4cc4b2; --bad: #ff7a6b; --warn: #e2b04a; color-scheme: dark }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 14px/1.45 var(--f-ui); margin: 0; }
+.wrap { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 16px 28px; max-width: 1360px; margin: 0 auto; display: grid; gap: 14px; }
+button, input, select, textarea { font: inherit; color: inherit; }
+.mono { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+header.bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; }
+.brand h1 { margin: 0; font-size: 20px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; }
+.brand .sub { color: var(--muted); font-size: 13px; }
+.engines { display: flex; flex-wrap: wrap; gap: 6px; margin-left: auto; }
+.pill { font: 600 11px var(--f-ui); letter-spacing: .06em; text-transform: uppercase; padding: 3px 9px; border-radius: 99px; border: 1px solid var(--line); color: var(--muted); }
+.pill.ok { color: var(--good); border-color: color-mix(in srgb, var(--good) 45%, transparent); }
+.pill.off { color: var(--muted); border-style: dashed; }
+.pill.err { color: var(--bad); border-color: var(--bad); }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px; display: grid; gap: 12px; min-width: 0; }
+.label { font: 600 11px var(--f-ui); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.note { color: var(--muted); font-size: 12.5px; margin: 0; }
+.btn { border: 1px solid var(--line); background: var(--sunk); border-radius: 7px; padding: 5px 11px; cursor: pointer; font-weight: 500; }
+.btn:hover { border-color: var(--muted); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.btn:disabled { opacity: .55; cursor: progress; }
+button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible, canvas:focus-visible, label.file:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+input[type="number"] { width: 5em; padding: 3px 6px; border: 1px solid var(--line); border-radius: 6px; background: var(--sunk); font-family: var(--f-mono); }
+select { padding: 4px 6px; border: 1px solid var(--line); border-radius: 6px; background: var(--sunk); }
+label.inl { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); }
+.msg { font: 12.5px var(--f-mono); min-height: 1.4em; overflow-wrap: anywhere; }
+.msg.err { color: var(--bad); } .msg.ok { color: var(--good); }
+
+/* signal chain */
+.chain { display: grid; grid-template-columns: minmax(0,1fr) 22px minmax(0,1fr) 22px minmax(0,1fr) 22px minmax(0,1fr) 22px minmax(0,1fr); align-items: stretch; gap: 0; }
+@media (max-width: 1080px) { .chain { grid-template-columns: minmax(0,1fr); gap: 4px; } .chain .arrow { transform: rotate(90deg); height: 18px; } }
+.arrow { display: grid; place-items: center; color: var(--muted); font: 600 16px var(--f-mono); }
+.node { border: 1px solid var(--line); border-radius: 9px; padding: 10px 12px; display: grid; gap: 6px; align-content: start; min-width: 0; background: var(--panel); cursor: pointer; text-align: left; }
+.node.sel { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.node.xpu { cursor: default; background: var(--sunk); }
+.node.stale { border-style: dashed; }
+.node .stale-tag { font: 600 10.5px var(--f-ui); letter-spacing: .06em; text-transform: uppercase; color: var(--warn); }
+.node .t { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; }
+.node .t b { font-weight: 600; font-size: 15px; letter-spacing: .04em; }
+.node .ring { font: 600 11px var(--f-mono); padding: 1px 6px; border-radius: 4px; }
+.node .ring.two { color: var(--two); background: color-mix(in srgb, var(--two) 14%, transparent); }
+.node .ring.five { color: var(--five); background: color-mix(in srgb, var(--five) 14%, transparent); }
+.kv { display: grid; grid-template-columns: max-content minmax(0,1fr); gap: 1px 10px; font: 12px var(--f-mono); }
+.kv span:nth-child(odd) { color: var(--muted); font-family: var(--f-ui); font-size: 12px; }
+.kv span:nth-child(even) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.stack { display: grid; grid-template-columns: repeat(20, minmax(0,1fr)); gap: 1px; height: 14px; }
+.stack i { display: block; border-radius: 1px; background: var(--two); }
+
+main { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; align-items: start; }
+@media (max-width: 960px) { main { grid-template-columns: minmax(0, 1fr); } }
+.scope { position: relative; background: var(--scope); border-radius: 6px; overflow: hidden; aspect-ratio: 1; max-width: 100%; }
+.scope canvas { width: 100%; height: 100%; display: block; image-rendering: pixelated; }
+.scope .tag { position: absolute; left: 8px; bottom: 8px; font: 500 11px var(--f-mono); color: #c9cfdb; background: #0e1016c8; padding: 2px 6px; border-radius: 4px; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 7px; overflow: hidden; flex-wrap: wrap; }
+.seg button { border: 0; background: transparent; padding: 5px 10px; cursor: pointer; color: var(--muted); font-weight: 500; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--accent-soft); color: var(--ink); }
+input[type="range"] { accent-color: var(--accent); width: 100%; }
+.lvl { display: grid; grid-template-columns: max-content minmax(0,1fr) max-content; gap: 10px; align-items: center; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th, td { text-align: left; padding: 5px 8px; border-bottom: 1px solid var(--line); }
+th { font: 600 11px var(--f-ui); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+td.num, th.num { text-align: right; font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.tbl { overflow-x: auto; }
+.ok-t { color: var(--good); font-weight: 600; } .bad-t { color: var(--bad); font-weight: 600; }
+textarea.code { width: 100%; min-height: 330px; padding: 10px; border: 1px solid var(--line); border-radius: 7px; background: var(--sunk); font: 12.5px/1.55 var(--f-mono); resize: vertical; white-space: pre; overflow-x: auto; tab-size: 2; }
+.tape { background: var(--sunk); border: 1px solid var(--line); border-radius: 6px; font: 12px/1.55 var(--f-mono); max-height: 220px; overflow: auto; padding: 8px 10px; white-space: pre-wrap; overflow-wrap: anywhere; margin: 0; }
+.tape .PLAN { color: var(--two); font-weight: 600; } .tape .TOOL { color: var(--accent); font-weight: 600; } .tape .OBSERVE { color: var(--five); font-weight: 600; } .tape .EMIT { color: var(--bad); font-weight: 600; }
+details > summary { cursor: pointer; font: 600 11px var(--f-ui); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+details[open] > summary { margin-bottom: 8px; }
+.ops { display: grid; grid-template-columns: max-content minmax(0,1fr); gap: 3px 14px; font-size: 13px; }
+.ops code { font: 12px var(--f-mono); color: var(--accent); }
+label.file { position: relative; overflow: hidden; }
+label.file input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+pre.src { margin: 0; max-height: 260px; overflow: auto; background: var(--sunk); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; font: 11.5px/1.5 var(--f-mono); white-space: pre; }
+</style>
+
+<div class="wrap">
+  <header class="bar">
+    <div class="brand"><h1>Plume XPU Console <span class="pill" id="ver" style="vertical-align:middle;letter-spacing:.04em"></span></h1><div class="sub">ByteFoundry as a virtual XPU · RUSSL frames in, RUSSL frames out · kernels written in LCUF-A</div></div>
+    <nav class="pages" aria-label="Console pages"><a href="index.html" aria-current="page">Console</a><a href="simmy.html">Simmy replay</a><a href="city.html">Port Alder</a><a href="verify.html">Verify R files</a></nav>
+    <div class="engines" id="engines"><span class="pill">starting engines</span></div>
+  </header>
+
+  <section class="panel" aria-label="Pipeline">
+    <div class="row" style="justify-content: space-between">
+      <span class="label">Pipeline · every R is a .russl program plus a .russ field container</span>
+      <div class="row">
+        <label class="inl" for="sel-engine">engine <select id="sel-engine"></select></label>
+        <button class="btn primary" id="b-run">Run pipeline</button>
+        <button class="btn" id="b-compare">Compare engines</button>
+        <button class="btn" id="b-holo">Check hologram</button>
+        <button class="btn" id="b-stop" disabled>Stop</button>
+      </div>
+    </div>
+    <div class="chain" id="chain">
+      <button class="node sel" id="n-r0" data-r="0"></button><div class="arrow" aria-hidden="true">→</div>
+      <div class="node xpu" id="n-bf1"></div><div class="arrow" aria-hidden="true">→</div>
+      <button class="node" id="n-r1" data-r="1"></button><div class="arrow" aria-hidden="true">→</div>
+      <div class="node xpu" id="n-bf2"></div><div class="arrow" aria-hidden="true">→</div>
+      <button class="node" id="n-r2" data-r="2"></button>
+    </div>
+    <div id="run-msg" class="msg"></div>
+    <div id="cmp" class="tbl" hidden></div>
+  </section>
+
+  <main>
+    <section class="panel" aria-label="Frame scope">
+      <div class="row" style="justify-content: space-between">
+        <span class="label" id="scope-title">R0 field</span>
+        <div class="seg" role="group" aria-label="View">
+          <button id="v-0" data-view="0" aria-pressed="true">Composite</button>
+          <button id="v-1" data-view="1" aria-pressed="false">Life</button>
+          <button id="v-2" data-view="2" aria-pressed="false">Bit plane</button>
+          <button id="v-3" data-view="3" aria-pressed="false">Lane</button>
+          <button id="v-4" data-view="4" aria-pressed="false">Change</button>
+        </div>
+      </div>
+      <div class="scope"><canvas id="cv" width="128" height="128" aria-label="Field view, 128 by 128 cells"></canvas><div id="tag" class="tag"></div></div>
+      <div class="lvl">
+        <label class="label" for="in-level">Pyramid level</label>
+        <input id="in-level" type="range" min="1" max="20" value="20">
+        <span id="lvl-out" class="mono">j = 20 · mod 2^20</span>
+      </div>
+      <div class="row">
+        <label class="inl" for="in-lane">lane <input id="in-lane" type="number" min="0" max="7" value="0"></label>
+        <label class="inl" for="in-plane">bit <input id="in-plane" type="number" min="0" max="19" value="10"></label>
+        <span class="note">Change view: cells where this R differs from the one before it.</span>
+      </div>
+      <details>
+        <summary>20 pyramid layers of this R</summary>
+        <div class="tbl"><table id="pyr"></table></div>
+        <p class="note">Level j is the field reduced mod 2^j. Each digest is stored in state/pyramid.json and re-checked when a .russ file is loaded.</p>
+      </details>
+      <details>
+        <summary>.russl program of this R</summary>
+        <pre class="src" id="src"></pre>
+      </details>
+    </section>
+
+    <section class="panel" aria-label="LCUF-A bench">
+      <div class="row" style="justify-content: space-between">
+        <span class="label">LCUF-A kernels · the array language each XPU runs</span>
+        <div class="seg" role="group" aria-label="Program">
+          <button id="p-1" data-prog="1" aria-pressed="true">BF1 · 2-adic</button>
+          <button id="p-2" data-prog="2" aria-pressed="false">BF2 · 5-adic</button>
+        </div>
+      </div>
+      <textarea id="code" class="code" spellcheck="false" aria-label="LCUF-A program"></textarea>
+      <div class="row"><button class="btn" id="b-compile">Compile</button><button class="btn" id="b-restore">Restore original</button><span id="cmsg" class="msg"></span></div>
+      <details>
+        <summary>LCUF-A operations</summary>
+        <div class="ops" id="ops"></div>
+      </details>
+
+      <div class="row" style="justify-content: space-between"><span class="label">R0 source</span></div>
+      <div class="row">
+        <label class="inl" for="in-seed">seed <input id="in-seed" type="number" min="0" value="7"></label>
+        <label class="inl" for="in-dens">plane-0 density % <input id="in-dens" type="number" min="0" max="100" value="35"></label>
+        <button class="btn" id="b-seed">New R0 from seed</button>
+        <label class="btn file" for="in-file">Load a .russ as R0<input id="in-file" type="file" accept=".russ,application/octet-stream"></label>
+      </div>
+      <div id="r0-msg" class="msg"></div>
+
+      <div class="row" style="justify-content: space-between"><span class="label">Run log · BFTL/1</span><button class="btn" id="b-copylog">Copy log</button></div>
+      <pre class="tape" id="tape"></pre>
+      <div class="row" id="saves" hidden>
+        <span class="label">Save</span>
+        <button class="btn" data-save="0">R0 .russ</button><button class="btn" data-save="1">R1 .russ</button><button class="btn" data-save="2">R2 .russ</button>
+        <button class="btn" data-savel="2">R2 .russl</button>
+      </div>
+      <p class="note" id="save-note">Saving .russ files works when the console runs locally (JA21 Blank Console or the bundled server).</p>
+    </section>
+  </main>
+</div>
+
+<script type="module">
+%%MODULES%%
+const CONSOLE_VERSION = "%%VERSION%%";
+const R_TEMPLATES = %%TEMPLATES%%;
+const XPU_1T = "%%XPU_B64%%", XPU_MT = "%%XPU_MT_B64%%";
+const $ = (id) => document.getElementById(id);
+const b64 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
+const ORIGINAL = { 1: BF1_SOURCE, 2: BF2_SOURCE };
+const S = { engines: [], engine: null, progs: { 1: compile(BF1_SOURCE), 2: compile(BF2_SOURCE) }, src: { 1: BF1_SOURCE, 2: BF2_SOURCE },
+  steps: { 1: 40, 2: 40 }, times: { 1: null, 2: null }, R: [null, null, null], stale: false, gen: 0, active: null, sel: 0, view: 0, lane: 0, plane: 10, level: 20, editing: 1, log: [], busy: false };
+const esc = (x) => String(x).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+$("ver").textContent = "v" + CONSOLE_VERSION;
+const BUSY_IDS = ["b-run", "b-compare", "b-holo", "b-seed", "in-file", "b-compile", "b-restore", "sel-engine"];
+function setBusy(on) { S.busy = on; BUSY_IDS.forEach((id) => { $(id).disabled = on; }); $("b-stop").disabled = !on || !S.active; document.querySelectorAll(".node input").forEach((i) => { i.disabled = on; }); }
+// Every engine call goes through use(): it records the engine for Stop, and retires any engine that stopped.
+async function use(engine, ...args) {
+  if (!engine) throw new Error("no engine is available");
+  S.active = engine; $("b-stop").disabled = !engine.cancel;
+  try { return await engine.run(...args); }
+  finally { S.active = null; $("b-stop").disabled = true; retireBroken(); }
+}
+function retireBroken() {
+  let changed = false;
+  S.engines = S.engines.map((e) => { if (e.broken && !e.unavailable) { changed = true; return { name: e.name, unavailable: "stopped: " + e.broken }; } return e; });
+  if (!changed) return;
+  if (!S.engine || S.engine.unavailable || S.engine.broken) {
+    S.engine = S.engines.find((x) => !x.unavailable) || null;
+    $("run-msg").textContent += S.engine ? ` · switched to ${S.engine.label}` : " · no engine is left; reload the page";
+  }
+  renderEngines();
+}
+function markStale(why) { if (S.R[1] || S.R[2]) { S.stale = true; $("run-msg").className = "msg"; $("run-msg").textContent = `${why}: R1 and R2 are from the previous settings; run the pipeline again`; drawChain(); } }
+const short = (t) => t ? t.replace("russ:sha256:", "").slice(0, 12) + "…" : "—";
+const mlu = (steps, ms) => ms > 0 ? (WORDS * steps / ms / 1000) : 0;
+
+/* ---------- engines ---------- */
+function spawn(src) {
+  const url = URL.createObjectURL(new Blob([src], { type: "text/javascript" })); const w = new Worker(url); URL.revokeObjectURL(url);
+  const hs = new Set(); w.onmessage = (e) => hs.forEach((h) => h(e.data));
+  w.onmessageerror = () => hs.forEach((h) => h({ type: "error", message: "a worker could not read a message" }));
+  w.onerror = (e) => { e.preventDefault?.(); hs.forEach((h) => h({ type: "error", message: e.message || "worker error" })); };
+  return { post: (m) => w.postMessage(m), onMessage: (f) => hs.add(f), offMessage: (f) => hs.delete(f), terminate: () => w.terminate() };
+}
+async function startEngines() {
+  const list = [];
+  // one thread runs in a worker so long runs never freeze the page; the in-page engine is the fallback
+  try { list.push(await createWasm1TWorker(b64(XPU_1T), spawn)); } catch { list.push(await createWasm1T(b64(XPU_1T))); }
+  const hw = navigator.hardwareConcurrency || 4;
+  if (globalThis.crossOriginIsolated && typeof SharedArrayBuffer !== "undefined") {
+    try {
+      list.push(await createWasmMT(b64(XPU_MT), Math.max(2, Math.min(hw, 16)), spawn));
+    } catch (e) { list.push({ name: "wasm-mt", unavailable: "threads failed: " + e.message }); }
+  } else list.push({ name: "wasm-mt", unavailable: "needs a cross-origin isolated page (run it locally)" });
+  if (navigator.gpu) {
+    try { list.push(await createWebGPU(navigator.gpu)); } catch (e) { list.push({ name: "webgpu", unavailable: e.message }); }
+  } else list.push({ name: "webgpu", unavailable: "WebGPU is not available in this browser" });
+  S.engines = list;
+  S.engine = list.find((e) => e.name === "wasm-mt" && !e.unavailable) || list[0];
+  renderEngines();
+}
+function renderEngines() {
+  const list = S.engines;
+  const pills = $("engines"); pills.textContent = "";
+  for (const e of list) { const p = document.createElement("span"); p.className = "pill " + (e.unavailable ? "off" : "ok");
+    p.textContent = e.unavailable ? `${e.name}: off` : e.label; p.title = e.unavailable || "ready"; pills.append(p); }
+  const sel = $("sel-engine"); sel.textContent = "";
+  for (const e of list.filter((x) => !x.unavailable)) { const o = document.createElement("option"); o.value = e.name; o.textContent = e.label; sel.append(o); }
+  if (S.engine) sel.value = S.engine.name;
+}
+$("b-stop").addEventListener("click", async () => { const e = S.active; if (e && e.cancel) { $("b-stop").disabled = true; $("run-msg").textContent = "stopping…"; await e.cancel(); } });
+$("sel-engine").addEventListener("change", (e) => { S.engine = S.engines.find((x) => x.name === e.target.value); });
+
+/* ---------- R0 ---------- */
+function seedField(seed, dens) {
+  let s = (seed >>> 0) ^ 0x9e3779b9; const r = () => { s ^= s << 13; s >>>= 0; s ^= s >>> 17; s ^= s << 5; s >>>= 0; return s; };
+  const f = new Uint32Array(WORDS);
+  for (let i = 0; i < WORDS; i++) { let v = r() & 0xffffe; if (r() % 100 < dens) v |= 1; f[i] = v; }
+  return f;
+}
+async function setR0(chunky, provenance) {
+  S.gen++;
+  S.R = [await buildRuss(R_TEMPLATES, 0, chunky, { ...provenance, console: CONSOLE_VERSION }), null, null]; S.R[0].field = chunky;
+  S.times = { 1: null, 2: null }; S.stale = false; drawChain(); select(0);
+}
+
+/* ---------- pipeline ---------- */
+const sha = async (u32) => (await sha256(new Uint8Array(u32.buffer, u32.byteOffset, u32.byteLength))).slice(0, 16);
+async function runPipeline() {
+  if (S.busy || !S.engine || !S.R[0]) return; setBusy(true); const eng = S.engine;
+  const gen = ++S.gen, chain = [S.R[0]]; let stage = 0;
+  const progs = { 1: S.progs[1], 2: S.progs[2] }, srcs = { 1: S.src[1], 2: S.src[2] }, steps = { 1: S.steps[1], 2: S.steps[2] };
+  const m = $("run-msg"); m.className = "msg"; m.textContent = `running on ${eng.label}…`;
+  try {
+    addLog("PLAN", `Run R0 → BF1 → R1 → BF2 → R2 on ${eng.label}: BF1 ${steps[1]} steps in Z/${progs[1].p}^${progs[1].n}, BF2 ${steps[2]} steps in Z/${progs[2].p}^${progs[2].n}.`);
+    for (const k of [1, 2]) {
+      stage = k; const prog = progs[k];
+      addLog("TOOL", `bf${k} module=${prog.module} ring=${prog.p}^${prog.n} steps=${steps[k]} engine=${eng.name} input=${short(chain[k - 1].tuple_id)}`);
+      const { out, ms } = await use(eng, prog, chain[k - 1].field, steps[k]);
+      if (gen !== S.gen || S.R[0] !== chain[0]) throw new Error("R0 changed during the run; run again");
+      const psha = await sha256(new TextEncoder().encode(srcs[k]));
+      S.R[k] = await buildRuss(R_TEMPLATES, k, out, { stage: `R${k}`, xpu: `ByteFoundry ${k}`, law: `${prog.module} in Z/${prog.p}^${prog.n}`, steps: steps[k],
+        input_tuple_id: chain[k - 1].tuple_id, lcuf_program_sha256: psha, lcufa_compiler: LCUFA_COMPILER_VERSION, console: CONSOLE_VERSION });
+      S.R[k].field = out; S.R[k].steps = steps[k]; S.R[k].programSha = psha; chain[k] = S.R[k]; S.times[k] = { ms, eng: eng.label };
+      if (k === 1) { S.R[2] = null; S.times[2] = null; S.stale = false; }   // R1 is current; R2 is now pending
+      addLog("OBSERVE", `R${k} ${short(S.R[k].tuple_id)} · ${ms.toFixed(1)} ms · ${mlu(steps[k], ms).toFixed(1)} M lane-updates/s · .russ ${S.R[k].bytes.length} bytes`);
+      drawChain();
+    }
+    S.stale = false;
+    addLog("EMIT", `R2 ${S.R[2].tuple_id}`);
+    m.className = "msg ok"; m.textContent = `done: R1 in ${S.times[1].ms.toFixed(1)} ms, R2 in ${S.times[2].ms.toFixed(1)} ms on ${eng.label}`;
+  } catch (e) {
+    // a stage that did not finish leaves no output: clear it and everything after it
+    if (gen === S.gen) for (let k = Math.max(stage, 1); k <= 2; k++) { S.R[k] = null; S.times[k] = null; }
+    m.className = "msg err"; m.textContent = `pipeline stopped at BF${stage || 1}: ${e.message}`; addLog("OBSERVE", "error: " + e.message);
+  } finally { drawChain(); select(S.sel); setBusy(false); }
+}
+// Hologram across files: for a 2-adic T-function program, layer j of R1 depends only on layer j of R0.
+// Run BF1 on R0 reduced mod 2^j and compare the result's layer j digest with R1's stored layer j.
+async function checkHologram() {
+  const m = $("run-msg"), box = $("cmp");
+  if (!S.R[1] || S.stale) { m.className = "msg err"; m.textContent = "run the pipeline first, so R1 matches the current BF1 program and steps"; return; }
+  if (S.progs[1].p !== 2) { m.className = "msg err"; m.textContent = "the hologram check applies to a 2-adic BF1 program"; return; }
+  if (S.busy || !S.engine) return; setBusy(true);
+  const eng = S.engine, rows = []; let all = true;
+  try {
+    for (const j of [1, 2, 4, 8, 12, 16, 20]) {
+      const mask = ((1 << j) - 1) >>> 0;
+      const { out } = await use(eng, S.progs[1], S.R[0].field.map((x) => x & mask), S.R[1].steps);
+      const lv = (await pyramid(toPlanar(out)))[j - 1].sha256, want = S.R[1].levels[j - 1].sha256, ok = lv === want; all &&= ok;
+      rows.push(`<tr><td class="num">${j}</td><td class="mono">${esc(want.slice(0, 16))}…</td><td class="mono">${esc(lv.slice(0, 16))}…</td><td class="${ok ? "ok-t" : "bad-t"}">${ok ? "holds" : "BROKEN"}</td></tr>`);
+    }
+    box.hidden = false;
+    box.innerHTML = `<table><thead><tr><th class="num">Layer j</th><th>R1 layer j (stored)</th><th>BF1 run on R0 mod 2^j</th><th>Hologram</th></tr></thead><tbody>${rows.join("")}</tbody></table>`;
+    m.className = all ? "msg ok" : "msg err";
+    m.textContent = all ? "hologram holds: each checked layer of R1 is reproduced from the same layer of R0 alone" : "hologram BROKEN: a higher bit changed a lower one. Every LCUF-A op is 1-Lipschitz in Z/2^20, so this points to an engine fault; compare engines";
+    addLog("TOOL", "check hologram R0 → R1 at layers 1,2,4,8,12,16,20"); addLog("OBSERVE", m.textContent);
+  } catch (e) { m.className = "msg err"; m.textContent = "hologram check stopped: " + e.message; }
+  finally { setBusy(false); }
+}
+async function compareEngines() {
+  if (S.busy || !S.R[0]) return; setBusy(true);
+  try {
+  const box = $("cmp"); box.hidden = false; box.innerHTML = `<p class="note">Running BF1 and BF2 on every available engine…</p>`;
+  const rows = [];
+  // reference: the R2 on display when it matches the current settings, else the first engine's result
+  let ref = S.R[2] && !S.stale ? await sha(S.R[2].field) : null; const refName = ref ? "displayed R2" : "first engine";
+  for (const e of S.engines) {
+    if (e.unavailable) { rows.push(`<tr><td>${esc(e.name)}</td><td colspan="5" class="note">${esc(e.unavailable)}</td></tr>`); continue; }
+    try {
+      const a = await use(e, S.progs[1], S.R[0].field, S.steps[1]); const b = await use(e, S.progs[2], a.out, S.steps[2]);
+      const d = await sha(b.out); if (!ref) ref = d;
+      rows.push(`<tr><td>${esc(e.label)}</td><td class="num">${a.ms.toFixed(1)}</td><td class="num">${b.ms.toFixed(1)}</td><td class="num">${mlu(S.steps[1], a.ms).toFixed(1)}</td><td class="num mono">${d}</td><td class="${d === ref ? "ok-t" : "bad-t"}">${d === ref ? "identical" : "DIFFERS"}</td></tr>`);
+    } catch (err) { rows.push(`<tr><td>${esc(e.label)}</td><td colspan="5" class="bad-t">${esc(err.message)}</td></tr>`); }
+  }
+  box.innerHTML = `<table><thead><tr><th>Engine</th><th class="num">BF1 ms</th><th class="num">BF2 ms</th><th class="num">BF1 M lane-updates/s</th><th class="num">R2 field digest</th><th>Against ${refName}</th></tr></thead><tbody>${rows.join("")}</tbody></table>`;
+  addLog("TOOL", "compare engines"); addLog("OBSERVE", `${S.engines.filter((e) => !e.unavailable).length} engines run; R2 digest ${ref}`);
+  } finally { setBusy(false); }
+}
+
+/* ---------- drawing ---------- */
+function drawChain() {
+  for (const k of [0, 1, 2]) {
+    const r = S.R[k], el = $("n-r" + k), stale = S.stale && k > 0 && r;
+    el.classList.toggle("stale", !!stale);
+    const pop = r ? r.field.reduce((s, v, i) => s + ((i & 7) === 0 ? v & 1 : 0), 0) : 0;
+    el.innerHTML = `<div class="t"><b>R${k}</b>${stale ? '<span class="stale-tag">stale</span>' : '<span class="ring two">2^20 · 20 layers</span>'}</div>
+      <div class="kv"><span>tuple</span><span>${r ? short(r.tuple_id) : "not run"}</span><span>.russ</span><span>${r ? (r.bytes.length / 1024).toFixed(0) + " KB" : "—"}</span><span>live · lane 0</span><span>${r ? pop : "—"}</span></div>`;
+  }
+  for (const k of [1, 2]) {
+    const p = S.progs[k], t = S.times[k], el = $("n-bf" + k);
+    el.innerHTML = `<div class="t"><b>ByteFoundry ${k}</b><span class="ring ${p.p === 2 ? "two" : "five"}">Z/${p.p}^${p.n}</span></div>
+      <label class="inl" for="st-${k}">steps <input id="st-${k}" type="number" min="1" max="5000" value="${S.steps[k]}"></label>
+      <div class="kv"><span>kernel</span><span>${esc(p.module)}</span><span>time</span><span>${t ? t.ms.toFixed(1) + " ms" : "—"}</span><span>rate</span><span>${t ? mlu(S.steps[k], t.ms).toFixed(1) + " M/s" : "—"}</span></div>`;
+    $("st-" + k).disabled = S.busy;
+    $("st-" + k).addEventListener("change", (e) => { const v = Math.max(1, Math.min(5000, Math.floor(Number(e.target.value)) || 1)); e.target.value = v; if (v !== S.steps[k]) { S.steps[k] = v; markStale(`BF${k} steps changed`); } });
+  }
+  document.querySelectorAll("[data-r]").forEach((b) => b.classList.toggle("sel", Number(b.dataset.r) === S.sel));
+}
+const heat = (t) => { let r = t < 128 ? t / 2 : 64 + (t - 128) * 1.5, g = t < 128 ? 24 + t / 3 : 66 + (t - 128), b = t < 128 ? 60 + t : 188 - (t - 128); return [Math.min(255, r | 0), Math.min(255, g | 0), Math.min(255, b | 0)]; };
+const ctx = $("cv").getContext("2d"), img = ctx.createImageData(128, 128);
+function draw() {
+  const r = S.R[S.sel]; if (!r) { ctx.clearRect(0, 0, 128, 128); $("tag").textContent = `R${S.sel} not run yet`; return; }
+  const f = r.field, prev = S.sel > 0 && S.R[S.sel - 1] ? S.R[S.sel - 1].field : null;
+  const m = S.level >= 32 ? 0xffffffff : ((1 << S.level) - 1) >>> 0, sh = Math.max(0, S.level - 8), d = img.data;
+  for (let c = 0; c < 16384; c++) {
+    const base = c * 8; let col;
+    if (S.view === 1) col = (f[base + S.lane] & m & 1) ? [250, 246, 236] : [14, 16, 22];
+    else if (S.view === 2) { let n = 0; for (let k = 0; k < 8; k++) n += ((f[base + k] & m) >>> S.plane) & 1; col = heat(Math.min(255, n * 32)); }
+    else if (S.view === 3) col = heat(((f[base + S.lane] & m) >>> sh) & 255);
+    else if (S.view === 4) { let n = 0; if (prev) for (let k = 0; k < 8; k++) { let x = (f[base + k] ^ prev[base + k]) & m; while (x) { n++; x &= x - 1; } } col = n ? heat(48 + Math.round(n * 207 / (8 * S.level))) : [14, 16, 22]; }
+    else { let v = 0; for (let k = 0; k < 8; k++) v ^= f[base + k] & m; col = (f[base + S.lane] & 1) ? [250, 246, 236] : heat((v >>> sh) & 255); }
+    d[c * 4] = col[0]; d[c * 4 + 1] = col[1]; d[c * 4 + 2] = col[2]; d[c * 4 + 3] = 255;
+  }
+  ctx.putImageData(img, 0, 0);
+  $("tag").textContent = `R${S.sel} · level ${S.level} · ${["composite", "life lane " + S.lane, "bit plane " + S.plane, "lane " + S.lane, S.sel ? "change from R" + (S.sel - 1) : "change (R0 has no input)"][S.view]}`;
+}
+function select(k) {
+  S.sel = k; drawChain(); draw(); const r = S.R[k];
+  $("scope-title").textContent = `R${k} field`;
+  $("src").textContent = r ? r.source : "Run the pipeline to produce this R.";
+  $("pyr").innerHTML = r ? `<thead><tr><th>Level j</th><th>Ring</th><th>sha256 of field mod 2^j</th></tr></thead><tbody>` + r.levels.map((l) => `<tr><td class="num">${l.level}</td><td class="mono">${l.modulus}</td><td class="mono">${l.sha256}</td></tr>`).join("") + "</tbody>" : "";
+}
+
+/* ---------- log ---------- */
+function addLog(op, text) {
+  S.log.push({ op, text }); if (S.log.length > 128) S.log.splice(0, S.log.length - 128);
+  const t = $("tape"); t.textContent = "";
+  for (const s of S.log) { const o = document.createElement("span"); o.className = s.op; o.textContent = s.op; t.append(o, " " + s.text.replace(/\n/g, " ") + "\n"); }
+  t.scrollTop = t.scrollHeight;
+}
+const logText = () => S.log.map((s) => `${s.op} ${/^[\s:\-|]/.test(s.text) ? "|" : ""}${s.text.replace(/\n/g, " ")}`).join("\n");
+
+/* ---------- editor ---------- */
+function showProg(k) { S.editing = k; $("code").value = S.src[k]; [1, 2].forEach((i) => $("p-" + i).setAttribute("aria-pressed", String(i === k))); $("cmsg").textContent = ""; }
+document.querySelectorAll("[data-prog]").forEach((b) => b.addEventListener("click", () => showProg(Number(b.dataset.prog))));
+$("b-compile").addEventListener("click", () => {
+  const k = S.editing, txt = $("code").value, m = $("cmsg");
+  try { const c = compile(txt); S.progs[k] = c; S.src[k] = txt; m.className = "msg ok";
+    m.textContent = `compiled ${c.module}: ${c.rows.length} rows (${c.ninit} init, ${c.nstep} step, ${c.nfinal} final), ${Object.keys(c.slot).length} frame slots, ring Z/${c.p}^${c.n}`;
+    addLog("TOOL", `compile bf${k}`); addLog("OBSERVE", m.textContent); drawChain(); markStale(`BF${k} program recompiled`);
+  } catch (e) { m.className = "msg err"; m.textContent = e.message; }
+});
+$("b-restore").addEventListener("click", () => { const k = S.editing; const changed = S.src[k] !== ORIGINAL[k]; S.src[k] = ORIGINAL[k]; S.progs[k] = compile(ORIGINAL[k]); showProg(k); drawChain(); if (changed) markStale(`BF${k} program restored`); });
+$("ops").innerHTML = Object.entries(OPS).map(([n, v]) => `<code>${n}${v[1] === 2 ? " a,b" : " a"}${v[2] ? " · arg c" : ""}</code><span>${v[4]}</span>`).join("");
+
+/* ---------- wiring ---------- */
+document.querySelectorAll("[data-r]").forEach((b) => b.addEventListener("click", () => select(Number(b.dataset.r))));
+document.querySelectorAll("[data-view]").forEach((b) => b.addEventListener("click", () => { S.view = Number(b.dataset.view); document.querySelectorAll("[data-view]").forEach((o) => o.setAttribute("aria-pressed", String(o === b))); draw(); }));
+$("in-level").addEventListener("input", (e) => { S.level = Number(e.target.value); $("lvl-out").textContent = `j = ${S.level} · mod 2^${S.level}`; draw(); });
+$("in-lane").addEventListener("input", (e) => { const v = Number(e.target.value); if (v >= 0 && v <= 7) { S.lane = v; draw(); } });
+$("in-plane").addEventListener("input", (e) => { const v = Number(e.target.value); if (v >= 0 && v <= 19) { S.plane = v; draw(); } });
+$("b-run").addEventListener("click", runPipeline);
+$("b-compare").addEventListener("click", compareEngines);
+$("b-holo").addEventListener("click", checkHologram);
+$("b-seed").addEventListener("click", async () => { if (S.busy) return; setBusy(true); const seed = Number($("in-seed").value) >>> 0, dens = Math.max(0, Math.min(100, Number($("in-dens").value) | 0));
+  try { await setR0(seedField(seed, dens), { stage: "R0", origin: "seed", seed, plane0_density_percent: dens }); } finally { setBusy(false); }
+  addLog("TOOL", `r0 seed=${seed} density=${dens}`); addLog("OBSERVE", `R0 ${short(S.R[0].tuple_id)}`); $("r0-msg").className = "msg ok"; $("r0-msg").textContent = `new R0 ${S.R[0].tuple_id}`; });
+$("in-file").addEventListener("change", async (e) => {
+  const f = e.target.files[0]; if (!f || S.busy) return; const m = $("r0-msg");
+  if (f.size > 64 * 1024 * 1024) { m.className = "msg err"; m.textContent = `${f.name} is larger than 64 MB`; e.target.value = ""; return; }
+  setBusy(true);
+  try { const r = await readRuss(new Uint8Array(await f.arrayBuffer()));
+    if (r.problems.length) { m.className = "msg err"; m.textContent = `refused ${f.name}: ${r.problems.join("; ")}`; addLog("TOOL", `load ${f.name}`); addLog("OBSERVE", m.textContent); }
+    else {
+      await setR0(r.chunky, { stage: "R0", origin: "loaded", loaded_tuple_id: r.tuple_id });
+      m.className = "msg ok";
+      m.textContent = `loaded ${f.name}: ${r.tuple_id}; records, payload root, tuple id, .russl → IR lowering, MSSL bindings, field binding and 20 pyramid layers verified` + (r.warnings.length ? ` (note: ${r.warnings.join("; ")})` : "");
+      addLog("TOOL", `load ${f.name}`); addLog("OBSERVE", m.textContent);
+    }
+  } catch (err) { m.className = "msg err"; m.textContent = `refused ${f.name}: ${err.message}`; }
+  setBusy(false); e.target.value = "";
+});
+async function copy(text, label) { const m = $("run-msg"); try { await navigator.clipboard.writeText(text); m.className = "msg ok"; m.textContent = label + " copied"; } catch { m.className = "msg"; m.textContent = "copy was blocked here; select the text in the log instead"; } }
+$("b-copylog").addEventListener("click", () => copy(logText(), "BFTL/1 run log"));
+const local = location.protocol === "file:" || /^(127\.0\.0\.1|localhost|\[::1\])$/.test(location.hostname);
+if (local) { $("saves").hidden = false; $("save-note").hidden = true; }
+const save = (bytes, name, type) => { const u = URL.createObjectURL(new Blob([bytes], { type })); const a = document.createElement("a"); a.href = u; a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(u), 2000); };
+document.querySelectorAll("[data-save]").forEach((b) => b.addEventListener("click", () => { const k = Number(b.dataset.save); if (S.R[k]) save(S.R[k].bytes, `plume-r${k}.russ`, "application/octet-stream"); }));
+document.querySelectorAll("[data-savel]").forEach((b) => b.addEventListener("click", () => { const k = Number(b.dataset.savel); if (S.R[k]) save(S.R[k].source, `plume-r${k}.russl`, "text/plain"); }));
+
+(async () => {
+  showProg(1); drawChain(); setBusy(true); $("run-msg").textContent = "starting engines…";
+  try {
+    await startEngines();
+    await setR0(seedField(7, 35), { stage: "R0", origin: "seed", seed: 7, plane0_density_percent: 35 });
+    setBusy(false);
+    await runPipeline();
+  } catch (e) { setBusy(false); $("run-msg").className = "msg err"; $("run-msg").textContent = "start-up failed: " + e.message; }
+})();
+</script>

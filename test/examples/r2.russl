@@ -1,0 +1,44 @@
+RUSSL/1.0
+# Output of ByteFoundry 2 (5-adic XPU, Z/5^8). Produced by bytefoundry.bf2.plume5.
+# Field: 8 Byte20 lanes (c6) x 128 rows (c7) x 128 columns (c8), u32 words holding 20 bits.
+# Layers: a 20-level 2-adic pyramid; level j is the field reduced mod 2^j.
+@unit id=plume.r2 version=1.0.0 profile=russl.core target=russ fail=closed
+@defaults mode=deterministic regime=exact effect=read scope=self
+@mssl alias=master module=master_coupled_mechanics source_version=0.1 digest=sha256:35158ea4260b69a1cb0c5037e5fdabc89d0fc253ba2866abb517a4ff7b08b15f
+@mssl alias=admission module=final_admission source_version=0.1 digest=sha256:0e4952a1e4a059c431863bbf6d225a26f08b75e51be88d1c9fccbf202ebad426
+@frame id=F0000 parent=ROOT module=plume.r2 phase=construct-evaluate
+ID│LANE│OP│OUT│CTRL│IN│ARG│META
+F001│field│FD│field.frame│_│_│shape=1,1,8,128,128;sample=u32;axes=c4,c5,c6,c7,c8│_
+P001│field│FP│field.frame.candidate│F001│field.frame›source.state│mapping=identity5│eff=derive
+Y001│field│PY│field.pyramid│P001│field.frame.candidate│levels=20;downsample=mod2pow;spatial_axes=none│eff=derive
+@end
+@frame id=F0001 parent=F0000 module=plume.r2.pyramid phase=pyramid
+ID│LANE│OP│OUT│CTRL│IN│ARG│META
+L001│field│FS│field.level01│Y001│field.pyramid│selector=mod2pow:1│eff=derive
+L002│field│FS│field.level02│Y001│field.pyramid│selector=mod2pow:2│eff=derive
+L003│field│FS│field.level03│Y001│field.pyramid│selector=mod2pow:3│eff=derive
+L004│field│FS│field.level04│Y001│field.pyramid│selector=mod2pow:4│eff=derive
+L005│field│FS│field.level05│Y001│field.pyramid│selector=mod2pow:5│eff=derive
+L006│field│FS│field.level06│Y001│field.pyramid│selector=mod2pow:6│eff=derive
+L007│field│FS│field.level07│Y001│field.pyramid│selector=mod2pow:7│eff=derive
+L008│field│FS│field.level08│Y001│field.pyramid│selector=mod2pow:8│eff=derive
+L009│field│FS│field.level09│Y001│field.pyramid│selector=mod2pow:9│eff=derive
+L010│field│FS│field.level10│Y001│field.pyramid│selector=mod2pow:10│eff=derive
+L011│field│FS│field.level11│Y001│field.pyramid│selector=mod2pow:11│eff=derive
+L012│field│FS│field.level12│Y001│field.pyramid│selector=mod2pow:12│eff=derive
+L013│field│FS│field.level13│Y001│field.pyramid│selector=mod2pow:13│eff=derive
+L014│field│FS│field.level14│Y001│field.pyramid│selector=mod2pow:14│eff=derive
+L015│field│FS│field.level15│Y001│field.pyramid│selector=mod2pow:15│eff=derive
+L016│field│FS│field.level16│Y001│field.pyramid│selector=mod2pow:16│eff=derive
+L017│field│FS│field.level17│Y001│field.pyramid│selector=mod2pow:17│eff=derive
+L018│field│FS│field.level18│Y001│field.pyramid│selector=mod2pow:18│eff=derive
+L019│field│FS│field.level19│Y001│field.pyramid│selector=mod2pow:19│eff=derive
+L020│field│FS│field.level20│Y001│field.pyramid│selector=mod2pow:20│eff=derive
+@end
+@frame id=F0002 parent=F0001 module=plume.r2.evaluate phase=evaluate-admit
+ID│LANE│OP│OUT│CTRL│IN│ARG│META
+C001│mechanics│CD│coupling.moore│Y001│field.pyramid│neighborhood=moore2;radius=1;representation=lane-rotated│eff=derive
+M001│mechanics│ME│mechanics.result│C001│master›field.pyramid│mode=deterministic;coupling=coupling.moore│eff=derive
+A001│admission│AE│admission.result│M001│admission›mechanics.result│policy=baseline│eff=derive
+E001│evidence│ER│receipt│A001│admission.result│content_bound=true│eff=write:evidence
+@end

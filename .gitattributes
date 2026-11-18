@@ -1,0 +1,12 @@
+# text is stored with LF; Windows batch files are checked out with CRLF, which cmd.exe needs for labels
+* text=auto eol=lf
+*.cmd text eol=crlf
+# binary data: never converted or diffed as text
+*.wasm binary
+*.png binary
+*.bin binary
+*.russ binary
+*.b20 binary
+*.zip binary
+# Zarr chunks and shards have no extension
+shards/zarr/**/c/** binary

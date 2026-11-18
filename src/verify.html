@@ -1,0 +1,80 @@
+<title>Verify R files · Plume XPU Console</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@400;500;600&display=swap">
+<style>
+%%CSS%%
+/* Verify R files: .russ containers checked in the page by the console's own toolchain. */
+.drop { border: 1.5px dashed var(--line); border-radius: 10px; padding: 22px; text-align: center; color: var(--muted); }
+.drop.over { border-color: var(--accent); color: var(--ink); }
+.verdict { font: 600 13px var(--f-mono); padding: 8px 10px; border-radius: 7px; border: 1px solid var(--line); background: var(--sunk); overflow-wrap: anywhere; }
+.verdict.ok { color: var(--good); border-color: color-mix(in srgb, var(--good) 45%, transparent); } .verdict.err { color: var(--bad); border-color: var(--bad); }
+td.res { font: 600 12px var(--f-mono); white-space: nowrap; } td.res.ok { color: var(--good); } td.res.err { color: var(--bad); }
+td.det { font: 12px var(--f-mono); overflow-wrap: anywhere; }
+</style>
+
+<div class="wrap">
+  <header class="bar">
+    <div class="brand"><h1>Verify R files <span class="pill" id="ver" style="vertical-align:middle;letter-spacing:.04em"></span></h1>
+      <div class="sub">RUSS 1.3 containers, checked here by the console's own toolchain: records, payload root, tuple id, the .russl → IR lowering, MSSL bindings, the field binding and all 20 pyramid layers</div></div>
+    <nav class="pages" aria-label="Console pages"><a href="index.html">Console</a><a href="simmy.html">Simmy replay</a><a href="city.html">Port Alder</a><a href="verify.html" aria-current="page">Verify R files</a></nav>
+  </header>
+
+  <section class="panel" aria-label="Files">
+    <div class="drop" id="drop">Drop .russ files here, or <label class="btn" for="pick" style="display:inline-block">choose files…</label>
+      <input type="file" id="pick" accept=".russ,application/octet-stream" multiple hidden></div>
+    <div class="verdict" id="verdict">Nothing checked yet. Nothing leaves this page: the files are read and verified locally.</div>
+    <div class="tbl"><table><thead><tr><th>file</th><th class="num">bytes</th><th>result</th><th>detail</th></tr></thead><tbody id="rows"></tbody></table></div>
+  </section>
+</div>
+
+<script type="module">
+%%MODULES%%
+const $ = (id) => document.getElementById(id);
+$("ver").textContent = "%%VERSION%%";
+const token = document.querySelector('meta[name="plume-token"]')?.content ?? null;
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+async function check(name, bytes) {
+  try {
+    if (bytes.length > 64 * 1024 * 1024) return { name, ok: false, detail: "larger than 64 MB" };
+    const r = await readRuss(bytes);
+    if (r.problems.length) return { name, ok: false, detail: r.problems.join("; ") };
+    const p = r.provenance?.pipeline || {};
+    return { name, ok: true, detail: `${r.tuple_id} (${p.stage ?? "?"}${p.input_tuple_id ? ", input " + p.input_tuple_id : ""})${r.warnings.length ? "; note: " + r.warnings.join("; ") : ""}` };
+  } catch (e) { return { name, ok: false, detail: e.message }; }
+}
+function show(results, sizes) {
+  $("rows").innerHTML = results.map((r, i) => `<tr><td>${esc(r.name)}</td><td class="num">${sizes[i].toLocaleString()}</td><td class="res ${r.ok ? "ok" : "err"}">${r.ok ? "verified" : "refused"}</td><td class="det">${esc(r.detail)}</td></tr>`).join("");
+  const bad = results.filter((r) => !r.ok).length, v = $("verdict");
+  v.className = "verdict " + (bad ? "err" : "ok");
+  v.textContent = bad ? `${bad} of ${results.length} file${results.length === 1 ? "" : "s"} refused` : `all ${results.length} file${results.length === 1 ? "" : "s"} verified`;
+}
+async function local(files) {
+  const list = [...files]; if (!list.length) return;
+  $("verdict").className = "verdict"; $("verdict").textContent = `checking ${list.length} file${list.length === 1 ? "" : "s"}…`;
+  const results = [], sizes = [];
+  for (const f of list) { sizes.push(f.size); results.push(f.size > 64 * 1024 * 1024 ? { name: f.name, ok: false, detail: "larger than 64 MB" } : await check(f.name, new Uint8Array(await f.arrayBuffer()))); }
+  show(results, sizes);
+}
+$("pick").addEventListener("change", (e) => { local(e.target.files); e.target.value = ""; });
+const drop = $("drop");
+drop.addEventListener("dragover", (e) => { e.preventDefault(); drop.classList.add("over"); });
+drop.addEventListener("dragleave", () => drop.classList.remove("over"));
+drop.addEventListener("drop", (e) => { e.preventDefault(); drop.classList.remove("over"); local(e.dataTransfer.files); });
+
+// On the Photon host (python host/plume_photon.py --verify FILE.russ ...), the files come from the host,
+// and the results go back to it: it prints them and exits with 0 only if every file verified.
+if (token) (async () => {
+  try {
+    const host = await (await fetch("/api/host")).json();
+    if (!host.verify) return;
+    $("verdict").textContent = "the host sent files: checking…";
+    const { files } = await (await fetch("/api/verify")).json(), results = [], sizes = [];
+    for (const f of files) { sizes.push(f.bytes); results.push(await check(f.name, new Uint8Array(await (await fetch(`/api/verify/${f.index}`)).arrayBuffer()))); }
+    show(results, sizes);
+    const r = await fetch("/api/verify/report", { method: "POST", headers: { "Content-Type": "application/json", "X-Plume-Token": token }, body: JSON.stringify({ results }) });
+    $("verdict").textContent += r.ok ? " · report sent to the host; you can close this window" : ` · the host refused the report (${r.status})`;
+  } catch (e) { $("verdict").className = "verdict err"; $("verdict").textContent = "could not talk to the host: " + e.message; }
+})();
+</script>

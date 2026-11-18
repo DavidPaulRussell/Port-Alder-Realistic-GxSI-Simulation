@@ -1,0 +1,417 @@
+<title>Plume XPU Live</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: a dark stage, one slide at a time, a live instrument on every slide; numbers set wide and heavy. Single dark look by choice. */
+:root {
+  --stage: #0a0e15; --panel: #111722; --line: #222b3b; --ink: #e9edf4; --muted: #8893a7;
+  --two: #8d9cf0; --five: #4cc4b2; --heat: #f0a23b; --good: #4cc4b2; --bad: #ff7a6b;
+  --f-display: "Archivo", "Arial Black", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { margin: 0; background: var(--stage); color: var(--ink); font: 15px/1.5 var(--f-display); font-stretch: 100%; overflow-x: hidden; }
+button { font: inherit; color: inherit; }
+.mono { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.deck { min-height: 100%; display: grid; grid-template-rows: auto 1fr auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 14px; gap: 10px; max-width: 1280px; margin: 0 auto; }
+.top { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between; }
+.brand { font-weight: 800; font-stretch: 125%; letter-spacing: .08em; text-transform: uppercase; font-size: 13px; }
+.hw { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font: 600 11px var(--f-mono); padding: 3px 8px; border-radius: 99px; border: 1px solid var(--line); color: var(--muted); }
+.chip.on { color: var(--good); border-color: color-mix(in srgb, var(--good) 45%, transparent); }
+.slide { display: grid; gap: 18px; align-content: start; min-width: 0; animation: in .35s ease-out; }
+@keyframes in { from { opacity: .4; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .slide { animation: none; } }
+.eyebrow { font: 600 12px var(--f-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--heat); }
+h1, h2 { margin: 0; font-weight: 850; font-stretch: 112%; letter-spacing: -.01em; text-wrap: balance; line-height: 1.02; }
+h1 { font-size: clamp(44px, 8vw, 104px); font-stretch: 125%; }
+h2 { font-size: clamp(28px, 4.2vw, 52px); }
+.lede { font-size: clamp(16px, 1.6vw, 20px); color: var(--muted); max-width: 62ch; margin: 0; font-weight: 400; }
+.lede b { color: var(--ink); font-weight: 650; }
+.cols { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 22px; align-items: start; }
+@media (max-width: 860px) { .cols { grid-template-columns: minmax(0, 1fr); } }
+.screen { background: #05070b; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; aspect-ratio: 1; max-width: 100%; position: relative; }
+.screen canvas { width: 100%; height: 100%; display: block; image-rendering: pixelated; }
+.screen .tag { position: absolute; left: 10px; bottom: 10px; font: 500 12px var(--f-mono); background: #05070bcc; padding: 3px 7px; border-radius: 4px; color: var(--muted); }
+.big { font-weight: 900; font-stretch: 125%; font-variant-numeric: tabular-nums; font-size: clamp(40px, 6vw, 78px); line-height: 1; }
+.unit { font: 500 13px var(--f-mono); color: var(--muted); }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; }
+.stat { display: grid; gap: 4px; }
+.stat .label { font: 600 11px var(--f-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.stat .v { font-weight: 850; font-stretch: 118%; font-size: clamp(26px, 3.2vw, 40px); font-variant-numeric: tabular-nums; line-height: 1.05; }
+.btn { border: 1px solid var(--line); background: var(--panel); border-radius: 8px; padding: 8px 14px; cursor: pointer; font-weight: 650; }
+.btn:hover { border-color: var(--muted); }
+.btn.go { background: var(--heat); border-color: var(--heat); color: #1a1206; }
+.btn:disabled { opacity: .5; cursor: progress; }
+button:focus-visible { outline: 2px solid var(--heat); outline-offset: 2px; }
+.row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.note { color: var(--muted); font-size: 13.5px; margin: 0; max-width: 70ch; }
+
+/* bit grid */
+.bits { display: grid; grid-template-columns: 2.4em repeat(20, minmax(0, 1fr)); gap: 3px; font: 11px var(--f-mono); color: var(--muted); }
+.bits i { aspect-ratio: 1; border-radius: 2px; background: #1a2130; display: block; }
+.bits i.on { background: var(--two); }
+.bits i.p0.on { background: var(--ink); }
+.bits i.flip { box-shadow: 0 0 0 2px var(--heat) inset; }
+
+/* chain */
+.chain { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 860px) { .chain { grid-template-columns: minmax(0, 1fr); } }
+.node { border: 1px solid var(--line); border-radius: 10px; padding: 14px; display: grid; gap: 6px; min-height: 132px; align-content: start; background: var(--panel); transition: border-color .3s, box-shadow .3s; }
+.node.xpu { background: transparent; border-style: dashed; }
+.node.live { border-color: var(--heat); box-shadow: 0 0 0 1px var(--heat), 0 0 28px -8px var(--heat); }
+.node.done { border-color: color-mix(in srgb, var(--good) 55%, transparent); }
+.node .n { font-weight: 850; font-stretch: 120%; font-size: 22px; }
+.node .r { font: 600 11px var(--f-mono); }
+.node .d { font: 12px var(--f-mono); color: var(--muted); overflow-wrap: anywhere; }
+
+/* race */
+.lanes { display: grid; gap: 14px; }
+.lane { display: grid; grid-template-columns: minmax(150px, 220px) minmax(0, 1fr) minmax(120px, 170px); gap: 14px; align-items: center; }
+@media (max-width: 760px) { .lane { grid-template-columns: minmax(0, 1fr); gap: 6px; } }
+.lane .who { font-weight: 700; } .lane .who small { display: block; font: 12px var(--f-mono); color: var(--muted); font-weight: 400; }
+.track { height: 26px; border-radius: 6px; background: #161d2a; overflow: hidden; position: relative; }
+.fill { position: absolute; inset: 0 auto 0 0; width: 0%; background: linear-gradient(90deg, color-mix(in srgb, var(--heat) 40%, transparent), var(--heat)); transition: width .12s linear; }
+.lane.gpu .fill { background: linear-gradient(90deg, color-mix(in srgb, var(--two) 40%, transparent), var(--two)); }
+.lane.js .fill { background: linear-gradient(90deg, #4a5468, #8893a7); }
+.lane .res { font: 600 13px var(--f-mono); text-align: right; }
+.lane .res small { display: block; color: var(--muted); font-weight: 400; }
+.ok { color: var(--good); } .bad { color: var(--bad); }
+
+/* hologram layers */
+.layers { display: grid; grid-template-columns: repeat(20, minmax(0, 1fr)); gap: 4px; align-items: end; height: 190px; }
+.layers div { display: grid; grid-template-rows: 1fr auto; gap: 4px; height: 100%; }
+.layers b { display: block; border-radius: 3px 3px 0 0; background: #1a2130; align-self: end; transition: background .25s; }
+.layers b.ok { background: var(--five); } .layers b.run { background: var(--heat); } .layers b.bad { background: var(--bad); }
+.layers span { font: 10px var(--f-mono); color: var(--muted); text-align: center; }
+
+/* trust */
+.trials { display: grid; gap: 10px; }
+.trial { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 14px; align-items: center; background: var(--panel); }
+.trial .what { font-weight: 700; } .trial .why { grid-column: 1 / -1; font: 12.5px var(--f-mono); color: var(--muted); overflow-wrap: anywhere; }
+.verdict { font: 700 13px var(--f-mono); letter-spacing: .06em; text-transform: uppercase; }
+
+/* scoreboard */
+.tbl { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { padding: 8px 10px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; }
+th { font: 600 11px var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+td.num, th.num { text-align: right; font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+td.hi { color: var(--heat); font-weight: 700; }
+.claims { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+.claims div { border-top: 2px solid var(--line); padding-top: 10px; }
+.claims h3 { margin: 0 0 6px; font-size: 15px; font-weight: 750; }
+.claims ul { margin: 0; padding-left: 18px; color: var(--muted); font-size: 14px; display: grid; gap: 4px; }
+
+/* nav */
+.nav { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.dots { display: flex; gap: 6px; flex-wrap: wrap; }
+.dots button { width: 28px; height: 6px; border-radius: 3px; border: 0; background: var(--line); cursor: pointer; padding: 0; }
+.dots button[aria-current="true"] { background: var(--heat); }
+.keys { font: 12px var(--f-mono); color: var(--muted); }
+</style>
+
+<div class="deck">
+  <div class="top">
+    <span class="brand">Plume XPU · live</span>
+    <div class="hw" id="hw"><span class="chip">detecting hardware…</span></div>
+  </div>
+  <main id="stage"></main>
+  <div class="nav">
+    <button class="btn" id="prev" aria-label="Previous slide">← Back</button>
+    <div class="dots" id="dots" aria-label="Slides"></div>
+    <span class="keys">← → or space</span>
+    <button class="btn go" id="next" aria-label="Next slide">Next →</button>
+  </div>
+</div>
+
+<script type="module">
+%%MODULES%%
+const R_TEMPLATES = %%TEMPLATES%%;
+const XPU_1T = "%%XPU_B64%%", XPU_MT = "%%XPU_MT_B64%%";
+const b64 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
+const $ = (id) => document.getElementById(id);
+const esc = (x) => String(x).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const frame = () => new Promise((r) => requestAnimationFrame(r));
+const BF1 = compile(BF1_SOURCE), BF2 = compile(BF2_SOURCE);
+const mlu = (steps, ms) => (WORDS * steps / ms / 1000);
+const fmt = (x, d = 1) => x == null ? "—" : x.toFixed(d);
+
+// reference run supplied by the user (Plume XPU Console 1.2.0 log, 2 Nov 2026)
+const REFERENCE = { label: "Reference run · console 1.2.0 (before the 1.3.0 CPU speed-up) · AMD GCN-5 GPU, 8 CPU threads", rows: { "wasm-1t": [15.8, 5.0], "wasm-mt": [35.5, 14.8], webgpu: [116.7, 119.0] } };
+
+/* ---------- engines ---------- */
+const E = { list: [], best: null, ready: null, results: {} };
+function spawn(src) {
+  const url = URL.createObjectURL(new Blob([src], { type: "text/javascript" })); const w = new Worker(url); URL.revokeObjectURL(url);
+  const hs = new Set(); w.onmessage = (e) => hs.forEach((h) => h(e.data));
+  w.onerror = (e) => { e.preventDefault?.(); hs.forEach((h) => h({ type: "error", message: e.message || "worker error" })); };
+  return { post: (m, t) => w.postMessage(m, t), onMessage: (f) => hs.add(f), offMessage: (f) => hs.delete(f), terminate: () => w.terminate() };
+}
+// Plain JavaScript baseline: the BF1 law written directly as typed-array loops, no LCUF-A engine.
+const BASELINE_SRC = `
+const L = 8, H = 128, W = 128, M = 0xFFFFF;
+function step(a, o) {
+  for (let y = 0; y < H; y++) { const ym = (y + H - 1) % H, yp = (y + 1) % H;
+    for (let x = 0; x < W; x++) { const xm = (x + W - 1) % W, xp = (x + 1) % W;
+      const nb = [(ym*W+xm)*L, (ym*W+x)*L, (ym*W+xp)*L, (y*W+xm)*L, (y*W+xp)*L, (yp*W+xm)*L, (yp*W+x)*L, (yp*W+xp)*L], b = (y*W+x)*L;
+      for (let k = 0; k < L; k++) { const kn = (k + 1) & 7; let live = 0, s = 0;
+        for (let j = 0; j < 8; j++) { live += a[nb[j] + k] & 1; s += a[nb[j] + kn]; }
+        const v = a[b + k], lo = (v & 1) ? ((12 >> live) & 1) : ((8 >> live) & 1);
+        const t = (v + ((Math.imul(v, v) & M) | 5)) & M;
+        o[b + k] = (lo + 2 * ((t ^ (s & M)) & M)) & M; } } } }
+onmessage = (e) => { let a = e.data.input, o = new Uint32Array(a.length); const t0 = performance.now();
+  for (let s = 0; s < e.data.steps; s++) { step(a, o); const t = a; a = o; o = t; }
+  postMessage({ out: a, ms: performance.now() - t0 }, [a.buffer]); };`;
+function baselineEngine() {
+  const w = spawn(BASELINE_SRC);
+  return { name: "js", label: "Plain JavaScript", threads: 1, run(_prog, input, steps) {
+    return new Promise((res, rej) => { const h = (m) => { w.offMessage(h); m.type === "error" ? rej(new Error(m.message)) : res(m); }; w.onMessage(h); const c = input.slice(); w.post({ input: c, steps }, [c.buffer]); }); } };
+}
+async function startEngines() {
+  const list = [baselineEngine()];
+  try { list.push(await createWasm1TWorker(b64(XPU_1T), spawn)); } catch { list.push(await createWasm1T(b64(XPU_1T))); }
+  if (globalThis.crossOriginIsolated && typeof SharedArrayBuffer !== "undefined") {
+    try { list.push(await createWasmMT(b64(XPU_MT), Math.max(2, Math.min(navigator.hardwareConcurrency || 4, 16)), spawn)); } catch {}
+  }
+  if (navigator.gpu) { try { list.push(await createWebGPU(navigator.gpu)); } catch {} }
+  E.list = list;
+  E.best = list.find((e) => e.name === "webgpu") || list.find((e) => e.name === "wasm-mt") || list.find((e) => e.name === "wasm-1t");
+  const hw = $("hw"); hw.textContent = "";
+  const add = (t, on) => { const c = document.createElement("span"); c.className = "chip" + (on ? " on" : ""); c.textContent = t; hw.append(c); };
+  add(`${navigator.hardwareConcurrency || "?"} CPU threads`, true);
+  for (const e of list.filter((x) => x.name !== "js")) add(e.label, true);
+  if (!list.some((e) => e.name === "wasm-mt")) add("Wasm threads: run locally", false);
+  if (!list.some((e) => e.name === "webgpu")) add("WebGPU: not available here", false);
+}
+E.ready = startEngines();
+
+/* ---------- shared data ---------- */
+function seedField(seed, dens) {
+  let s = (seed >>> 0) ^ 0x9e3779b9; const r = () => { s ^= s << 13; s >>>= 0; s ^= s >>> 17; s ^= s << 5; s >>>= 0; return s; };
+  const f = new Uint32Array(WORDS); for (let i = 0; i < WORDS; i++) { let v = r() & 0xffffe; if (r() % 100 < dens) v |= 1; f[i] = v; } return f;
+}
+const R0 = seedField(7, 35);
+const digest = async (u32) => (await sha256(new Uint8Array(u32.buffer, u32.byteOffset, u32.byteLength))).slice(0, 16);
+const heat = (t) => [Math.min(255, t < 128 ? t / 2 : 64 + (t - 128) * 1.5) | 0, Math.min(255, t < 128 ? 24 + t / 3 : 66 + (t - 128)) | 0, Math.min(255, t < 128 ? 60 + t : 188 - (t - 128)) | 0];
+function paint(ctx, f, other) {
+  const img = ctx.createImageData(128, 128), d = img.data;
+  for (let c = 0; c < 16384; c++) {
+    const b = c * 8; let col;
+    if (other) { let n = 0; for (let k = 0; k < 8; k++) { let x = f[b + k] ^ other[b + k]; while (x) { n++; x &= x - 1; } } col = n ? heat(Math.min(255, 60 + n * 3)) : ((f[b] & 1) ? [60, 66, 80] : [8, 10, 15]); }
+    else { let v = 0; for (let k = 0; k < 8; k++) v ^= f[b + k]; col = (f[b] & 1) ? [240, 236, 226] : heat((v >>> 12) & 255); }
+    d[c * 4] = col[0]; d[c * 4 + 1] = col[1]; d[c * 4 + 2] = col[2]; d[c * 4 + 3] = 255;
+  }
+  ctx.putImageData(img, 0, 0);
+}
+
+/* ---------- slides ---------- */
+let current = 0, token = 0;
+const live = () => { const t = token; return () => t === token; };
+const SLIDES = [
+  { id: "power", render: () => `
+    <div class="eyebrow">ByteFoundry · virtual XPU</div>
+    <h1>Plume XPU</h1>
+    <p class="lede">One computation, written once in <b>LCUF-A</b>, run in two number systems (2-adic and 5-adic) on every processor in this computer. <b>Every number on these slides is measured live, on your machine, while you watch.</b></p>
+    <div class="stats" id="s0"></div>
+    <div class="row"><button class="btn go" data-next>Start the demonstration →</button></div>`,
+    run: async (ok) => { await E.ready; if (!ok()) return;
+      const s = $("s0"); const t0 = performance.now(); const r = await E.best.run(BF1, R0, 200); if (!ok()) return;
+      s.innerHTML = `<div class="stat"><span class="label">Fastest engine here</span><span class="v" style="font-size:clamp(22px,2.6vw,32px)">${esc(E.best.label)}</span></div>
+        <div class="stat"><span class="label">Warm-up, 200 steps</span><span class="v mono">${fmt(r.ms, 0)}<span class="unit"> ms</span></span></div>
+        <div class="stat"><span class="label">Throughput</span><span class="v mono">${fmt(mlu(200, r.ms))}<span class="unit"> M lane-updates/s</span></span></div>
+        <div class="stat"><span class="label">Bits updated per step</span><span class="v mono">2.6<span class="unit"> million</span></span></div>`; } },
+  { id: "cell", render: () => `
+    <div class="eyebrow">The frame</div>
+    <h2>16,384 cells. 160 bits each. All of them, every step.</h2>
+    <div class="cols">
+      <div class="screen"><canvas id="cv1" width="128" height="128"></canvas><span class="tag mono" id="t1"></span></div>
+      <div style="display:grid;gap:14px;align-content:start">
+        <p class="lede">Each cell is a <b>Pixel160</b>: eight Byte20 lanes. Bit 0 runs Conway's Life. Bits 1 to 19 carry the plume field, a 19-step echo of what Life did. Below is the cell under the crosshair, updating live.</p>
+        <div class="bits" id="bits1"></div>
+        <div class="stats"><div class="stat"><span class="label">Step</span><span class="v mono" id="st1">0</span></div><div class="stat"><span class="label">Frames drawn / s</span><span class="v mono" id="fps1">—</span></div></div>
+      </div>
+    </div>`,
+    run: async (ok) => { await E.ready; const ctx = $("cv1").getContext("2d"); let f = R0, n = 0, t0 = performance.now(), frames = 0;
+      const cx = 64, cy = 64;
+      while (ok()) {
+        const prev = f; f = (await E.best.run(BF1, f, 1)).out; n++; frames++; if (!ok()) return;
+        paint(ctx, f); $("st1").textContent = n.toLocaleString(); $("t1").textContent = `cell (${cx}, ${cy}) · ${E.best.label}`;
+        const base = (cy * 128 + cx) * 8; let h = '<span></span>' + Array.from({ length: 20 }, (_, i) => `<span>${(19 - i) % 5 === 0 ? 19 - i : ""}</span>`).join("");
+        for (let k = 0; k < 8; k++) { h += `<span>L${k}</span>`; for (let bit = 19; bit >= 0; bit--) { const v = (f[base + k] >> bit) & 1, w = (prev[base + k] >> bit) & 1; h += `<i class="${v ? "on" : ""}${bit === 0 ? " p0" : ""}${v !== w ? " flip" : ""}"></i>`; } }
+        $("bits1").innerHTML = h;
+        if (performance.now() - t0 > 1000) { $("fps1").textContent = frames; frames = 0; t0 = performance.now(); }
+        await frame();
+      } } },
+  { id: "plume", render: () => `
+    <div class="eyebrow">A plume</div>
+    <h2>Flip one bit. Watch the consequence travel at exactly one cell per step.</h2>
+    <div class="cols">
+      <div class="screen"><canvas id="cv2" width="128" height="128"></canvas><span class="tag mono" id="t2"></span></div>
+      <div style="display:grid;gap:16px;align-content:start">
+        <p class="lede">Two copies of the frame run side by side. They differ in a single bit at the centre. Coloured cells are where they now disagree. The proven limit is a cone: the plume can never be more than <b>t</b> cells from where it started.</p>
+        <div class="stats">
+          <div class="stat"><span class="label">Step t</span><span class="v mono" id="p-t">0</span></div>
+          <div class="stat"><span class="label">Plume radius</span><span class="v mono" id="p-r">0</span></div>
+          <div class="stat"><span class="label">Bits that differ</span><span class="v mono" id="p-b">1</span></div>
+          <div class="stat"><span class="label">Radius ≤ t</span><span class="v" id="p-ok">—</span></div>
+        </div>
+        <div class="row"><button class="btn" id="p-again">Flip again</button></div>
+      </div>
+    </div>`,
+    run: async (ok) => { await E.ready; const ctx = $("cv2").getContext("2d");
+      const go = async (ok) => {
+        let a = R0, b = R0.slice(); b[(64 * 128 + 64) * 8] ^= 1; let held = true;
+        for (let t = 1; t <= 64 && ok(); t++) {
+          [a, b] = [(await E.best.run(BF1, a, 1)).out, (await E.best.run(BF1, b, 1)).out]; if (!ok()) return;
+          let bits = 0, r = 0;
+          for (let c = 0; c < 16384; c++) { let any = 0; for (let k = 0; k < 8; k++) { let x = a[c * 8 + k] ^ b[c * 8 + k]; if (x) any = 1; while (x) { bits++; x &= x - 1; } }
+            if (any) { const dy = Math.abs((c >> 7) - 64), dx = Math.abs((c & 127) - 64); r = Math.max(r, Math.min(dx, 128 - dx), Math.min(dy, 128 - dy)); } }
+          held &&= r <= t; paint(ctx, a, b);
+          $("p-t").textContent = t; $("p-r").textContent = r; $("p-b").textContent = bits.toLocaleString();
+          $("p-ok").innerHTML = held ? '<span class="ok">holds</span>' : '<span class="bad">broken</span>'; $("t2").textContent = `two frames, one bit apart · ${E.best.label}`;
+          await sleep(30);
+        } };
+      $("p-again").onclick = () => { token++; go(live()); }; await go(ok); } },
+  { id: "pipeline", render: () => `
+    <div class="eyebrow">The pipeline</div>
+    <h2>Two XPUs, two number systems, five sealed files.</h2>
+    <div class="chain">
+      <div class="node" id="c0"><span class="n">R0</span><span class="r" style="color:var(--two)">.russl + .russ</span><span class="d" id="c0d">seeded frame</span></div>
+      <div class="node xpu" id="c1"><span class="n">ByteFoundry 1</span><span class="r" style="color:var(--two)">Z/2^20</span><span class="d" id="c1d">waiting</span></div>
+      <div class="node" id="c2"><span class="n">R1</span><span class="r" style="color:var(--two)">.russl + .russ</span><span class="d" id="c2d">—</span></div>
+      <div class="node xpu" id="c3"><span class="n">ByteFoundry 2</span><span class="r" style="color:var(--five)">Z/5^8</span><span class="d" id="c3d">waiting</span></div>
+      <div class="node" id="c4"><span class="n">R2</span><span class="r" style="color:var(--two)">.russl + .russ</span><span class="d" id="c4d">—</span></div>
+    </div>
+    <p class="lede">Each R is a RUSSL program with a <b>20-layer 2-adic pyramid</b> plus a sealed RUSS container. Every container is hashed, chained to the one before it, and verified as it is produced.</p>
+    <div class="row"><button class="btn" id="pl-again">Run again</button><span class="note" id="pl-note"></span></div>`,
+    run: async (ok) => { await E.ready;
+      const go = async () => {
+        ["c0", "c1", "c2", "c3", "c4"].forEach((id) => $(id).classList.remove("live", "done"));
+        $("c0").classList.add("live"); const r0 = await buildRuss(R_TEMPLATES, 0, R0, { stage: "R0", origin: "seed", seed: 7 }); if (!ok()) return;
+        $("c0d").textContent = r0.tuple_id.slice(12, 28) + "…"; $("c0").classList.replace("live", "done");
+        let input = R0, prev = r0; const out = {};
+        for (const k of [1, 2]) {
+          const xpu = $("c" + (2 * k - 1)), r = $("c" + (2 * k)); xpu.classList.add("live"); $(`c${2 * k - 1}d`).textContent = `running 400 steps on ${E.best.label}…`;
+          const res = await E.best.run(k === 1 ? BF1 : BF2, input, 400); if (!ok()) return;
+          $(`c${2 * k - 1}d`).textContent = `${fmt(res.ms, 0)} ms · ${fmt(mlu(400, res.ms))} M/s`; xpu.classList.replace("live", "done"); r.classList.add("live");
+          const R = await buildRuss(R_TEMPLATES, k, res.out, { stage: `R${k}`, steps: 400, input_tuple_id: prev.tuple_id }); if (!ok()) return;
+          const v = await readRuss(R.bytes); if (!ok()) return;
+          $(`c${2 * k}d`).textContent = `${R.tuple_id.slice(12, 28)}… · verified ${v.problems.length ? "✗" : "✓"}`; r.classList.replace("live", "done");
+          input = res.out; prev = R; out[k] = { R, res };
+        }
+        E.pipe = { r0, ...out };
+        $("pl-note").textContent = `R0 → R2 in ${fmt(out[1].res.ms + out[2].res.ms, 0)} ms of compute, each file re-verified, including re-lowering its RUSSL source.`;
+      };
+      $("pl-again").onclick = async () => { $("pl-again").disabled = true; await go(); $("pl-again").disabled = false; }; await go(); } },
+  { id: "race", render: () => `
+    <div class="eyebrow">The race</div>
+    <h2>Same law, same frame, 400 steps. Every engine in this computer.</h2>
+    <div class="lanes" id="lanes"></div>
+    <div class="row"><button class="btn go" id="rc-go">Race again</button><span class="note" id="rc-note">Bar length is measured speed. Engines run one after another so none slows the others. Plain JavaScript is the same law written as ordinary loops, the baseline any programmer would start from.</span></div>`,
+    run: async (ok) => { await E.ready;
+      const go = async () => {
+        const STEPS = 400, CHUNK = 40, lanes = $("lanes");
+        const order = ["js", "wasm-1t", "wasm-mt", "webgpu"].map((n) => E.list.find((e) => e.name === n)).filter(Boolean);
+        lanes.innerHTML = order.map((e) => `<div class="lane ${e.name === "webgpu" ? "gpu" : e.name === "js" ? "js" : ""}" id="ln-${e.name}"><div class="who">${esc(e.label.split(" · ")[0])}<small>${esc(e.name === "js" ? "ordinary loops, no XPU" : e.label.split(" · ").slice(1).join(" · ") || "LCUF-A engine")}</small></div><div class="track"><div class="fill"></div></div><div class="res">—</div></div>`).join("");
+        const digests = {}, rate = {};
+        // bar length = measured throughput against the fastest engine so far, so the finished race shows the real ratio
+        const rescale = () => { const max = Math.max(...Object.values(rate)); for (const [n, r] of Object.entries(rate)) $("ln-" + n).querySelector(".fill").style.width = `${r / max * 100}%`; };
+        for (const e of order) {
+          const lane = $("ln-" + e.name), fill = lane.querySelector(".fill"), res = lane.querySelector(".res");
+          let f = R0, ms = 0;
+          for (let s = 0; s < STEPS; s += CHUNK) {
+            const r = await e.run(BF1, f, CHUNK); if (!ok()) return; f = r.out; ms += r.ms;
+            rate[e.name] = mlu(s + CHUNK, ms); rescale(); res.innerHTML = `${fmt(rate[e.name])} M/s<small>${s + CHUNK} of ${STEPS} steps · ${fmt(ms, 0)} ms</small>`;
+            await frame();
+          }
+          digests[e.name] = await digest(f); E.results[e.name] = mlu(STEPS, ms);
+          res.innerHTML = `${fmt(mlu(STEPS, ms))} M/s<small>${fmt(ms, 0)} ms · ${digests[e.name].slice(0, 8)}</small>`;
+        }
+        const ref = digests[order[0].name], same = order.every((e) => digests[e.name] === ref);
+        const slow = E.results.js, fast = Math.max(...order.map((e) => E.results[e.name]));
+        $("rc-note").innerHTML = `${same ? '<span class="ok">All results identical</span>' : '<span class="bad">Results differ</span>'} (digest ${ref.slice(0, 8)}). The fastest engine here is <b>${fmt(fast / slow)}×</b> the plain JavaScript baseline.`;
+      };
+      $("rc-go").onclick = async () => { $("rc-go").disabled = true; await go(); $("rc-go").disabled = false; }; await go(); } },
+  { id: "hologram", render: () => `
+    <div class="eyebrow">The hologram</div>
+    <h2>Any layer of the answer can be rebuilt from the same layer of the question.</h2>
+    <div class="layers" id="layers"></div>
+    <p class="lede">For each of the 20 layers, ByteFoundry 1 is run on R0 cut down to <b>j bits</b>. The result's layer j must equal layer j of the full-precision R1, digest for digest. Lower layers never see the bits above them.</p>
+    <div class="row"><span class="note" id="h-note"></span></div>`,
+    run: async (ok) => { await E.ready;
+      const L = $("layers"); L.innerHTML = Array.from({ length: 20 }, (_, i) => `<div><b id="hb${i + 1}" style="height:${18 + (i + 1) * 8}px"></b><span>${i + 1}</span></div>`).join("");
+      const full = (await E.best.run(BF1, R0, 40)).out; if (!ok()) return;
+      const want = await pyramid(toPlanar(full)); let all = true, t0 = performance.now();
+      for (let j = 1; j <= 20 && ok(); j++) {
+        $("hb" + j).className = "run"; const m = ((1 << j) - 1) >>> 0;
+        const r = await E.best.run(BF1, R0.map((x) => x & m), 40); if (!ok()) return;
+        const got = (await pyramid(toPlanar(r.out)))[j - 1].sha256, good = got === want[j - 1].sha256; all &&= good;
+        $("hb" + j).className = good ? "ok" : "bad"; $("h-note").textContent = `layer ${j} of 20 · ${good ? "matches" : "DIFFERS"}`; await frame();
+      }
+      if (ok()) $("h-note").innerHTML = all ? `<span class="ok">All 20 layers reproduced exactly</span> in ${fmt((performance.now() - t0) / 1000, 2)} s on ${esc(E.best.label)}.` : '<span class="bad">A layer differed.</span>'; } },
+  { id: "trust", render: () => `
+    <div class="eyebrow">Trust</div>
+    <h2>Change one byte, and the file is refused.</h2>
+    <div class="trials" id="trials"></div>
+    <p class="note">Checks run here, in the page: container structure, every digest, the payload root, the tuple id, the corpus schemas, the MSSL bindings, and re-lowering the RUSSL source to its IR. No server and no Python.</p>`,
+    run: async (ok) => { await E.ready;
+      const R = E.pipe?.[1]?.R || await buildRuss(R_TEMPLATES, 1, (await E.best.run(BF1, R0, 40)).out, { stage: "R1" }); if (!ok()) return;
+      const box = $("trials"); box.innerHTML = "";
+      const trial = async (what, bytes) => {
+        const el = document.createElement("div"); el.className = "trial"; el.innerHTML = `<span class="what">${esc(what)}</span><span class="verdict">checking…</span><span class="why"></span>`; box.append(el);
+        await sleep(350); if (!ok()) return;
+        try { const r = await readRuss(bytes); el.querySelector(".verdict").innerHTML = r.problems.length ? '<span class="bad">refused</span>' : '<span class="ok">verified</span>';
+          el.querySelector(".why").textContent = r.problems.length ? r.problems.join("; ") : `${r.tuple_id.slice(0, 40)}… · source re-lowered to the stored IR`; }
+        catch (e) { el.querySelector(".verdict").innerHTML = '<span class="bad">refused</span>'; el.querySelector(".why").textContent = e.message; }
+      };
+      await trial("The R1 file as produced", R.bytes);
+      const a = R.bytes.slice(); a[a.length - 4096] ^= 1; await trial("One bit flipped inside the field data", a);
+      const b = R.bytes.slice(), needle = new TextEncoder().encode("levels=20");
+      let at = -1; for (let i = 0; i + needle.length <= b.length && at < 0; i++) if (needle.every((x, k) => b[i + k] === x)) at = i;
+      if (at >= 0) b[at + 8] = "1".charCodeAt(0);                    // levels=20 → levels=21
+      await trial("One character changed in the RUSSL program (levels=20 → 21)", b);
+      const c = R.bytes.slice(0, R.bytes.length - 1); await trial("The last byte removed", c); } },
+  { id: "scoreboard", render: () => `
+    <div class="eyebrow">Scoreboard</div>
+    <h2>The numbers, side by side.</h2>
+    <div class="tbl"><table id="score"></table></div>
+    <div class="row"><button class="btn" id="csv">Copy as CSV</button><span class="note" id="csv-note">Millions of lane-updates per second. "This computer" comes from the race on this page (run it first if a cell is empty). The reference columns are your AMD GCN-5 run on console 1.2.0, before the 1.3.0 CPU speed-up.</span></div>
+    <div class="claims">
+      <div><h3>What this demonstrates</h3><ul><li>One LCUF-A program runs on a plain loop, Wasm threads and the GPU with byte-identical results.</li><li>The LCUF-A engine beats the same law written as plain JavaScript loops.</li><li>On the reference GPU, BF2 ran 24× faster than one CPU thread (console 1.2.0).</li><li>Every output is a sealed, chained file that anyone can re-verify.</li></ul></div>
+      <div><h3>What it does not claim</h3><ul><li>No new physics: this is an exact, deterministic cellular computation.</li><li>No comparison with dedicated hardware accelerators.</li><li>WebGPU speed depends on the GPU and the browser.</li></ul></div>
+    </div>`,
+    run: async (ok) => { await E.ready;
+      const rows = [["js", "Plain JavaScript"], ["wasm-1t", "Wasm · 1 thread"], ["wasm-mt", "Wasm · all threads"], ["webgpu", "WebGPU"]];
+      const here = (n) => E.results[n];
+      const one = REFERENCE.rows["wasm-1t"];
+      $("score").innerHTML = `<thead><tr><th>Engine</th><th class="num">This computer · BF1</th><th class="num">Ref. 1.2.0 · BF1</th><th class="num">Ref. 1.2.0 · BF2</th><th class="num">Ref. BF2 vs 1 thread</th></tr></thead><tbody>` +
+        rows.map(([n, l]) => { const ref = REFERENCE.rows[n]; return `<tr><td>${l}</td><td class="num">${fmt(here(n))}</td><td class="num">${ref ? fmt(ref[0]) : "—"}</td><td class="num">${ref ? fmt(ref[1]) : "—"}</td><td class="num ${n === "webgpu" ? "hi" : ""}">${ref ? fmt(ref[1] / one[1]) + "×" : "—"}</td></tr>`; }).join("") + "</tbody>";
+      $("csv").onclick = async () => {
+        const csv = ["engine,this_computer_bf1,reference_bf1,reference_bf2", ...rows.map(([n, l]) => [l, here(n) ?? "", REFERENCE.rows[n]?.[0] ?? "", REFERENCE.rows[n]?.[1] ?? ""].join(","))].join("\n");
+        try { await navigator.clipboard.writeText(csv); $("csv-note").textContent = "Copied as CSV; paste it into any spreadsheet."; } catch { $("csv-note").textContent = csv; }
+      }; } },
+];
+
+function show(i) {
+  current = Math.max(0, Math.min(SLIDES.length - 1, i)); token++;
+  const s = SLIDES[current], ok = live();
+  $("stage").innerHTML = `<section class="slide" aria-label="Slide ${current + 1} of ${SLIDES.length}">${s.render()}</section>`;
+  $("stage").querySelectorAll("[data-next]").forEach((b) => b.addEventListener("click", () => show(current + 1)));
+  [...$("dots").children].forEach((d, k) => d.setAttribute("aria-current", String(k === current)));
+  $("prev").disabled = current === 0; $("next").disabled = current === SLIDES.length - 1;
+  try { history.replaceState(null, "", "#" + s.id); } catch {}
+  s.run(ok).catch((e) => { if (ok()) { const n = document.createElement("p"); n.className = "note bad"; n.textContent = "Stopped: " + e.message; $("stage").firstElementChild.append(n); } });
+}
+$("dots").innerHTML = SLIDES.map((s, i) => `<button aria-label="Slide ${i + 1}: ${s.id}"></button>`).join("");
+[...$("dots").children].forEach((d, i) => d.addEventListener("click", () => show(i)));
+$("prev").addEventListener("click", () => show(current - 1));
+$("next").addEventListener("click", () => show(current + 1));
+addEventListener("keydown", (e) => { if (e.target.closest?.("input,textarea")) return; if (e.key === "ArrowRight" || e.key === " ") { e.preventDefault(); show(current + 1); } if (e.key === "ArrowLeft") show(current - 1); });
+addEventListener("hashchange", () => { const i = SLIDES.findIndex((s) => "#" + s.id === location.hash); if (i >= 0 && i !== current) show(i); });
+show(Math.max(0, SLIDES.findIndex((s) => "#" + s.id === location.hash)));
+</script>

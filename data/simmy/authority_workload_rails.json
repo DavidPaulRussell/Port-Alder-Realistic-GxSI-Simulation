@@ -1,0 +1,2098 @@
+{
+  "inputs": {
+    "1": [
+      [
+        3,
+        3,
+        0,
+        1
+      ],
+      [
+        3,
+        3,
+        0,
+        1
+      ],
+      [
+        1,
+        1,
+        0,
+        1
+      ],
+      [
+        1,
+        0,
+        0,
+        1
+      ],
+      [
+        1,
+        1,
+        0,
+        1
+      ],
+      [
+        1,
+        0,
+        0,
+        1
+      ],
+      [
+        1,
+        0,
+        0,
+        1
+      ],
+      [
+        1,
+        0,
+        0,
+        1
+      ],
+      [
+        1,
+        0,
+        0,
+        1
+      ],
+      [
+        1,
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        0,
+        1
+      ]
+    ],
+    "10": [
+      [
+        0,
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        0,
+        1
+      ],
+      [
+        1,
+        1,
+        0,
+        1
+      ],
+      [
+        1,
+        1,
+        0,
+        1
+      ],
+      [
+        1,
+        0,
+        0,
+        1
+      ],
+      [
+        1,
+        0,
+        0,
+        1
+      ],
+      [
+        1,
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        0,
+        1
+      ],
+      [
+        1,
+        0,
+        0,
+        1
+      ],
+      [
+        1,
+        0,
+        1,
+        1
+      ],
+      [
+        1,
+        0,
+        1,
+        9
+      ]
+    ],
+    "2": [
+      [
+        3,
+        3,
+        0,
+        1
+      ],
+      [
+        3,
+        3,
+        0,
+        1
+      ],
+      [
+        1,
+        1,
+        0,
+        1
+      ],
+      [
+        1,
+        0,
+        0,
+        1
+      ],
+      [
+        1,
+        0,
+        0,
+        1
+      ],
+      [
+        1,
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        0,
+        1
+      ],
+      [
+        1,
+        1,
+        0,
+        1
+      ],
+      [
+        1,
+        0,
+        0,
+        1
+      ],
+      [
+        1,
+        0,
+        1,
+        1
+      ],
+      [
+        1,
+        0,
+        1,
+        1
+      ]
+    ],
+    "3": [
+      [
+        3,
+        3,
+        0,
+        1
+      ],
+      [
+        3,
+        3,
+        0,
+        1
+      ],
+      [
+        1,
+        0,
+        0,
+        17
+      ],
+      [
+        1,
+        0,
+        0,
+        1
+      ],
+      [
+        1,
+        0,
+        0,
+        1
+      ],
+      [
+        1,
+        0,
+        0,
+        1
+      ],
+      [
+        1,
+        1,
+        0,
+        1
+      ],
+      [
+        1,
+        0,
+        0,
+        1
+      ],
+      [
+        1,
+        0,
+        0,
+        1
+      ],
+      [
+        1,
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        0,
+        1
+      ]
+    ],
+    "4": [
+      [
+        3,
+        3,
+        0,
+        1
+      ],
+      [
+        3,
+        3,
+        0,
+        1
+      ],
+      [
+        3,
+        3,
+        0,
+        17
+      ],
+      [
+        1,
+        1,
+        0,
+        1
+      ],
+      [
+        1,
+        0,
+        0,
+        1
+      ],
+      [
+        1,
+        0,
+        0,
+        1
+      ],
+      [
+        1,
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        0,
+        1
+      ],
+      [
+        1,
+        0,
+        0,
+        1
+      ],
+      [
+        1,
+        0,
+        0,
+        1
+      ],
+      [
+        1,
+        0,
+        1,
+        1
+      ],
+      [
+        1,
+        0,
+        1,
+        1
+      ]
+    ],
+    "5": [
+      [
+        3,
+        3,
+        0,
+        1
+      ],
+      [
+        3,
+        3,
+        0,
+        1
+      ],
+      [
+        1,
+        1,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        0,
+        6
+      ],
+      [
+        1,
+        0,
+        0,
+        1
+      ],
+      [
+        1,
+        0,
+        0,
+        1
+      ],
+      [
+        1,
+        0,
+        0,
+        1
+      ],
+      [
+        1,
+        1,
+        0,
+        1
+      ],
+      [
+        1,
+        0,
+        0,
+        1
+      ],
+      [
+        1,
+        0,
+        0,
+        1
+      ],
+      [
+        1,
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        0,
+        1
+      ]
+    ],
+    "6": [
+      [
+        3,
+        3,
+        0,
+        1
+      ],
+      [
+        3,
+        3,
+        0,
+        1
+      ],
+      [
+        1,
+        1,
+        0,
+        1
+      ],
+      [
+        1,
+        1,
+        0,
+        1
+      ],
+      [
+        1,
+        0,
+        0,
+        1
+      ],
+      [
+        1,
+        0,
+        0,
+        1
+      ],
+      [
+        1,
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        0,
+        1
+      ],
+      [
+        1,
+        0,
+        0,
+        1
+      ],
+      [
+        1,
+        0,
+        1,
+        1
+      ],
+      [
+        1,
+        0,
+        1,
+        1
+      ]
+    ],
+    "7": [
+      [
+        3,
+        1,
+        0,
+        1
+      ],
+      [
+        3,
+        3,
+        0,
+        1
+      ],
+      [
+        1,
+        1,
+        0,
+        1
+      ],
+      [
+        1,
+        1,
+        0,
+        1
+      ],
+      [
+        1,
+        0,
+        0,
+        1
+      ],
+      [
+        1,
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        0,
+        1
+      ],
+      [
+        1,
+        0,
+        0,
+        1
+      ],
+      [
+        1,
+        0,
+        0,
+        1
+      ],
+      [
+        1,
+        1,
+        0,
+        1
+      ],
+      [
+        1,
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        0,
+        1
+      ]
+    ],
+    "8": [
+      [
+        3,
+        1,
+        0,
+        1
+      ],
+      [
+        3,
+        3,
+        0,
+        1
+      ],
+      [
+        1,
+        1,
+        0,
+        1
+      ],
+      [
+        1,
+        0,
+        0,
+        1
+      ],
+      [
+        1,
+        0,
+        0,
+        1
+      ],
+      [
+        1,
+        0,
+        0,
+        1
+      ],
+      [
+        1,
+        1,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        0,
+        1
+      ],
+      [
+        1,
+        0,
+        0,
+        1
+      ],
+      [
+        1,
+        0,
+        1,
+        1
+      ],
+      [
+        1,
+        0,
+        1,
+        1
+      ]
+    ],
+    "9": [
+      [
+        3,
+        0,
+        3,
+        1
+      ],
+      [
+        0,
+        0,
+        0,
+        1
+      ],
+      [
+        1,
+        1,
+        0,
+        1
+      ],
+      [
+        1,
+        1,
+        0,
+        1
+      ],
+      [
+        1,
+        0,
+        0,
+        1
+      ],
+      [
+        1,
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        0,
+        1
+      ],
+      [
+        1,
+        0,
+        0,
+        1
+      ],
+      [
+        1,
+        0,
+        0,
+        1
+      ],
+      [
+        1,
+        0,
+        0,
+        1
+      ],
+      [
+        1,
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        0,
+        1
+      ]
+    ]
+  },
+  "mesh_policy": {
+    "planning_discount": "1/4",
+    "policy_version": "simmy.rails.mesh/1.0",
+    "release_capacity": 1
+  },
+  "oracle": {
+    "1": {
+      "deer.00": {
+        "alpha": "103/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "1/2",
+        "score": 515
+      },
+      "deer.01": {
+        "alpha": "97/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 500
+      },
+      "deer.02": {
+        "alpha": "103/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "1/2",
+        "score": 515
+      },
+      "deer.03": {
+        "alpha": "97/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 500
+      },
+      "deer.04": {
+        "alpha": "97/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 500
+      },
+      "deer.05": {
+        "alpha": "97/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 500
+      },
+      "deer.06": {
+        "alpha": "97/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 500
+      },
+      "deer.07": {
+        "alpha": "97/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 500
+      },
+      "deer.08": {
+        "alpha": "97/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 500
+      },
+      "deer.09": {
+        "alpha": "97/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 500
+      },
+      "deer.10": {
+        "alpha": "97/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 500
+      },
+      "deer.unlicensed": {
+        "alpha": "97/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 500
+      },
+      "warden.a": {
+        "alpha": "115/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "1/2",
+        "score": 542
+      },
+      "warden.b": {
+        "alpha": "115/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "1/2",
+        "score": 542
+      }
+    },
+    "10": {
+      "deer.00": {
+        "alpha": "163/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "511/512",
+        "score": 626
+      },
+      "deer.01": {
+        "alpha": "127/6",
+        "beta": "679/18",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "15/16",
+        "score": 359
+      },
+      "deer.02": {
+        "alpha": "103/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "1/2",
+        "score": 515
+      },
+      "deer.03": {
+        "alpha": "97/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 500
+      },
+      "deer.04": {
+        "alpha": "67681/3750",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "3/4",
+        "score": 527
+      },
+      "deer.05": {
+        "alpha": "1598569/93750",
+        "beta": "26700511/656250",
+        "level": "RESTRICTED",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 295
+      },
+      "deer.06": {
+        "alpha": "1337339/41250",
+        "beta": "42791647/656250",
+        "level": "RESTRICTED",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 332
+      },
+      "deer.07": {
+        "alpha": "64081/3750",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "1/2",
+        "score": 513
+      },
+      "deer.08": {
+        "alpha": "39881281/2343750",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "1/2",
+        "score": 512
+      },
+      "deer.09": {
+        "alpha": "97/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 500
+      },
+      "deer.10": {
+        "alpha": "97/6",
+        "beta": "690797819/21093750",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 330
+      },
+      "deer.unlicensed": {
+        "alpha": "0",
+        "beta": "97/3",
+        "level": "SUSPENDED",
+        "lifecycle": "terminated",
+        "reliability": "0",
+        "score": 0
+      },
+      "warden.a": {
+        "alpha": "1061/30",
+        "beta": "3977/150",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "255/512",
+        "score": 571
+      },
+      "warden.b": {
+        "alpha": "2795/66",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "255/256",
+        "score": 723
+      }
+    },
+    "2": {
+      "deer.00": {
+        "alpha": "109/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "3/4",
+        "score": 529
+      },
+      "deer.01": {
+        "alpha": "97/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 500
+      },
+      "deer.02": {
+        "alpha": "103/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "1/2",
+        "score": 515
+      },
+      "deer.03": {
+        "alpha": "97/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 500
+      },
+      "deer.04": {
+        "alpha": "97/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 500
+      },
+      "deer.05": {
+        "alpha": "97/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 500
+      },
+      "deer.06": {
+        "alpha": "97/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 500
+      },
+      "deer.07": {
+        "alpha": "97/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 500
+      },
+      "deer.08": {
+        "alpha": "103/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "1/2",
+        "score": 515
+      },
+      "deer.09": {
+        "alpha": "97/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 500
+      },
+      "deer.10": {
+        "alpha": "97/6",
+        "beta": "1067/54",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 450
+      },
+      "deer.unlicensed": {
+        "alpha": "97/6",
+        "beta": "1067/54",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 450
+      },
+      "warden.a": {
+        "alpha": "133/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "3/4",
+        "score": 578
+      },
+      "warden.b": {
+        "alpha": "133/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "3/4",
+        "score": 578
+      }
+    },
+    "3": {
+      "deer.00": {
+        "alpha": "109/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "3/4",
+        "score": 529
+      },
+      "deer.01": {
+        "alpha": "97/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 500
+      },
+      "deer.02": {
+        "alpha": "103/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "1/2",
+        "score": 515
+      },
+      "deer.03": {
+        "alpha": "97/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 500
+      },
+      "deer.04": {
+        "alpha": "103/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "1/2",
+        "score": 515
+      },
+      "deer.05": {
+        "alpha": "97/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 500
+      },
+      "deer.06": {
+        "alpha": "97/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 500
+      },
+      "deer.07": {
+        "alpha": "97/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 500
+      },
+      "deer.08": {
+        "alpha": "2569/150",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "1/2",
+        "score": 514
+      },
+      "deer.09": {
+        "alpha": "97/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 500
+      },
+      "deer.10": {
+        "alpha": "97/6",
+        "beta": "8827/450",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 451
+      },
+      "deer.unlicensed": {
+        "alpha": "97/6",
+        "beta": "8827/450",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 451
+      },
+      "warden.a": {
+        "alpha": "151/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "7/8",
+        "score": 608
+      },
+      "warden.b": {
+        "alpha": "151/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "7/8",
+        "score": 608
+      }
+    },
+    "4": {
+      "deer.00": {
+        "alpha": "127/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "7/8",
+        "score": 566
+      },
+      "deer.01": {
+        "alpha": "103/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "1/2",
+        "score": 515
+      },
+      "deer.02": {
+        "alpha": "103/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "1/2",
+        "score": 515
+      },
+      "deer.03": {
+        "alpha": "97/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 500
+      },
+      "deer.04": {
+        "alpha": "103/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "1/2",
+        "score": 515
+      },
+      "deer.05": {
+        "alpha": "97/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 500
+      },
+      "deer.06": {
+        "alpha": "97/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 500
+      },
+      "deer.07": {
+        "alpha": "97/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 500
+      },
+      "deer.08": {
+        "alpha": "2569/150",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "1/2",
+        "score": 514
+      },
+      "deer.09": {
+        "alpha": "97/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 500
+      },
+      "deer.10": {
+        "alpha": "97/6",
+        "beta": "31331/1350",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 410
+      },
+      "deer.unlicensed": {
+        "alpha": "97/6",
+        "beta": "31331/1350",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 410
+      },
+      "warden.a": {
+        "alpha": "169/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "15/16",
+        "score": 635
+      },
+      "warden.b": {
+        "alpha": "169/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "15/16",
+        "score": 635
+      }
+    },
+    "5": {
+      "deer.00": {
+        "alpha": "133/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "15/16",
+        "score": 578
+      },
+      "deer.01": {
+        "alpha": "103/6",
+        "beta": "679/18",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 312
+      },
+      "deer.02": {
+        "alpha": "103/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "1/2",
+        "score": 515
+      },
+      "deer.03": {
+        "alpha": "97/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 500
+      },
+      "deer.04": {
+        "alpha": "103/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "1/2",
+        "score": 515
+      },
+      "deer.05": {
+        "alpha": "103/6",
+        "beta": "1843/42",
+        "level": "RESTRICTED",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 281
+      },
+      "deer.06": {
+        "alpha": "97/6",
+        "beta": "3007/42",
+        "level": "RESTRICTED",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 184
+      },
+      "deer.07": {
+        "alpha": "97/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 500
+      },
+      "deer.08": {
+        "alpha": "2569/150",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "1/2",
+        "score": 514
+      },
+      "deer.09": {
+        "alpha": "97/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 500
+      },
+      "deer.10": {
+        "alpha": "97/6",
+        "beta": "257923/11250",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 413
+      },
+      "deer.unlicensed": {
+        "alpha": "97/6",
+        "beta": "257923/11250",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 413
+      },
+      "warden.a": {
+        "alpha": "187/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "31/32",
+        "score": 658
+      },
+      "warden.b": {
+        "alpha": "1174/33",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "31/32",
+        "score": 687
+      }
+    },
+    "6": {
+      "deer.00": {
+        "alpha": "139/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "31/32",
+        "score": 588
+      },
+      "deer.01": {
+        "alpha": "109/6",
+        "beta": "679/18",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "1/2",
+        "score": 325
+      },
+      "deer.02": {
+        "alpha": "103/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "1/2",
+        "score": 515
+      },
+      "deer.03": {
+        "alpha": "97/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 500
+      },
+      "deer.04": {
+        "alpha": "103/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "1/2",
+        "score": 515
+      },
+      "deer.05": {
+        "alpha": "2569/150",
+        "beta": "44911/1050",
+        "level": "RESTRICTED",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 285
+      },
+      "deer.06": {
+        "alpha": "2231/66",
+        "beta": "72847/1050",
+        "level": "RESTRICTED",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 327
+      },
+      "deer.07": {
+        "alpha": "97/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 500
+      },
+      "deer.08": {
+        "alpha": "64081/3750",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "1/2",
+        "score": 513
+      },
+      "deer.09": {
+        "alpha": "97/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 500
+      },
+      "deer.10": {
+        "alpha": "97/6",
+        "beta": "895019/33750",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 378
+      },
+      "deer.unlicensed": {
+        "alpha": "97/6",
+        "beta": "895019/33750",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 378
+      },
+      "warden.a": {
+        "alpha": "205/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "63/64",
+        "score": 678
+      },
+      "warden.b": {
+        "alpha": "1273/33",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "63/64",
+        "score": 704
+      }
+    },
+    "7": {
+      "deer.00": {
+        "alpha": "145/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "63/64",
+        "score": 599
+      },
+      "deer.01": {
+        "alpha": "115/6",
+        "beta": "679/18",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "3/4",
+        "score": 336
+      },
+      "deer.02": {
+        "alpha": "103/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "1/2",
+        "score": 515
+      },
+      "deer.03": {
+        "alpha": "97/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 500
+      },
+      "deer.04": {
+        "alpha": "2569/150",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "1/2",
+        "score": 514
+      },
+      "deer.05": {
+        "alpha": "2569/150",
+        "beta": "44911/1050",
+        "level": "RESTRICTED",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 285
+      },
+      "deer.06": {
+        "alpha": "2231/66",
+        "beta": "72847/1050",
+        "level": "RESTRICTED",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 327
+      },
+      "deer.07": {
+        "alpha": "103/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "1/2",
+        "score": 515
+      },
+      "deer.08": {
+        "alpha": "64081/3750",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "1/2",
+        "score": 513
+      },
+      "deer.09": {
+        "alpha": "97/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 500
+      },
+      "deer.10": {
+        "alpha": "97/6",
+        "beta": "7342027/281250",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 382
+      },
+      "deer.unlicensed": {
+        "alpha": "97/6",
+        "beta": "7342027/281250",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 382
+      },
+      "warden.a": {
+        "alpha": "211/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "127/128",
+        "score": 685
+      },
+      "warden.b": {
+        "alpha": "1372/33",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "127/128",
+        "score": 720
+      }
+    },
+    "8": {
+      "deer.00": {
+        "alpha": "151/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "127/128",
+        "score": 608
+      },
+      "deer.01": {
+        "alpha": "115/6",
+        "beta": "679/18",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "3/4",
+        "score": 336
+      },
+      "deer.02": {
+        "alpha": "103/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "1/2",
+        "score": 515
+      },
+      "deer.03": {
+        "alpha": "97/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 500
+      },
+      "deer.04": {
+        "alpha": "2719/150",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "3/4",
+        "score": 528
+      },
+      "deer.05": {
+        "alpha": "64081/3750",
+        "beta": "1094839/26250",
+        "level": "RESTRICTED",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 290
+      },
+      "deer.06": {
+        "alpha": "54611/1650",
+        "beta": "1765303/26250",
+        "level": "RESTRICTED",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 329
+      },
+      "deer.07": {
+        "alpha": "2569/150",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "1/2",
+        "score": 514
+      },
+      "deer.08": {
+        "alpha": "1598569/93750",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "1/2",
+        "score": 513
+      },
+      "deer.09": {
+        "alpha": "97/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 500
+      },
+      "deer.10": {
+        "alpha": "97/6",
+        "beta": "25057331/843750",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 352
+      },
+      "deer.unlicensed": {
+        "alpha": "97/6",
+        "beta": "25057331/843750",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 352
+      },
+      "warden.a": {
+        "alpha": "217/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "255/256",
+        "score": 691
+      },
+      "warden.b": {
+        "alpha": "1471/33",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "255/256",
+        "score": 733
+      }
+    },
+    "9": {
+      "deer.00": {
+        "alpha": "157/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "255/256",
+        "score": 618
+      },
+      "deer.01": {
+        "alpha": "121/6",
+        "beta": "679/18",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "7/8",
+        "score": 348
+      },
+      "deer.02": {
+        "alpha": "103/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "1/2",
+        "score": 515
+      },
+      "deer.03": {
+        "alpha": "97/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 500
+      },
+      "deer.04": {
+        "alpha": "67681/3750",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "3/4",
+        "score": 527
+      },
+      "deer.05": {
+        "alpha": "64081/3750",
+        "beta": "1094839/26250",
+        "level": "RESTRICTED",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 290
+      },
+      "deer.06": {
+        "alpha": "54611/1650",
+        "beta": "1765303/26250",
+        "level": "RESTRICTED",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 329
+      },
+      "deer.07": {
+        "alpha": "2569/150",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "1/2",
+        "score": 514
+      },
+      "deer.08": {
+        "alpha": "1598569/93750",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "1/2",
+        "score": 513
+      },
+      "deer.09": {
+        "alpha": "97/6",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 500
+      },
+      "deer.10": {
+        "alpha": "97/6",
+        "beta": "205005523/7031250",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 356
+      },
+      "deer.unlicensed": {
+        "alpha": "97/6",
+        "beta": "205005523/7031250",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "0",
+        "score": 356
+      },
+      "warden.a": {
+        "alpha": "217/6",
+        "beta": "485/18",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "255/512",
+        "score": 573
+      },
+      "warden.b": {
+        "alpha": "2867/66",
+        "beta": "97/6",
+        "level": "NOMINAL",
+        "lifecycle": "running",
+        "reliability": "255/256",
+        "score": 728
+      }
+    }
+  },
+  "policy": {
+    "evidence_weights": {
+      "commit": "1",
+      "denial": "97/27",
+      "fault": "194/9",
+      "gate_fail": "97/7",
+      "gate_pass": "97/22"
+    },
+    "idle_forgetting": "24/25",
+    "policy_version": "simmy.rails.authority/1.0",
+    "prior_alpha": "97/6",
+    "prior_beta": "97/6",
+    "prior_mean": "1/2",
+    "prior_strength": "97/3",
+    "reliability_decay": "1/2",
+    "reliability_expand_at_least": "7/8",
+    "reliability_hold_at_least": "3/4",
+    "score_scale": 1000,
+    "thresholds": {
+      "expand_above": 800,
+      "expand_hold_above": 700,
+      "restore_from_suspend_above": 200,
+      "restore_nominal_above": 400,
+      "restrict_below": 300,
+      "suspend_below": 100
+    }
+  },
+  "schema": "SIMMY4.UNITY.AUTHORITY_WORKLOAD/2-RAILS",
+  "source_telemetry_sha256": "beb7a31d09930c64d243597bb8294d7edb38558117597d7fd216b157fdae7390",
+  "source_trace_sha256": "642de610d49b6c8dbcd5e5738611743a58cbda32c13823a31e35823c08a6db1b",
+  "source_workload_sha256": "5ccd2de1470f72ce308c8a497e2eb176580aa8ddf87c61eaac7ad99b7bb8a58a",
+  "ticks": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+  ],
+  "verdicts": {
+    "1": [],
+    "10": [],
+    "2": [],
+    "3": [],
+    "4": [],
+    "5": [
+      [
+        7,
+        2,
+        1,
+        6
+      ],
+      [
+        7,
+        2,
+        1,
+        6
+      ],
+      [
+        8,
+        2,
+        4,
+        5
+      ],
+      [
+        1,
+        1,
+        1,
+        4
+      ]
+    ],
+    "6": [
+      [
+        8,
+        1,
+        4,
+        5
+      ]
+    ],
+    "7": [],
+    "8": [],
+    "9": []
+  }
+}

@@ -1,0 +1,446 @@
+<title>Port Alder · Plume XPU Console</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@400;500;600&display=swap">
+<style>
+%%CSS%%
+/* Port Alder: the live city, its four layers, its registry, its law book and the proof of every day. */
+.wrap { max-width: 1680px; }
+.world { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(330px, 1fr); gap: 14px; align-items: start; }
+@media (max-width: 1100px) { .world { grid-template-columns: minmax(0, 1fr); } }
+.view3d { position: relative; aspect-ratio: 16 / 9; background: #0b0d12; border-radius: 10px; overflow: hidden; }
+.view3d canvas { width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
+.view3d canvas:active { cursor: grabbing; }
+.hud { position: absolute; left: 12px; top: 12px; max-width: min(380px, 62%); background: #0b0d12b8; color: #e8ecf3; border-radius: 9px; padding: 9px 12px; font: 12.5px/1.45 var(--f-ui); backdrop-filter: blur(6px); }
+.hud b { font: 600 15px var(--f-ui); letter-spacing: .02em; }
+.tools3d { position: absolute; right: 10px; top: 10px; display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; max-width: 60%; }
+.tools3d .btn, .tools3d select { background: #0b0d12b8; color: #e8ecf3; border-color: #ffffff30; backdrop-filter: blur(6px); }
+.caption { position: absolute; left: 12px; bottom: 10px; right: 12px; color: #e8ecf3; font: 12px var(--f-mono); text-shadow: 0 1px 2px #000; display: flex; justify-content: space-between; gap: 10px; pointer-events: none; }
+.nogl { position: absolute; inset: 0; display: grid; place-items: center; align-content: center; gap: 10px; color: #c9cfdb; text-align: center; padding: 20px; font-size: 14px; background: #0b0d12e6; }
+.nogl[hidden], .prep[hidden] { display: none; }
+.prep { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); color: #cfd6e2; background: #0b0d12cc; border-radius: 8px; padding: 8px 14px; font: 12.5px/1.4 var(--f-mono); pointer-events: none; }
+.stat { display: grid; grid-template-columns: repeat(auto-fill, minmax(124px, 1fr)); gap: 8px; }
+.stat div { background: var(--sunk); border: 1px solid var(--line); border-radius: 7px; padding: 6px 9px; }
+.stat b { display: block; font: 600 16px var(--f-mono); }
+.stat span { font-size: 11.5px; color: var(--muted); }
+.group { font: 600 11px var(--f-ui); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 10px 0 4px; }
+canvas.chart { width: 100%; height: 140px; display: block; background: var(--sunk); border: 1px solid var(--line); border-radius: 6px; margin-bottom: 8px; }
+.events { max-height: 300px; overflow: auto; font: 12px/1.5 var(--f-mono); margin: 0; padding: 0; list-style: none; }
+.events li { padding: 2px 0; border-bottom: 1px dashed var(--line); }
+.events .k { color: var(--muted); }
+.events a, .sinlink { color: var(--accent); cursor: pointer; text-decoration: underline dotted; }
+table.tbl { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+table.tbl th, table.tbl td { padding: 3px 6px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+table.tbl td.num, table.tbl th.num { text-align: right; font-family: var(--f-mono); }
+.scroll { max-height: 340px; overflow: auto; }
+.card { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 3px 12px; font-size: 12.5px; }
+.card .k { color: var(--muted); }
+.bars { display: grid; grid-template-columns: max-content minmax(0, 1fr) 3.2em; gap: 3px 8px; font-size: 12px; align-items: center; }
+.gbar { height: 7px; border-radius: 4px; background: var(--sunk); border: 1px solid var(--line); overflow: hidden; }
+.gbar i { display: block; height: 100%; background: var(--accent); }
+pre.save { margin: 0; max-height: 200px; overflow: auto; background: var(--sunk); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; font: 11.5px/1.5 var(--f-mono); white-space: pre; }
+.chip { font: 600 10px var(--f-ui); letter-spacing: .06em; text-transform: uppercase; padding: 1px 6px; border-radius: 99px; border: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
+.chip.on { color: var(--good); border-color: color-mix(in srgb, var(--good) 50%, transparent); }
+.chip.off { color: var(--bad); border-color: color-mix(in srgb, var(--bad) 50%, transparent); }
+</style>
+
+<div class="wrap">
+  <header class="bar">
+    <div class="brand"><h1>Port Alder <span class="pill" id="ver" style="vertical-align:middle;letter-spacing:.04em"></span></h1>
+      <div class="sub">A sentient city on the Plume XPU, modelled on Everett, Washington · every citizen an agent with a Social Information Number · integer-cent double-entry books audited daily · nested in Pilchuck County, the State of Puget and the United North American States</div></div>
+    <nav class="pages" aria-label="Console pages"><a href="index.html">Console</a><a href="simmy.html">Simmy replay</a><a href="city.html" aria-current="page">Port Alder</a><a href="verify.html">Verify R files</a></nav>
+    <div class="engines" id="engines"><span class="pill">starting engines</span></div>
+  </header>
+
+  <section class="panel" aria-label="City controls">
+    <div class="row" style="justify-content: space-between">
+      <div class="row">
+        <button class="btn primary" id="b-play" disabled>Play</button>
+        <button class="btn" id="b-step" disabled>Step a day</button>
+        <label class="inl" for="speed">pace <select id="speed"><option value="2000">1 day / 2 s</option><option value="1000" selected>1 day / s</option><option value="300">3 days / s</option><option value="0">as fast as it runs</option></select></label>
+        <label class="inl" for="sel-engine">XPU <select id="sel-engine"></select></label>
+      </div>
+      <div class="row">
+        <label class="inl" for="seed">seed <input id="seed" type="number" value="20261117" style="width:7.5em"></label>
+        <button class="btn" id="b-new" disabled>New city</button>
+        <button class="btn" id="b-save" disabled>Save</button>
+        <label class="file btn">Load a save<input type="file" id="f-load" accept=".json,application/json" hidden></label>
+      </div>
+    </div>
+    <div class="stat" id="stats"></div>
+    <div id="msg" class="msg"></div>
+  </section>
+
+  <div class="world">
+    <section class="panel" aria-label="The city in 3D" style="padding:10px">
+      <div class="view3d" id="view3d">
+        <canvas id="cv3d" tabindex="0" aria-label="Live 3D view of Port Alder; drag to orbit, scroll to zoom, click a building to inspect it"></canvas>
+        <div class="hud" id="hud" hidden></div>
+        <div class="tools3d">
+          <button class="btn" id="b-overview" title="Back over the whole city">overview</button>
+          <select id="quality" aria-label="Render quality"><option value="low">low</option><option value="medium">medium</option><option value="high" selected>high</option><option value="ultra">ultra</option></select>
+          <select id="tod" aria-label="Time of day"><option value="">day runs with the city</option><option value="480">morning</option><option value="750">noon</option><option value="1080">evening</option><option value="1290">night</option></select>
+          <button class="btn" id="b-full" title="Full screen">⤢</button>
+        </div>
+        <div class="caption"><span id="cap-l"></span><span id="cap-r"></span></div>
+        <div class="prep" id="prep" hidden aria-live="polite"></div>
+        <div class="nogl" id="nogl" hidden role="alert"><p id="nogl-why"></p><p class="note">The city runs without the view; every panel below works.</p></div>
+      </div>
+    </section>
+    <section class="panel" aria-label="The four layers">
+      <div class="label">Matryoshka · the city inside its county, state and nation</div>
+      <div class="scroll"><table class="tbl" id="layers"></table></div>
+      <p class="note">Each outer layer is a sample of households and employers, each standing for many like it; the city's row counts its citizens, scaled to the people they represent. Everyone in every layer decides for themselves.</p>
+      <div class="group">the day</div>
+      <div class="card" id="today"></div>
+    </section>
+  </div>
+
+  <div class="grid2">
+    <section class="panel" aria-label="The city's measures">
+      <div class="label">Port Alder's measures</div>
+      <div id="board"></div>
+    </section>
+    <section class="panel" aria-label="Over time">
+      <div class="label">Over time</div>
+      <canvas class="chart" id="ch-pop" width="760" height="140"></canvas>
+      <canvas class="chart" id="ch-u" width="760" height="140"></canvas>
+      <canvas class="chart" id="ch-mood" width="760" height="140"></canvas>
+    </section>
+  </div>
+
+  <div class="grid2">
+    <section class="panel" aria-label="The registry">
+      <div class="label">The registry · Social Information Numbers</div>
+      <div class="row"><input id="sin-in" placeholder="PA-0000001-X" style="width:12em" aria-label="Social Information Number"><button class="btn" id="b-sin">Look up</button>
+        <button class="btn" id="b-sin-first">first citizen</button><button class="btn" id="b-sin-next">next</button><span class="note" id="sin-note"></span></div>
+      <div id="person" class="note">Enter a number, or follow one from the events.</div>
+    </section>
+    <section class="panel" aria-label="The building">
+      <div class="label">The building you clicked</div>
+      <div id="building" class="note">Click a building in the 3D view.</div>
+    </section>
+  </div>
+
+  <div class="grid2">
+    <section class="panel" aria-label="Programs and the ballot">
+      <div class="label">Programs and the ballot</div>
+      <div id="programs"></div>
+      <div class="group">city measures (the voters decide each November)</div>
+      <div class="scroll"><table class="tbl" id="ballot"></table></div>
+      <div class="group">state initiatives</div>
+      <div id="state-ballot" class="note"></div>
+    </section>
+    <section class="panel" aria-label="Redevelopment">
+      <div class="label">Redevelopment · designs drawn and chosen by the citizens</div>
+      <div id="dev"></div>
+      <div class="scroll"><ul class="events" id="dev-events"></ul></div>
+    </section>
+  </div>
+
+  <div class="grid2">
+    <section class="panel" aria-label="The law book">
+      <div class="row" style="justify-content: space-between"><span class="label">The law book · continuum images with a faithful linear form</span><input id="law-q" placeholder="filter" style="width:9em" aria-label="Filter laws"></div>
+      <p class="note" id="corpus"></p>
+      <div class="scroll"><table class="tbl" id="laws"></table></div>
+    </section>
+    <section class="panel" aria-label="The umbrella">
+      <div class="label">The umbrella · who decides every variable</div>
+      <p class="note">No variable is procedural: each field of each table is decided by agents, or is an aggregate or a law of their states. Data and law from the real world enter only as history (the founding census) and as the statutes that bind decisions.</p>
+      <div class="scroll"><table class="tbl" id="vars"></table></div>
+    </section>
+  </div>
+
+  <div class="grid2">
+    <section class="panel" aria-label="Interventions">
+      <div class="label">Interventions · recorded in the save and replayed</div>
+      <div class="row"><select id="iv-kind" aria-label="Intervention"></select><span id="iv-args" class="row"></span><button class="btn" id="b-iv" disabled>Apply tomorrow</button></div>
+      <ul class="events" id="iv-list"></ul>
+    </section>
+    <section class="panel" aria-label="Proof">
+      <div class="label">Proof · every day sealed into the digest chain</div>
+      <div class="card" id="proof"></div>
+      <div class="group">the save (configuration, interventions and the chain)</div>
+      <pre class="save" id="save"></pre>
+    </section>
+  </div>
+
+  <section class="panel" aria-label="Events">
+    <div class="label">What happened</div>
+    <ul class="events" id="events"></ul>
+  </section>
+</div>
+
+<script type="module">
+%%MODULES%%
+const CONSOLE_VERSION = "%%VERSION%%";
+const CELLS_TEXT = %%SIMMY_CELLS%%, WORKLOAD_TEXT = %%SIMMY_WORKLOAD%%;
+const XPU_1T = "%%XPU_B64%%", XPU_MT = "%%XPU_MT_B64%%";
+const $ = (id) => document.getElementById(id);
+const esc = (x) => String(x).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+const b64 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
+const short = (h, n = 12) => (h ? String(h).slice(0, n) + "…" : "—");
+const money = (cents) => (cents < 0 ? "−$" : "$") + Math.round(Math.abs(cents) / 100).toLocaleString("en-US");
+const bp = (x) => (x / 100).toFixed(1) + "%", pm = (x) => (x / 10).toFixed(1) + "%", int = (x) => Math.round(x).toLocaleString("en-US");
+$("ver").textContent = "v" + CITY_VERSION;
+const S = { engines: [], engine: null, boot: null, city: null, view: null, playing: false, busy: false, timer: null, hist: [], outer: [], sin: -1, bld: -1, stepAt: 0, lastStep: 0 };
+const msg = (t, cls = "") => { $("msg").className = "msg " + cls; $("msg").textContent = t; };
+
+/* ---------- engines (as on the console page) ---------- */
+function spawn(src) {
+  const url = URL.createObjectURL(new Blob([src], { type: "text/javascript" })); const w = new Worker(url); URL.revokeObjectURL(url);
+  const hs = new Set(); w.onmessage = (e) => hs.forEach((h) => h(e.data));
+  w.onerror = (e) => { e.preventDefault?.(); hs.forEach((h) => h({ type: "error", message: e.message || "worker error" })); };
+  return { post: (m) => w.postMessage(m), onMessage: (f) => hs.add(f), offMessage: (f) => hs.delete(f), terminate: () => w.terminate() };
+}
+async function startEngines() {
+  const list = [];
+  try { list.push(await createWasm1TWorker(b64(XPU_1T), spawn)); } catch { list.push(await createWasm1T(b64(XPU_1T))); }
+  const hw = navigator.hardwareConcurrency || 4;
+  if (globalThis.crossOriginIsolated && typeof SharedArrayBuffer !== "undefined") {
+    try { list.push(await createWasmMT(b64(XPU_MT), Math.max(2, Math.min(hw, 16)), spawn)); } catch (e) { list.push({ name: "wasm-mt", unavailable: "threads failed: " + e.message }); }
+  } else list.push({ name: "wasm-mt", unavailable: "needs a cross-origin isolated page (start it with Photon)" });
+  if (navigator.gpu) { try { list.push(await createWebGPU(navigator.gpu)); } catch (e) { list.push({ name: "webgpu", unavailable: e.message }); } }
+  else list.push({ name: "webgpu", unavailable: "WebGPU is not available in this browser" });
+  S.engines = list; S.engine = list.find((e) => e.name === "wasm-mt" && !e.unavailable) || list[0];
+  const pills = $("engines"); pills.textContent = "";
+  for (const e of list) { const p = document.createElement("span"); p.className = "pill " + (e.unavailable ? "off" : "ok"); p.textContent = e.unavailable ? `${e.name}: off` : e.label; p.title = e.unavailable || "ready"; pills.append(p); }
+  const sel = $("sel-engine"); sel.textContent = "";
+  for (const e of list.filter((x) => !x.unavailable)) { const o = document.createElement("option"); o.value = e.name; o.textContent = e.label; sel.append(o); }
+  sel.value = S.engine.name;
+}
+$("sel-engine").addEventListener("change", (e) => { S.engine = S.engines.find((x) => x.name === e.target.value); });
+
+/* ---------- boot on the verified Simmy replay ---------- */
+async function bootSimmy() {
+  if (sha256Hex(WORKLOAD_TEXT) !== SIMMY_WORKLOAD_SHA256) throw new Error("the embedded Simmy workload is not the v3.0.0 file");
+  msg("replaying Simmy v3.0.0 to boot the city…"); await new Promise((r) => setTimeout(r, 30));
+  const t0 = performance.now(), boot = simmyBoot(JSON.parse(CELLS_TEXT), JSON.parse(WORKLOAD_TEXT));
+  if (boot.sha256 !== SIMMY_REPLAY_SHA256) throw new Error("the Simmy replay did not reproduce its release digest");
+  msg(`Simmy replay verified in ${(performance.now() - t0).toFixed(0)} ms (SHA-256 ${short(boot.sha256, 16)}); founding the city…`, "ok");
+  return boot;
+}
+async function newCity(cfg, interventions = []) {
+  stop(); msg("founding Port Alder: the census reads its people, homes and firms…"); await new Promise((r) => setTimeout(r, 30));
+  const t0 = performance.now();
+  S.city = new City(cfg, S.boot); S.city.interventions = interventions.map((x) => ({ ...x }));
+  S.hist = []; S.outer = []; S.sin = -1; S.bld = -1;
+  if (S.view) S.view.attach(S.city);
+  msg(`Port Alder founded in ${(performance.now() - t0).toFixed(0)} ms: ${int(S.city.people.count)} citizens in ${int(S.city.hh.count)} households, ${int(S.city.firms.count)} firms; ${int(S.city.outer.A.count)} households and ${int(S.city.outer.F.count)} employers sampled in the outer layers.`, "ok");
+  for (const id of ["b-play", "b-step", "b-new", "b-save", "b-iv"]) $(id).disabled = false;
+  drawAll(true);
+}
+
+/* ---------- the loop ---------- */
+async function stepOnce() {
+  if (S.busy || !S.city) return; S.busy = true;
+  try {
+    const R = await S.city.step(S.engine);
+    S.hist.push({ e: R.epoch, date: R.date, ...R.stats.series });
+    if (S.hist.length > 4000) S.hist.splice(0, S.hist.length - 4000);
+    const K = S.city.outer?.kpi; if (K && R.date.endsWith("-01")) S.outer.push({ e: R.epoch, county: K.county?.unemployment, state: K.state?.unemployment, nation: K.nation?.unemployment });
+    S.lastStep = performance.now();
+    if (!R.audit.ok) msg(`the books did not balance on ${R.label}: ${R.audit.problems[0]}`, "bad");
+    drawAll(R.date.endsWith("-01"));
+  } catch (e) { stop(); msg("the city stopped: " + (e.message || e), "bad"); console.error(e); }
+  finally { S.busy = false; }
+}
+function stop() { S.playing = false; clearTimeout(S.timer); $("b-play").textContent = "Play"; }
+function loop() {
+  if (!S.playing) return;
+  const pace = Number($("speed").value);
+  stepOnce().then(() => { if (S.playing) S.timer = setTimeout(loop, Math.max(0, pace - (performance.now() - S.lastStep))); });
+}
+$("b-play").onclick = () => { if (S.playing) stop(); else { S.playing = true; $("b-play").textContent = "Pause"; loop(); } };
+$("b-step").onclick = () => { stop(); stepOnce(); };
+$("b-new").onclick = () => newCity({ seed: Number($("seed").value) | 0, boot: "instant" });
+$("b-save").onclick = () => { const blob = new Blob([S.city.saveText()], { type: "application/json" }), a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `port-alder-${S.city.cfg.seed}-day${S.city.epoch}.json`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); };
+$("f-load").onchange = async (ev) => {
+  const f = ev.target.files?.[0]; if (!f) return;
+  try {
+    const save = JSON.parse(await f.text()); if (save.format !== SAVE_FORMAT) throw new Error(`not a ${SAVE_FORMAT} save`);
+    await newCity(save.config, save.interventions || []); msg(`replaying the save to day ${save.epoch}…`);
+    for (let k = 0; k < save.epoch; k++) { await S.city.step(S.engine); if (k % 20 === 19) { msg(`replaying: day ${k + 1} of ${save.epoch}`); await new Promise((r) => setTimeout(r, 0)); } }
+    const want = save.chain?.[save.chain.length - 1]?.[1];
+    msg(want === S.city.digest ? `the save replayed to the same digest on day ${save.epoch} (${short(want, 16)})` : `the replay reached ${short(S.city.digest, 16)}, the save says ${short(want, 16)}`, want === S.city.digest ? "ok" : "bad");
+    drawAll(true);
+  } catch (e) { msg("could not load the save: " + e.message, "bad"); }
+  ev.target.value = "";
+};
+
+/* ---------- the 3D view ---------- */
+async function startView() {
+  try {
+    S.view = new City3D($("cv3d"), { quality: $("quality").value, onPick: (p) => { if (p) { S.bld = p.building; drawBuilding(); } }, onStatus: (t) => { $("prep").hidden = t === "ready" || t === "safe graphics"; $("prep").textContent = t; },
+      onLost: () => { $("nogl").hidden = false; $("nogl-why").textContent = "The graphics context was lost. Reload the page to bring the view back."; }, onError: (e) => { $("nogl").hidden = false; $("nogl-why").textContent = "3D view unavailable: " + (e.message || e); } });
+    await S.view.whenReady; if (S.city) S.view.attach(S.city); S.view.start(); $("hud").hidden = false;
+    const tick = () => { if (S.view && S.city) { const pace = Number($("speed").value) || 1000, fixed = $("tod").value;
+      const m = fixed ? Number(fixed) : S.playing ? 360 + Math.min(1, (performance.now() - S.lastStep) / pace) * 1020 : 750; S.view.setTime(m); drawHud(m); } requestAnimationFrame(tick); };
+    requestAnimationFrame(tick);
+  } catch (e) { $("nogl").hidden = false; $("nogl-why").textContent = "3D view unavailable: " + (e.message || e); }
+}
+$("b-overview").onclick = () => { if (S.view) Object.assign(S.view.cam, { tx: 64 * CELL_M, tz: 64 * CELL_M, yaw: -0.6, pitch: 0.7, dist: 2600 }); };
+$("b-full").onclick = () => { const el = $("view3d"); (document.fullscreenElement ? document.exitFullscreen() : el.requestFullscreen?.())?.catch?.(() => {}); };
+$("quality").onchange = () => msg("the render quality applies when the page is reloaded");
+function drawHud(minutes) {
+  const c = S.city; if (!c) return; const d = c.today || dayInfo(Math.max(1, c.epoch)), h = Math.floor(minutes / 60), mi = Math.floor(minutes % 60);
+  const s = S.hist[S.hist.length - 1];
+  $("hud").innerHTML = `<b>Port Alder</b> · ${esc(d.label || d.iso)} · ${String(h).padStart(2, "0")}:${String(mi).padStart(2, "0")}<br>${s ? `${int(s.pop)} citizens · unemployment ${bp(s.unemployment)} · mood ${s.mood}` : "the founding day"}`;
+  $("cap-l").textContent = `day ${c.epoch} · ${short(c.digest, 16)}`; $("cap-r").textContent = S.view ? `${S.view.carCount || 0} cars · ${S.view.personCount || 0} people on the street` : "";
+}
+
+/* ---------- drawing ---------- */
+const tile = (v, k) => `<div><b>${v}</b><span>${esc(k)}</span></div>`;
+function drawAll(monthly) {
+  drawStats(); drawToday(); drawEvents(); drawProof(); drawCharts();
+  if (monthly) { drawLayers(); drawBoard(); drawPrograms(); drawDev(); drawLaws(); }
+  if (S.sin >= 0) drawPerson(); if (S.bld >= 0) drawBuilding();
+}
+function drawStats() {
+  const c = S.city, s = c.stats().series;
+  $("stats").innerHTML = [tile(int(s.pop), "citizens"), tile(int(s.households), "households"), tile(bp(s.unemployment), "unemployment"), tile(int(s.firms), "firms open"), tile(s.mood, "mood (−1000…1000)"),
+    tile(money(s.cityCash), "city cash"), tile(bp(s.policy), "policy rate"), tile(pm(s.trustCity), "trust the city"), tile(int(c.reg.n), "numbers issued")].join("");
+}
+function drawToday() {
+  const c = S.city, d = c.today || dayInfo(1), R = c.last;
+  $("today").innerHTML = [["date", d.label || d.iso], ["season", ["winter", "spring", "summer", "autumn"][((d.m % 12) / 3) | 0]], ["a holiday", d.holiday || "no"],
+    ["audit", R ? (R.audit.ok ? `balanced (${R.audit.checks} checks)` : "FAILED") : "—"], ["the day took", R ? `${Math.round(R.ms.total || 0)} ms` : "—"]].map(([k, v]) => `<span class="k">${esc(k)}</span><span>${esc(v)}</span>`).join("");
+}
+function drawLayers() {
+  const K = S.city.outer?.kpi; if (!K) { $("layers").innerHTML = ""; return; }
+  const rows = [["Port Alder", K.city], [LAYERS[1]?.name || "Pilchuck County", K.county], [LAYERS[2]?.name || "State of Puget", K.state], [LAYERS[3]?.name || "United North American States", K.nation]];
+  const cols = [["people", (k) => int(k.pop)], ["unemployed", (k) => bp(k.unemployment)], ["in poverty", (k) => pm(k.poverty)], ["uninsured", (k) => pm(k.uninsured)], ["Basic Food", (k) => pm(k.snap)], ["Medicaid", (k) => pm(k.medicaid)], ["mood", (k) => k.mood], ["distress", (k) => pm(k.distress)], ["household income", (k) => money(k.income)], ["net migration ‰", (k) => k.netMigration ?? "—"]];
+  $("layers").innerHTML = `<tr><th></th>${rows.map(([n]) => `<th class="num">${esc(n)}</th>`).join("")}</tr>` + cols.map(([label, f]) => `<tr><td>${esc(label)}</td>${rows.map(([, k]) => `<td class="num">${k ? esc(f(k)) : "—"}</td>`).join("")}</tr>`).join("");
+}
+function drawBoard() {
+  const b = S.city.board; if (!b) return;
+  const g = (name, items) => `<div class="group">${esc(name)}</div><div class="stat">${items.map(([v, k]) => tile(v, k)).join("")}</div>`;
+  $("board").innerHTML = [
+    g("work", [[bp(b.work.unemployment), "unemployment"], [int(b.work.employed), "employed"], [int(b.work.looking), "looking"], [int(b.work.outCommuters), "work beyond the city"], [int(b.work.retired), "retired"]]),
+    g("income", [[money(b.income.medianHousehold), "median household"], [pm(b.income.poverty), "in poverty"], [(b.income.gini / 1000).toFixed(3), "Gini"], [pm(b.income.rentBurdened), "rent-burdened"], [pm(b.income.segregation), "dissimilarity"]]),
+    g("health", [[pm(b.health.uninsured), "uninsured"], [pm(b.health.employerPlan), "employer plan"], [pm(b.health.appleHealth), "Apple Health"], [int(b.health.careVisitsYear), "care visits (year)"], [int(b.health.wentWithoutCare), "went without care"], [String(b.health.reproduction), "flu R"]]),
+    g("mental health", [[int(b.mental.distressed), "distressed"], [int(b.mental.inCounselling), "in counselling"], [`${b.mental.counsellingWaitDays} d`, "wait for counselling"], [int(b.mental.crisisContacts), "crisis contacts"], [int(b.mental.wentWithoutHelp), "went without help"]]),
+    g("housing", [[int(b.housing.homes), "homes"], [pm(b.housing.vacancy), "vacant"], [pm(b.housing.ownership), "owner-occupied"], [money(b.housing.medianRent), "median rent"], [int(b.housing.notices), "notices"], [int(b.housing.evictions), "evictions"]]),
+    g("prices and money", [[(b.prices.cpiCity / 1e4).toFixed(1), "city prices (100 at founding)"], [bp(b.prices.inflationNation / 100), "national inflation"], [bp(b.prices.policyRate), "policy rate"], [int(b.business.open), "firms open"], [money(b.city.cash), "city cash"]]),
+  ].join("");
+}
+function chart(id, series, labels, fmt) {
+  const cv = $(id), x = cv.getContext("2d"), W = cv.width, H = cv.height, css = getComputedStyle(document.documentElement);
+  x.clearRect(0, 0, W, H); const cols = [css.getPropertyValue("--accent"), css.getPropertyValue("--two"), css.getPropertyValue("--five"), css.getPropertyValue("--muted")];
+  const all = series.flat().filter(Number.isFinite); if (!all.length) return; let lo = Math.min(...all), hi = Math.max(...all); if (hi - lo < 1e-9) { hi += 1; lo -= 1; }
+  x.font = "11px " + css.getPropertyValue("--f-mono"); x.fillStyle = css.getPropertyValue("--muted"); x.fillText(fmt(hi), 4, 12); x.fillText(fmt(lo), 4, H - 4);
+  series.forEach((s, k) => { if (!s.length) return; x.strokeStyle = cols[k % 4]; x.lineWidth = 1.6; x.beginPath();
+    s.forEach((v, i) => { const px = 60 + (i / Math.max(1, s.length - 1)) * (W - 70), py = H - 8 - ((v - lo) / (hi - lo)) * (H - 22); i ? x.lineTo(px, py) : x.moveTo(px, py); }); x.stroke();
+    x.fillStyle = cols[k % 4]; x.fillText(labels[k], W - 8 - x.measureText(labels[k]).width, 12 + k * 13); });
+}
+function drawCharts() {
+  const h = S.hist; chart("ch-pop", [h.map((r) => r.pop)], ["citizens"], int);
+  chart("ch-u", [h.map((r) => r.unemployment / 100), S.outer.map((r) => r.county / 100), S.outer.map((r) => r.state / 100), S.outer.map((r) => r.nation / 100)], ["city %", "county %", "state %", "nation %"], (v) => v.toFixed(1));
+  chart("ch-mood", [h.map((r) => r.mood), h.map((r) => r.stress)], ["mood", "stress"], (v) => String(Math.round(v)));
+}
+function sinLink(g) { return g >= 0 ? `<span class="sinlink" data-sin="${g}">${esc(sinText(S.city, g))}</span>` : "—"; }
+document.addEventListener("click", (ev) => { const t = ev.target.closest?.("[data-sin]"); if (!t) return; S.sin = Number(t.dataset.sin); drawPerson(); $("person").scrollIntoView({ block: "nearest", behavior: "smooth" }); });
+function drawEvents() {
+  const c = S.city, list = c.events.slice(-80).reverse();
+  $("events").innerHTML = list.map((x) => { const d = dayInfo(Math.max(1, x.epoch)), sins = (x.ids || []).filter((g) => Number.isInteger(g) && g >= 0 && g < c.reg.n && x.kind !== "layoff" && x.kind !== "closure").slice(0, 3);
+    return `<li><span class="k">${esc(d.iso)} · ${esc(x.kind)}</span> ${esc(x.text)} ${["arrival", "birth", "death", "partners", "couple"].includes(x.kind) ? sins.map(sinLink).join(" ") : ""}</li>`; }).join("");
+}
+function drawProof() {
+  const c = S.city, R = c.last;
+  $("proof").innerHTML = [["genesis", short(c.genesisDigest, 24)], ["today's digest", short(c.digest, 24)], ["days sealed", int(c.history.length)], ["Simmy boot", short(c.boot.sha256, 24)],
+    ["the books", R ? (R.audit.ok ? "balanced" : "out of balance") : "opening"], ["laws used so far", `${LAW_USE.size} of ${LAW_ROWS.length}`]].map(([k, v]) => `<span class="k">${esc(k)}</span><span class="mono">${esc(v)}</span>`).join("");
+  const t = c.saveText(); $("save").textContent = t.length > 6000 ? t.slice(0, 6000) + "\n…" : t;
+}
+
+/* ---------- the registry ---------- */
+const PROG_NAMES = [["Basic Food", 1], ["WorkFirst", 2], ["Apple Health", 4], ["WIC", 8], ["child care", 16], ["SSI", 32], ["ABD", 64], ["housing voucher", 128], ["Working Families", 256], ["SUN Bucks", 512]];
+function drawPerson() {
+  const c = S.city, g = S.sin; if (g < 0 || g >= c.reg.n) { $("person").textContent = "No such number."; return; }
+  const i = c.slotOf(g), row = registryRows(c, g, 1)[0];
+  if (i < 0) { $("person").innerHTML = `<div class="card"><span class="k">number</span><span class="mono">${esc(row.sin)}</span><span class="k">issued by</span><span>${esc(row.office)} (${esc(row.cause)})</span><span class="k">status</span><span>${esc(row.status)}</span></div>`; return; }
+  const P = c.people, H = c.hh, h = P.hh[i], t = P.traits[i], age = ageYears(c, i), emp = P.emp[i];
+  const job = emp < 0 ? "—" : emp === E_ROW ? "works beyond the city" : emp >= E_F0 && emp < E_B0 ? c.names.firm(emp - E_F0) : emp === E_CITY ? "the city" : emp === E_SCHOOL ? "the schools" : "public service";
+  const progs = h >= 0 ? PROG_NAMES.filter(([, bit]) => H.progs[h] & bit).map(([n]) => n).join(", ") || "none" : "—";
+  const mems = []; for (let k = 0; k < 8; k++) { const m = P.memK[i * 8 + k]; if (m) mems.push(MEM[m]?.[0]); }
+  const friends = []; for (let k = 0; k < 4; k++) { const f = P.friend[i * 4 + k]; if (f >= 0) friends.push(sinLink(f)); }
+  const lv = (x) => LEVEL_NAMES[x]?.toLowerCase() ?? x;
+  $("person").innerHTML = `<div class="card">
+    <span class="k">name</span><span><b>${esc(c.names.person(i))}</b> · ${esc(row.sin)}</span>
+    <span class="k">age, status</span><span>${age} · ${esc(STATUS[P.status[i]])}${P.status[i] >= 2 ? " · " + esc(OCCS[P.occ[i]]?.name || "") : ""}</span>
+    <span class="k">work</span><span>${esc(job)}${emp >= 0 ? ` · ${money(P.wage[i])}/hour × ${P.hours[i]} h` : ""}</span>
+    <span class="k">household</span><span>${h >= 0 ? `${H.size[h]} people · ${H.tenure[h] ? "owners" : `renters at ${money(H.rent[h])}`} · ${money(H.inc[h])} a month after tax` : "—"}</span>
+    <span class="k">programs</span><span>${esc(progs)}</span>
+    <span class="k">partner</span><span>${sinLink(P.partner[i])}</span>
+    <span class="k">friends</span><span>${friends.join(" ") || "—"}</span>
+    <span class="k">trust</span><span>employer ${lv(P.teLv[i])} · landlord ${lv(P.tlLv[i])} · bank ${lv(P.tbLv[i])} · city ${lv(P.tcLv[i])}</span>
+    <span class="k">mood, stress</span><span>${P.val[i]} · ${P.stress[i]} · health ${P.health[i]}</span>
+    <span class="k">remembers</span><span>${esc(mems.join("; ") || "nothing yet")}</span>
+    <span class="k">temperament</span><span>${TRAITS.map((n, k) => `${n} ${trait(t, k)}`).join(" · ")}</span></div>
+    <div class="group">needs</div><div class="bars">${NEEDS.map((n, k) => `<span>${esc(n)}</span><span class="gbar"><i style="width:${P.need[i * 8 + k] / 10}%"></i></span><span class="mono">${P.need[i * 8 + k]}</span>`).join("")}</div>`;
+}
+$("b-sin").onclick = () => { const g = lookupSin(S.city, $("sin-in").value); $("sin-note").textContent = g < 0 ? "no such number (check the letter)" : ""; if (g >= 0) { S.sin = g; drawPerson(); } };
+$("b-sin-first").onclick = () => { S.sin = 0; drawPerson(); };
+$("b-sin-next").onclick = () => { S.sin = Math.min(S.city.reg.n - 1, S.sin + 1); drawPerson(); };
+
+/* ---------- a building ---------- */
+function drawBuilding() {
+  const c = S.city, W = c.world, T = W.buildings, b = S.bld; if (b < 0 || !T.alive[b]) { $("building").textContent = "Click a building in the 3D view."; return; }
+  const D = W.dwellings; let homes = 0, lived = 0; const people = [];
+  for (const d of D.each()) if (D.bld[d] === b) { homes++; if (D.hh[d] >= 0) { lived++; const h = D.hh[d]; if (people.length < 6 && c.hh.head[h] >= 0) people.push(sinLink(c.people.sin[c.hh.head[h]])); } }
+  const kind = BKIND[T.kind[b]]?.name || "building", stage = ["standing", "standing", "under notice", "coming down", "going up"][T.stage[b]] || "standing";
+  $("building").innerHTML = `<div class="card"><span class="k">building</span><span><b>${esc(kind)}</b> · ${T.floors[b]} floors · ${esc(W.hoodName(W.frontCell(b)))}</span>
+    <span class="k">homes</span><span>${homes} (${lived} lived in) · ${T.spaces[b]} commercial spaces</span><span class="k">condition</span><span>${(T.cond[b] / 10).toFixed(0)}% · ${esc(stage)}${T.stage[b] >= 3 ? ` (${(T.progress[b] / 10).toFixed(0)}%)` : ""}</span>
+    <span class="k">assessed</span><span>${money(T.value[b])}</span><span class="k">households</span><span>${people.join(" ") || "—"}</span></div>`;
+}
+
+/* ---------- programs, the ballot, redevelopment ---------- */
+function drawPrograms() {
+  const b = S.city.board, p = b?.programs; if (!p) return;
+  $("programs").innerHTML = `<div class="stat">${[[int(p.snapHouseholds), "Basic Food households"], [int(p.appleHealth), "on Apple Health"], [int(p.wic), "WIC"], [int(p.childCare), "child care help"], [int(p.tanf), "WorkFirst"], [int(p.ssi), "SSI"], [int(p.vouchers), "housing vouchers"], [int(p.voucherWaitlist), "voucher wait list"], [int(p.applications), "applications"], [int(p.denials), "denials"]].map(([v, k]) => tile(v, k)).join("")}</div>`;
+  const G = S.city.gov, m = G.measures || [];
+  $("ballot").innerHTML = `<tr><th>measure</th><th>what it does</th><th class="num">votes</th><th>status</th></tr>` + MEASURES.map((x, k) => { const s = m[k] || {}; const on = s.until >= S.city.epoch;
+    return `<tr><td><b>${esc(x.name)}</b></td><td>${esc(x.what)}</td><td class="num">${int(s.votes || 0)}</td><td>${on ? `<span class="chip on">in force</span>` : s.passed ? `<span class="chip">ended</span>` : (G.ballot || []).includes?.(x.key) ? `<span class="chip">on the ballot</span>` : `<span class="chip">not passed</span>`}</td></tr>`; }).join("");
+  const sb = G.stateBallot || [], done = G.stateDone || {};
+  $("state-ballot").textContent = STATE_MEASURES.map((x) => `${x.name}: ${done[x.key] ? "passed" : sb.includes?.(x.key) ? "on the ballot" : "not passed"}`).join(" · ");
+}
+function drawDev() {
+  const c = S.city, D = c.gov.dev || {};
+  $("dev").innerHTML = `<div class="stat">${[[int(D.proposals || 0), "proposals"], [int(D.designs || 0), "designs drawn"], [int(D.built || 0), "built"], [int(D.demolished || D.down || 0), "demolished"], [int(D.left || 0), "left when their home came down"], [int(D.closed || 0), "firms lost premises"]].map(([v, k]) => tile(v, k)).join("")}</div>`;
+  $("dev-events").innerHTML = c.events.filter((x) => ["design", "construction", "demolition", "opening"].includes(x.kind)).slice(-30).reverse().map((x) => `<li><span class="k">${esc(dayInfo(Math.max(1, x.epoch)).iso)}</span> ${esc(x.text)}</li>`).join("");
+}
+
+/* ---------- the law book and the umbrella ---------- */
+function drawLaws() {
+  const q = $("law-q").value.trim().toLowerCase(), rows = LAW_ROWS.filter((r) => !q || r.join(" ").toLowerCase().includes(q));
+  $("corpus").textContent = `${CORPUS.title} (${CORPUS.year}${CORPUS.edition ? ", " + CORPUS.edition : ""}): ${int(CORPUS.entries)} entries, of which ${int(CORPUS.faithful)} have a faithful linear continuum image. Each law below is implemented from its equation and cited by station and entry; no text of the corpus is copied.`;
+  $("laws").innerHTML = `<tr><th>entry</th><th>law</th><th>class</th><th>continuum image</th><th class="num">uses</th></tr>` + rows.map((r) => `<tr><td class="mono">${esc(r[0])}</td><td>${esc(r[1])}</td><td>${esc(r[2])}</td><td>${esc(r[3])}</td><td class="num">${int(LAW_USE.get(r[0]) || 0)}</td></tr>`).join("");
+}
+$("law-q").oninput = drawLaws;
+function drawVars() {
+  const labels = { people: "people", households: "households", firms: "firms", loans: "loans", outerHouseholds: "outer households", outerFirms: "outer employers", places: "places", buildings: "buildings", dwellings: "homes", spaces: "spaces" };
+  $("vars").innerHTML = `<tr><th>table</th><th>fields</th><th>decided by</th><th>laws</th></tr>` + Object.entries(VARIABLES).flatMap(([g, rows]) => rows.map(([f, who, laws]) => `<tr><td>${esc(labels[g] || g)}</td><td class="mono" style="max-width:14em">${esc(f)}</td><td>${esc(who)}</td><td class="mono">${esc(laws.join(" "))}</td></tr>`)).join("");
+}
+
+/* ---------- interventions ---------- */
+function drawIvForm() {
+  const sel = $("iv-kind"); sel.innerHTML = Object.entries(INTERVENTIONS).map(([k, v]) => `<option value="${esc(k)}">${esc(v.label)}</option>`).join("");
+  const args = () => { const spec = INTERVENTIONS[sel.value]; $("iv-args").innerHTML = Object.entries(spec.args).map(([k, [lo, hi]]) => `<label class="inl">${esc(k)} <input data-k="${esc(k)}" type="number" min="${lo}" max="${hi}" value="${lo}" style="width:7em"></label>`).join(""); };
+  sel.onchange = args; args();
+}
+$("b-iv").onclick = () => {
+  try { const args = {}; for (const el of $("iv-args").querySelectorAll("input")) args[el.dataset.k] = Number(el.value);
+    const iv = S.city.intervene($("iv-kind").value, args); msg(`recorded for day ${iv.epoch}: ${INTERVENTIONS[iv.kind].label}`, "ok"); drawIvList(); drawProof(); }
+  catch (e) { msg(e.message, "bad"); }
+};
+function drawIvList() { $("iv-list").innerHTML = (S.city?.interventions || []).map((x) => `<li><span class="k">day ${x.epoch}</span> ${esc(INTERVENTIONS[x.kind]?.label || x.kind)} ${esc(JSON.stringify(x.args))}</li>`).join(""); }
+
+/* ---------- start ---------- */
+(async () => {
+  try {
+    drawVars(); drawIvForm();
+    await startEngines(); S.boot = await bootSimmy();
+    await newCity({ seed: Number($("seed").value) | 0, boot: "instant" });
+    if (new URLSearchParams(location.search).get("view") === "0") { $("nogl").hidden = false; $("nogl-why").textContent = "The 3D view is off (?view=0)."; } else startView();
+  } catch (e) { msg("Port Alder could not start: " + (e.message || e), "bad"); console.error(e); }
+})();
+</script>

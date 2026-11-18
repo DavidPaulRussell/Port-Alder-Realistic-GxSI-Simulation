@@ -1,0 +1,10 @@
+# what the console, its hosts and its tests write locally
+/worlds/
+/maps/
+/host/photon.path
+/test/out/
+/test/*.bin
+node_modules/
+__pycache__/
+*.pyc
+*.tmp

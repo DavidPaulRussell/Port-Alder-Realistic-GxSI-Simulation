@@ -1,0 +1,215 @@
+<title>Simmy replay · Plume XPU Console</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@400;500;600&display=swap">
+<style>
+%%CSS%%
+/* Simmy replay: the 69-cell mesh, the E1 release schedule, the rails authority and the certificates. */
+.mesh { display: grid; grid-template-columns: repeat(auto-fill, minmax(34px, 1fr)); gap: 4px; }
+.cell { aspect-ratio: 1; border-radius: 5px; display: grid; place-items: center; font: 600 11px var(--f-mono); color: #fff; background: #3a4150; border: 1px solid transparent; cursor: default; transition: background .25s; }
+.cell.m0 { background: #3a4150; color: #aab3c4; } .cell.m1 { background: #5b6b8c; } .cell.m2 { background: #c08a2b; } .cell.m3 { background: #2f9e7a; } .cell.m4 { background: #1aa5b8; } .cell.m5 { background: var(--bad); }
+.cell.rel { border-color: var(--ink); }
+.cell.new { box-shadow: 0 0 0 2px var(--accent); }
+.legend { display: flex; flex-wrap: wrap; gap: 10px; font-size: 12px; color: var(--muted); }
+.legend i { display: inline-block; width: 11px; height: 11px; border-radius: 3px; vertical-align: -1px; margin-right: 4px; }
+canvas.timeline { width: 100%; height: 120px; display: block; background: var(--sunk); border: 1px solid var(--line); border-radius: 6px; }
+.lvl-pill { font: 600 10.5px var(--f-ui); letter-spacing: .05em; padding: 1px 7px; border-radius: 99px; border: 1px solid var(--line); }
+.lvl-pill.L0 { color: var(--bad); border-color: var(--bad); } .lvl-pill.L1 { color: var(--warn); border-color: var(--warn); } .lvl-pill.L2 { color: var(--muted); } .lvl-pill.L3 { color: var(--good); border-color: var(--good); }
+.score { position: relative; height: 10px; border-radius: 3px; background: linear-gradient(90deg, color-mix(in srgb, var(--bad) 30%, transparent) 0 10%, color-mix(in srgb, var(--warn) 22%, transparent) 10% 30%, var(--sunk) 30% 70%, color-mix(in srgb, var(--good) 22%, transparent) 70% 100%); border: 1px solid var(--line); min-width: 120px; }
+.score b { position: absolute; top: -3px; width: 3px; height: 14px; background: var(--ink); border-radius: 2px; transform: translateX(-1px); }
+.score s { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--muted); opacity: .5; }
+.big { font: 600 22px var(--f-mono); }
+.verdict { font: 600 13px var(--f-mono); padding: 8px 10px; border-radius: 7px; border: 1px solid var(--line); background: var(--sunk); overflow-wrap: anywhere; }
+.verdict.ok { color: var(--good); border-color: color-mix(in srgb, var(--good) 45%, transparent); } .verdict.err { color: var(--bad); border-color: var(--bad); }
+tr.boot td { color: var(--warn); }
+.scroll { max-height: 420px; overflow: auto; }
+.cyc { font: 12px var(--f-mono); }
+</style>
+
+<div class="wrap">
+  <header class="bar">
+    <div class="brand"><h1>Simmy replay <span class="pill" id="ver" style="vertical-align:middle;letter-spacing:.04em"></span></h1>
+      <div class="sub">Simmy 4.0.0 UNITY · rails dynamics (package v3.0.0) · replayed in the console's own JavaScript, byte for byte against the Python release</div></div>
+    <nav class="pages" aria-label="Console pages"><a href="index.html">Console</a><a href="simmy.html" aria-current="page">Simmy replay</a><a href="city.html">Port Alder</a><a href="verify.html">Verify R files</a></nav>
+  </header>
+
+  <section class="panel" aria-label="Replay">
+    <div class="row" style="justify-content: space-between">
+      <span class="label">Replay · 67 subsystems, the QUORUM control plane and the authority mini-VM</span>
+      <div class="row">
+        <label class="inl" for="speed">speed <select id="speed"><option value="250">4 ticks/s</option><option value="100" selected>10 ticks/s</option><option value="30">30 ticks/s</option><option value="0">full speed</option></select></label>
+        <button class="btn primary" id="b-run">Run replay</button>
+        <button class="btn" id="b-reset" disabled>Reset</button>
+      </div>
+    </div>
+    <div class="row" style="gap: 22px">
+      <div><div class="label">tick</div><div class="big" id="k-tick">0</div></div>
+      <div><div class="label">released</div><div class="big" id="k-rel">0 / 67</div></div>
+      <div><div class="label">verified</div><div class="big" id="k-ver">0</div></div>
+      <div><div class="label">authority workload</div><div class="big" id="k-wt">—</div></div>
+      <div><div class="label">fold cross-checks</div><div class="big" id="k-fold">0</div></div>
+    </div>
+    <div class="verdict" id="verdict">Inputs: checking the embedded manifest projection and the rails workload…</div>
+  </section>
+
+  <div class="grid2">
+    <section class="panel" aria-label="Mesh">
+      <div class="row" style="justify-content: space-between"><span class="label">Mesh · maturity of every cell</span><span class="note" id="hover">hover a cell</span></div>
+      <div class="mesh" id="mesh"></div>
+      <div class="legend"><span><i style="background:#3a4150"></i>not implemented</span><span><i style="background:#5b6b8c"></i>scaffolded</span><span><i style="background:#c08a2b"></i>dev-functional (ready)</span><span><i style="background:#2f9e7a"></i>verified</span><span><i style="background:#1aa5b8"></i>operational</span><span><i style="background:var(--bad)"></i>blocked</span><span>outlined: released</span></div>
+      <canvas class="timeline" id="timeline" width="920" height="120" aria-label="Maturity counts by tick"></canvas>
+      <p class="note">Stacked counts by tick. A subsystem is released by E1 admission (one slot per tick); after five phases it is ready, and it is verified when all eight gates pass, nine of thirteen QUORUM votes pass and its census holds.</p>
+    </section>
+    <section class="panel" aria-label="Authority">
+      <div class="label">Authority mini-VM · E6 Beta evidence, E3 forgetting, E2/E15 hysteresis cones, E20 latch</div>
+      <div class="tbl"><table><thead><tr><th>Agent</th><th>Level</th><th>Score (0–1000)</th><th class="num">α</th><th class="num">β</th><th class="num">Reliab.</th><th class="num">Margin</th></tr></thead><tbody id="agents"></tbody></table></div>
+      <p class="note">Bands: suspended below 100 (restored at 200), restricted below 300 (nominal from 400), expanded from 800 with reliability ≥ 7/8 (held above 700 with ≥ 3/4). The oracle checks α, β, score, level, lifecycle and reliability of all 14 agents on every workload tick.</p>
+    </section>
+  </div>
+
+  <div class="grid2">
+    <section class="panel" aria-label="Release">
+      <div class="label">Release · E1 K-slot admission by (readiness, E14 planning value, −number)</div>
+      <div class="tbl scroll"><table><thead><tr><th class="num">Tick</th><th>Admitted</th><th class="num">Readiness</th><th>Slot price</th></tr></thead><tbody id="admissions"></tbody></table></div>
+      <p class="note">Rows in amber are bootstrap admissions (readiness below 1): the dependency graph has cycles, so some subsystem must go first. Every admitted key is at least the slot price, the best rejected key.</p>
+    </section>
+    <section class="panel" aria-label="Certificates">
+      <div class="label">Certificates</div>
+      <div class="kv" id="certs"><span>status</span><span>run the replay</span></div>
+      <details><summary>E17 contradiction certificates</summary><div id="cycles" class="cyc"></div></details>
+      <div class="row">
+        <button class="btn" id="d-replay" disabled>Download unity_mesh_run.json</button>
+        <button class="btn" id="d-cells">cells.json</button>
+        <button class="btn" id="d-workload">authority_workload_rails.json</button>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script type="module">
+%%MODULES%%
+const CONSOLE_VERSION = "%%VERSION%%";
+const CELLS_TEXT = %%SIMMY_CELLS%%;
+const WORKLOAD_TEXT = %%SIMMY_WORKLOAD%%;
+const $ = (id) => document.getElementById(id);
+const esc = (x) => String(x).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+$("ver").textContent = "v" + CONSOLE_VERSION;
+const manifest = JSON.parse(CELLS_TEXT), workload = JSON.parse(WORKLOAD_TEXT);
+const cellsSha = sha256Hex(CELLS_TEXT), workloadSha = sha256Hex(WORKLOAD_TEXT);
+const inputsOk = workloadSha === SIMMY_WORKLOAD_SHA256;
+const subs = manifest.cells.filter((c) => c.kind === "subsystem");
+const titleOf = Object.fromEntries(subs.map((c) => [c.number, c.title]));
+const S = { run: null, timer: null, history: [], lastAdmitted: new Set(), result: null, text: null };
+
+function verdict(cls, html) { const v = $("verdict"); v.className = "verdict " + cls; v.innerHTML = html; }
+verdict(inputsOk ? "" : "err", inputsOk
+  ? `Inputs: rails workload SHA-256 ${workloadSha.slice(0, 16)}… (Simmy v${SIMMY_PACKAGE_VERSION}); manifest projection ${cellsSha.slice(0, 16)}… of CELLS_MANIFEST.json ${esc(manifest.source.sha256.slice(0, 16))}…. Run the replay: it must reproduce SHA-256 ${SIMMY_REPLAY_SHA256.slice(0, 16)}….`
+  : `The embedded rails workload does not have the Simmy v${SIMMY_PACKAGE_VERSION} SHA-256; the replay will not run.`);
+
+/* ---------- mesh grid ---------- */
+const meshCells = manifest.cells.map((c) => ({ c, el: Object.assign(document.createElement("div"), { className: "cell m0" }) }));
+for (const { c, el } of meshCells) {
+  el.textContent = c.kind === "subsystem" ? c.number : c.kind === "control_plane" ? "Q" : "A";
+  el.title = `${c.container} — ${c.title}`;
+  el.addEventListener("mouseenter", () => { $("hover").textContent = `${c.kind === "subsystem" ? "SIM-" + String(c.number).padStart(2, "0") : c.container} · ${c.title}${el.dataset.m ? " · " + el.dataset.m : ""}`; });
+  $("mesh").append(el);
+}
+function paintMesh() {
+  const r = S.run;
+  meshCells.forEach(({ c, el }) => {
+    if (c.kind === "authority_minivm") { const on = r && r.amStart !== null; el.className = "cell " + (on ? "m3 rel" : "m0"); el.dataset.m = on ? `authority running since tick ${r.amStart}` : "waiting for SIM-67"; return; }
+    const m = r ? r.maturity(c.container) : 0, rel = r && r.releasedAt.get(c.container) !== null;
+    el.className = `cell m${m}${rel ? " rel" : ""}${c.kind === "subsystem" && S.lastAdmitted.has(c.number) ? " new" : ""}`;
+    el.dataset.m = MATURITY_NAMES[m].toLowerCase().replace("_", "-") + (rel ? `, released at tick ${r.releasedAt.get(c.container)}` : "");
+  });
+}
+function paintTimeline() {
+  const cv = $("timeline"), g = cv.getContext("2d"), W = cv.width, H = cv.height; g.clearRect(0, 0, W, H);
+  const cols = ["#3a4150", "#5b6b8c", "#c08a2b", "#2f9e7a", "#1aa5b8", "#c0392b"], n = Math.max(92, S.history.length), w = W / n;
+  S.history.forEach((counts, t) => { let y = H; counts.forEach((k, m) => { const h = (k / 68) * H; g.fillStyle = cols[m]; g.fillRect(t * w, y - h, Math.ceil(w), h); y -= h; }); });
+}
+/* ---------- authority ---------- */
+function paintAgents() {
+  const r = S.run; if (!r) return;
+  const p = r.p, th = p.th, marks = [100, 200, 300, 400, 700, 800].map((x) => `<s style="left:${x / 10}%"></s>`).join("");
+  $("agents").innerHTML = r.ast.agents.map((a) => {
+    const s = scoreOf(a.alpha, a.beta, p), sc = Number(s.floor()), lvl = a.level_code;
+    const margin = a.lifecycle === "terminated" ? "—" : qs(levelMargin(lvl, s, p));
+    return `<tr><td class="mono">${esc(a.agent)} <span class="note">${a.class}</span></td><td><span class="lvl-pill L${lvl}">${LEVELS[lvl]}</span>${a.lifecycle !== "running" ? ` <span class="note">${a.lifecycle}</span>` : ""}</td>
+      <td><div class="score">${marks}<b style="left:${sc / 10}%"></b></div><span class="note mono">${sc}</span></td>
+      <td class="num">${esc(qs(a.alpha))}</td><td class="num">${esc(qs(a.beta))}</td><td class="num">${esc(qs(a.reliability))}</td><td class="num">${esc(margin.length > 14 ? (+margin.split("/")[0] / +(margin.split("/")[1] || 1)).toFixed(2) : margin)}</td></tr>`;
+  }).join("");
+}
+/* ---------- release table ---------- */
+function addAdmission(rec) {
+  const tr = document.createElement("tr"); if (rec.bootstrap.some(Boolean)) tr.className = "boot";
+  const n = rec.admitted[0];
+  tr.innerHTML = `<td class="num">${rec.tick}</td><td>SIM-${String(n).padStart(2, "0")} ${esc(titleOf[n])}</td><td class="num">${esc(rec.readiness[0])}</td><td>${rec.slot_price ? `SIM-${String(rec.slot_price.subsystem).padStart(2, "0")} at ${esc(rec.slot_price.readiness)}` : "—"}</td>`;
+  $("admissions").append(tr);
+}
+/* ---------- run ---------- */
+function counts() { const k = [0, 0, 0, 0, 0, 0]; for (const c of manifest.cells) if (c.kind !== "authority_minivm") k[S.run.maturity(c.container)]++; return k; }
+function stepOnce() {
+  const r = S.run, before = r.admissions.length, info = r.step();
+  S.lastAdmitted = new Set(info.admitted);
+  for (let i = before; i < r.admissions.length; i++) addAdmission(r.admissions[i]);
+  S.history.push(counts());
+  $("k-tick").textContent = info.tick; $("k-rel").textContent = `${r.releasedSet.size} / 67`;
+  $("k-ver").textContent = subs.filter((c) => r.maturity(c.container) >= MAT_VERIFIED && r.maturity(c.container) !== MAT_BLOCKED).length;
+  $("k-wt").textContent = info.wt === null ? "waiting" : info.wt <= r.workloadEnd ? `tick ${info.wt} of ${r.workloadEnd}` : "done";
+  $("k-fold").textContent = r.audit.checks.toLocaleString("en-US");
+  return info;
+}
+function paintAll() { paintMesh(); paintTimeline(); paintAgents(); }
+function finish() {
+  const r = S.run; S.result = r.result(); S.text = replayText(S.result);
+  const digest = sha256Hex(S.text), ok = digest === SIMMY_REPLAY_SHA256, R = S.result.rails;
+  verdict(ok ? "ok" : "err", ok
+    ? `Replay verified: SHA-256 ${digest} — identical to GENERATED/unity_mesh_run.json of Simmy v${SIMMY_PACKAGE_VERSION} (${S.text.length.toLocaleString("en-US")} bytes, ${R.authority_oracle_fields_checked} oracle fields, ${R.fold_cross_checks.toLocaleString("en-US")} fold cross-checks).`
+    : `Replay digest ${digest} differs from the Simmy release ${SIMMY_REPLAY_SHA256}.`);
+  const pl = R.release.planning;
+  $("certs").innerHTML = [
+    ["E8 fixed point", `reached at tick ${R.convergence.fixed_point_reached_at_tick}, verified at ${R.convergence.verified_at_tick}`],
+    ["E14 planning", `γ = ${pl.planning_discount}; values ${pl.min_value} … ${pl.max_value}; ρ(γA) ≤ ${pl.spectral_radius_bound}`],
+    ["E1 release", `${R.release.admissions.length} admissions, ${R.release.bootstrap_admissions} bootstrap`],
+    ["E17 cycles", `${R.dependency_contradictions.length} strongly connected components with a cycle`],
+    ["E16 integration", `${R.integration.components} component${R.integration.components === 1 ? "" : "s"} (dim ker L)`],
+    ["E20 folds", `${R.fold_cross_checks.toLocaleString("en-US")} count folds = lattice folds`],
+    ["Oracle", `${R.authority_oracle_fields_checked} / 840 fields match`],
+    ["Replay", `${digest.slice(0, 32)}…`],
+  ].map(([k, v]) => `<span>${k}</span><span>${esc(v)}</span>`).join("");
+  $("cycles").innerHTML = R.dependency_contradictions.map((c) => `<p>{${c.component.join(", ")}} · ${c.cycle.join(" → ")}<br><span class="note">${esc(c.certificate)}</span></p>`).join("");
+  $("d-replay").disabled = false;
+  S.lastAdmitted = new Set(); paintAll();
+}
+function reset() {
+  clearTimeout(S.timer); S.timer = null;
+  S.run = new SimmyRun(manifest, workload); S.history = []; S.lastAdmitted = new Set(); S.result = null; S.text = null;
+  $("admissions").textContent = ""; $("d-replay").disabled = true;
+  ["k-tick", "k-ver", "k-fold"].forEach((id) => { $(id).textContent = "0"; }); $("k-rel").textContent = "0 / 67"; $("k-wt").textContent = "—";
+  paintAll();
+}
+function run() {
+  if (!inputsOk) return;
+  if (!S.run || S.run.done) reset();
+  $("b-run").disabled = true; $("b-reset").disabled = false;
+  const delay = Number($("speed").value);
+  const loop = () => {
+    try {
+      if (delay === 0) { const t0 = performance.now(); while (!S.run.done && performance.now() - t0 < 30) stepOnce(); }
+      else stepOnce();
+      paintAll();
+      if (S.run.done) { finish(); $("b-run").disabled = false; $("b-run").textContent = "Run again"; return; }
+      S.timer = setTimeout(loop, delay);
+    } catch (e) { verdict("err", "The replay stopped: " + esc(e.message)); $("b-run").disabled = false; }
+  };
+  loop();
+}
+$("b-run").addEventListener("click", run);
+$("b-reset").addEventListener("click", () => { reset(); $("b-run").disabled = false; $("b-run").textContent = "Run replay"; });
+const download = (name, text, type = "application/json") => { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; document.body.append(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000); };
+$("d-replay").addEventListener("click", () => S.text && download("unity_mesh_run.json", S.text));
+$("d-cells").addEventListener("click", () => download("cells.json", CELLS_TEXT));
+$("d-workload").addEventListener("click", () => download("authority_workload_rails.json", WORKLOAD_TEXT));
+reset();
+</script>

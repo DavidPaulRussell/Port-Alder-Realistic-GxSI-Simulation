@@ -1,0 +1,9 @@
+#!/bin/sh
+# Refuse a commit that breaks the GitHub size contract (25 MB a file, 1 GB a repository).
+# Enable once:  git config core.hooksPath tools/git-hooks
+top="$(git rev-parse --show-toplevel)"
+for py in python3 python py; do
+  if command -v "$py" >/dev/null 2>&1; then exec "$py" -B "$top/tools/check_github_limits.py" "$top"; fi
+done
+echo "pre-commit: Python was not found, so the size contract was not checked (tools/check_github_limits.cmd checks sizes without it)." >&2
+exit 0

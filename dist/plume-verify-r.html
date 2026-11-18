@@ -1,0 +1,1009 @@
+<title>Verify R files · Plume XPU Console</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@400;500;600&display=swap">
+<style>
+/* Plume XPU Console: the shared look of the console pages (from src/page.html). */
+/* SPDX-License-Identifier: GPL-3.0-only */
+:root {
+  --bg: #e9ecf1; --panel: #ffffff; --sunk: #f3f5f8; --ink: #141922; --muted: #586174; --line: #d3d9e2;
+  --accent: #b5600c; --accent-soft: #b5600c1f; --on-accent: #ffffff;
+  --two: #4c5fc2; --five: #1f8577; --good: #1f8577; --bad: #c0392b; --warn: #a66a00;
+  --scope: #0e1016;
+  --f-ui: "IBM Plex Sans Condensed", "Roboto Condensed", "Arial Narrow", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0d1117; --panel: #151a23; --sunk: #10141b; --ink: #e4e8ef; --muted: #8a94a7; --line: #263042;
+  --accent: #f0a23b; --accent-soft: #f0a23b24; --on-accent: #1a1206;
+  --two: #8d9cf0; --five: #4cc4b2; --good: #4cc4b2; --bad: #ff7a6b; --warn: #e2b04a; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0d1117; --panel: #151a23; --sunk: #10141b; --ink: #e4e8ef; --muted: #8a94a7; --line: #263042;
+  --accent: #f0a23b; --accent-soft: #f0a23b24; --on-accent: #1a1206;
+  --two: #8d9cf0; --five: #4cc4b2; --good: #4cc4b2; --bad: #ff7a6b; --warn: #e2b04a; color-scheme: dark }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 14px/1.45 var(--f-ui); margin: 0; }
+.wrap { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 16px 28px; max-width: 1360px; margin: 0 auto; display: grid; gap: 14px; }
+button, input, select, textarea { font: inherit; color: inherit; }
+.mono { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+header.bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; }
+.brand h1 { margin: 0; font-size: 20px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; }
+.brand .sub { color: var(--muted); font-size: 13px; }
+.engines { display: flex; flex-wrap: wrap; gap: 6px; margin-left: auto; }
+.pill { font: 600 11px var(--f-ui); letter-spacing: .06em; text-transform: uppercase; padding: 3px 9px; border-radius: 99px; border: 1px solid var(--line); color: var(--muted); }
+.pill.ok { color: var(--good); border-color: color-mix(in srgb, var(--good) 45%, transparent); }
+.pill.off { color: var(--muted); border-style: dashed; }
+.pill.err { color: var(--bad); border-color: var(--bad); }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px; display: grid; gap: 12px; min-width: 0; }
+.label { font: 600 11px var(--f-ui); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.note { color: var(--muted); font-size: 12.5px; margin: 0; }
+.btn { border: 1px solid var(--line); background: var(--sunk); border-radius: 7px; padding: 5px 11px; cursor: pointer; font-weight: 500; }
+.btn:hover { border-color: var(--muted); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.btn:disabled { opacity: .55; cursor: progress; }
+button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible, canvas:focus-visible, label.file:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+input[type="number"] { width: 5em; padding: 3px 6px; border: 1px solid var(--line); border-radius: 6px; background: var(--sunk); font-family: var(--f-mono); }
+select { padding: 4px 6px; border: 1px solid var(--line); border-radius: 6px; background: var(--sunk); }
+label.inl { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); }
+.msg { font: 12.5px var(--f-mono); min-height: 1.4em; overflow-wrap: anywhere; }
+.msg.err { color: var(--bad); } .msg.ok { color: var(--good); }
+
+.kv { display: grid; grid-template-columns: max-content minmax(0,1fr); gap: 1px 10px; font: 12px var(--f-mono); }
+.kv span:nth-child(odd) { color: var(--muted); font-family: var(--f-ui); font-size: 12px; }
+.kv span:nth-child(even) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 7px; overflow: hidden; flex-wrap: wrap; }
+.seg button { border: 0; background: transparent; padding: 5px 10px; cursor: pointer; color: var(--muted); font-weight: 500; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--accent-soft); color: var(--ink); }
+input[type="range"] { accent-color: var(--accent); width: 100%; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th, td { text-align: left; padding: 5px 8px; border-bottom: 1px solid var(--line); }
+th { font: 600 11px var(--f-ui); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+td.num, th.num { text-align: right; font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.tbl { overflow-x: auto; }
+.ok-t { color: var(--good); font-weight: 600; } .bad-t { color: var(--bad); font-weight: 600; }
+details > summary { cursor: pointer; font: 600 11px var(--f-ui); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+details[open] > summary { margin-bottom: 8px; }
+label.file { position: relative; overflow: hidden; }
+label.file input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+
+/* navigation between the console pages */
+nav.pages { display: flex; gap: 6px; flex-wrap: wrap; }
+nav.pages a { font: 600 12px var(--f-ui); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); text-decoration: none; padding: 4px 10px; border: 1px solid var(--line); border-radius: 99px; }
+nav.pages a[aria-current="page"] { color: var(--ink); border-color: var(--accent); background: var(--accent-soft); }
+nav.pages a:hover { color: var(--ink); }
+.grid2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; align-items: start; }
+@media (max-width: 960px) { .grid2 { grid-template-columns: minmax(0, 1fr); } }
+.bar-h { height: 8px; border-radius: 4px; background: var(--sunk); border: 1px solid var(--line); position: relative; overflow: hidden; }
+.bar-h > i { position: absolute; inset: 0 auto 0 0; background: var(--accent); }
+
+/* Verify R files: .russ containers checked in the page by the console's own toolchain. */
+.drop { border: 1.5px dashed var(--line); border-radius: 10px; padding: 22px; text-align: center; color: var(--muted); }
+.drop.over { border-color: var(--accent); color: var(--ink); }
+.verdict { font: 600 13px var(--f-mono); padding: 8px 10px; border-radius: 7px; border: 1px solid var(--line); background: var(--sunk); overflow-wrap: anywhere; }
+.verdict.ok { color: var(--good); border-color: color-mix(in srgb, var(--good) 45%, transparent); } .verdict.err { color: var(--bad); border-color: var(--bad); }
+td.res { font: 600 12px var(--f-mono); white-space: nowrap; } td.res.ok { color: var(--good); } td.res.err { color: var(--bad); }
+td.det { font: 12px var(--f-mono); overflow-wrap: anywhere; }
+</style>
+
+<div class="wrap">
+  <header class="bar">
+    <div class="brand"><h1>Verify R files <span class="pill" id="ver" style="vertical-align:middle;letter-spacing:.04em"></span></h1>
+      <div class="sub">RUSS 1.3 containers, checked here by the console's own toolchain: records, payload root, tuple id, the .russl → IR lowering, MSSL bindings, the field binding and all 20 pyramid layers</div></div>
+    <nav class="pages" aria-label="Console pages"><a href="plume-xpu-console.html">Console</a><a href="plume-simmy-replay.html">Simmy replay</a><a href="plume-port-alder.html">Port Alder</a><a href="plume-verify-r.html" aria-current="page">Verify R files</a></nav>
+  </header>
+
+  <section class="panel" aria-label="Files">
+    <div class="drop" id="drop">Drop .russ files here, or <label class="btn" for="pick" style="display:inline-block">choose files…</label>
+      <input type="file" id="pick" accept=".russ,application/octet-stream" multiple hidden></div>
+    <div class="verdict" id="verdict">Nothing checked yet. Nothing leaves this page: the files are read and verified locally.</div>
+    <div class="tbl"><table><thead><tr><th>file</th><th class="num">bytes</th><th>result</th><th>detail</th></tr></thead><tbody id="rows"></tbody></table></div>
+  </section>
+</div>
+
+<script type="module">
+const __mod_lcufa = (() => {
+// LCUF-A/0.3 — the LCUF array profile (ByteFoundry virtual XPU).
+// SPDX-License-Identifier: MIT OR GPL-3.0-only
+//
+// An LCUF-style column language whose values are whole frames: 8 lanes x 128 x 128
+// words in the ring Z/p^n. It plays the role NumPy plays for Python: each row is one
+// array operation that a native backend runs over the whole frame.
+//
+//   LCUF-A/0.3
+//   module <name>
+//   ring p=<prime> n=<digits>
+//   frame lanes=8 height=128 width=128
+//   phase | id | op | inputs | output | arg
+//   init  | i1 | from2 | in | x | -
+//   step  | s1 | life  | x  | lo | -
+//   ...
+//   final | f1 | to2   | x  | out | -
+//   end
+//
+// Phases: init runs once, step runs n times, final runs once. `in` is the input
+// frame; the program must write `out`. Names are registers; a row's output must
+// differ from its inputs (the GPU cannot alias a written buffer).
+
+const LCUFA_LANGUAGE = "LCUF-A/0.3";
+const LANES = 8, HEIGHT = 128, WIDTH = 128, WORDS = LANES * HEIGHT * WIDTH;
+const MAX_SLOTS = 16, MAX_ROWS = 256, MAX_SOURCE_CHARS = 65536, MAX_STEPS = 100000;
+const LCUFA_COMPILER_VERSION = "0.3.2";
+const COLUMNS = ["phase", "id", "op", "inputs", "output", "arg"];
+
+// op name -> [code, inputs, takes const arg, neighbour access, description]
+const OPS = {
+  copy:  [1, 1, false, false, "copy a frame"],
+  life:  [2, 1, false, true,  "Life rule on digit 0 of each lane (alive = digit 0 ≠ 0) → 0/1"],
+  rot:   [3, 1, true,  false, "lane rotation: lane k takes lane (k + c) mod 8"],
+  nsum:  [4, 1, false, true,  "Moore 8-neighbour sum, same lane, mod p^n"],
+  sq:    [5, 1, false, false, "x² mod p^n"],
+  mul:   [6, 2, false, false, "a·b mod p^n"],
+  mulc:  [7, 1, true,  false, "a·c mod p^n"],
+  add:   [8, 2, false, false, "a + b mod p^n"],
+  addc:  [9, 1, true,  false, "a + c mod p^n"],
+  orc:   [10, 1, true, false, "a ∨ c (p = 2 only)"],
+  dadd:  [11, 2, false, false, "digit-wise addition mod p, no carries (XOR when p = 2)"],
+  shift: [12, 1, false, false, "a·p mod p^n (moves every digit up one place)"],
+  from2: [13, 1, false, false, "re-encode a 20-bit word: digit 0 = bit 0, digits 1.. = (x >> 1) mod p^(n−1)"],
+  to2:   [14, 1, false, false, "decode to a 20-bit word: bit 0 = digit 0 mod 2, bits 1.. = x div p"],
+  modj:  [15, 1, true,  false, "a mod p^c (pyramid level c)"],
+};
+
+class LcufaDiagnostic extends Error {
+  constructor(message, line) { super(line ? `line ${line}: ${message}` : message); this.line = line; }
+}
+const fail = (m, l) => { throw new LcufaDiagnostic(m, l); };
+const IDENT = /^[A-Za-z_][A-Za-z0-9_]{0,31}$/;
+// names that collide with JavaScript object machinery are not register names
+const RESERVED_NAMES = new Set(["__proto__", "constructor", "prototype", "undefined", "null", "hasOwnProperty", "toString", "valueOf"]);
+const isName = (h) => IDENT.test(h) && !RESERVED_NAMES.has(h);
+const isPrime = (p) => { if (p < 2) return false; for (let d = 2; d * d <= p; d++) if (p % d === 0) return false; return true; };
+
+function parse(text) {
+  if (typeof text !== "string") fail("source must be text");
+  if (text.length > MAX_SOURCE_CHARS) fail(`source is longer than ${MAX_SOURCE_CHARS} characters`);
+  const lines = text.replace(/\r\n?/g, "\n").split("\n");
+  let i = 0;
+  const next = () => { while (i < lines.length) { const raw = lines[i++]; const t = raw.trim(); if (t && !t.startsWith("#")) return [t, i]; } return [null, i]; };
+  let [t, ln] = next();
+  if (t !== LCUFA_LANGUAGE) fail(`first line must be ${LCUFA_LANGUAGE}`, ln);
+  [t, ln] = next(); const mm = /^module ([A-Za-z_][A-Za-z0-9_.-]*)$/.exec(t || ""); if (!mm) fail("expected: module <name>", ln);
+  [t, ln] = next(); const rm = /^ring p=([1-9][0-9]*) n=([1-9][0-9]*)$/.exec(t || ""); if (!rm) fail("expected: ring p=<prime> n=<digits> (decimal, no leading zeros, n ≥ 1)", ln);
+  if (rm[1].length > 7 || rm[2].length > 2) fail("p or n is too large; p^n must fit in 21 bits", ln);
+  const p = Number(rm[1]), n = Number(rm[2]);
+  if (n < 1) fail("n must be at least 1", ln);
+  if (p > 2 ** 21 || p ** n > 2 ** 21) fail(`p^n is larger than 2^21; the XPU word ring must fit in 21 bits`, ln);
+  if (!isPrime(p)) fail(`p=${p} is not prime`, ln);
+  if (p === 2 && n !== 20) fail("for p=2 the XPU ring is the Byte20 ring, n=20", ln);
+  [t, ln] = next(); if (t !== "frame lanes=8 height=128 width=128") fail("expected: frame lanes=8 height=128 width=128", ln);
+  [t, ln] = next(); if ((t || "").split("|").map((s) => s.trim()).join("|") !== COLUMNS.join("|")) fail(`expected column header: ${COLUMNS.join(" | ")}`, ln);
+  const rows = []; const ids = new Set(); let ended = false; const order = { init: 0, step: 1, final: 2 }; let last = 0;
+  for (;;) {
+    [t, ln] = next(); if (t === null) break;
+    if (t === "end") { ended = true; [t, ln] = next(); if (t !== null) fail("content after end", ln); break; }
+    const cells = t.split("|").map((s) => s.trim());
+    if (cells.length !== 6 || cells.some((c) => !c)) fail("a row needs six non-empty cells", ln);
+    const [phase, id, op, ins, out, arg] = cells;
+    if (!(phase in order)) fail(`phase must be init, step or final, not "${phase}"`, ln);
+    if (order[phase] < last) fail("phases must appear in the order init, step, final", ln);
+    last = order[phase];
+    if (!IDENT.test(id) || ids.has(id)) fail(`row id "${id}" is invalid or repeated`, ln); ids.add(id);
+    if (!(op in OPS)) fail(`unknown op "${op}"`, ln);
+    const [, nin, takesC] = OPS[op];
+    const inputs = ins === "-" ? [] : ins.split(",").map((s) => s.trim());
+    if (inputs.length !== nin) fail(`${op} takes ${nin} input${nin > 1 ? "s" : ""}`, ln);
+    for (const h of inputs) if (!isName(h)) fail(`bad or reserved input name "${h}"`, ln);
+    if (!isName(out) || out === "in") fail(`bad or reserved output name "${out}"`, ln);
+    if (inputs.includes(out)) fail(`output ${out} must differ from the inputs`, ln);
+    let c = 0;
+    if (takesC) { if (!/^[0-9]{1,10}$/.test(arg)) fail(`${op} needs a non-negative integer arg (at most 10 digits)`, ln); c = Number(arg); if (c > 0xffffffff) fail("arg too large", ln); }
+    else if (arg !== "-") fail(`${op} takes no arg; write -`, ln);
+    if (op === "orc" && p !== 2) fail("orc is a 2-adic operation; use p=2", ln);
+    if (op === "rot" && c > 7) fail("rot arg must be 0..7", ln);
+    if (op === "modj" && (c < 1 || c > n)) fail(`modj arg must be 1..${n}`, ln);
+    // constants act in the ring: reduce them so every backend sees the same in-range value
+    if (op === "addc" || op === "mulc" || op === "orc") c = c % p ** n;
+    rows.push({ phase, id, op, inputs, output: out, c, line: ln });
+  }
+  if (!ended) fail("missing end");
+  if (rows.length > MAX_ROWS) fail(`more than ${MAX_ROWS} rows`);
+  return { language: LCUFA_LANGUAGE, module: mm[1], p, n, M: p ** n, rows };
+}
+
+// Static admission: definitions before use, `out` written, slot budget.
+function compile(text) {
+  const prog = parse(text);
+  // Definitions before use. A step row may read a name written earlier in the same
+  // iteration, or a name that already has a value from init.
+  const defined = new Set(["in"]);
+  for (const ph of ["init", "step", "final"]) {
+    const known = new Set(defined);
+    for (const r of prog.rows.filter((x) => x.phase === ph)) {
+      for (const h of r.inputs) if (!known.has(h)) fail(`${h} is read before it is written${ph === "step" ? " (a step row can only read init values or rows above it)" : ""}`, r.line);
+      known.add(r.output);
+    }
+    known.forEach((k) => defined.add(k));
+  }
+  if (!defined.has("out")) fail("the program never writes out");
+  const names = ["in", ...[...defined].filter((x) => x !== "in")];
+  if (names.length > MAX_SLOTS) fail(`${names.length} registers; the XPU has ${MAX_SLOTS} frame slots`);
+  const slot = Object.assign(Object.create(null), Object.fromEntries(names.map((nm, k) => [nm, k])));
+  const code = new Uint32Array(prog.rows.length * 5);
+  prog.rows.forEach((r, k) => {
+    code.set([OPS[r.op][0], slot[r.output], slot[r.inputs[0]], r.inputs.length > 1 ? slot[r.inputs[1]] : 0, r.c], k * 5);
+  });
+  const count = (ph) => prog.rows.filter((r) => r.phase === ph).length;
+  return { ...prog, slot, code, ninit: count("init"), nstep: count("step"), nfinal: count("final"), outSlot: slot.out };
+}
+
+/* ---------------- reference interpreter (independent of the C engine) ---------------- */
+function referenceRun(compiled, input, steps, rule = { birth: 1 << 3, survive: 12 }) {
+  const { p, n, M } = compiled;
+  const regs = new Map([["in", Uint32Array.from(input)]]);
+  const mod = (x) => ((x % M) + M) % M;
+  const dadd = (a, b) => { let r = 0, pw = 1; for (let i = 0; i < n; i++) { r += ((a % p + b % p) % p) * pw; pw *= p; a = Math.floor(a / p); b = Math.floor(b / p); } return r; };
+  const runRow = (r) => {
+    const a = regs.get(r.inputs[0]), b = regs.get(r.inputs[1]), o = new Uint32Array(WORDS), c = r.c;
+    const nb = (y, x) => { const out = []; for (const dy of [-1, 0, 1]) for (const dx of [-1, 0, 1]) if (dy || dx) out.push((((y + dy + HEIGHT) % HEIGHT) * WIDTH + ((x + dx + WIDTH) % WIDTH)) * LANES); return out; };
+    switch (r.op) {
+      case "copy": o.set(a); break;
+      case "add": for (let i = 0; i < WORDS; i++) o[i] = mod(a[i] + b[i]); break;
+      case "addc": for (let i = 0; i < WORDS; i++) o[i] = mod(a[i] + c); break;
+      case "orc": for (let i = 0; i < WORDS; i++) o[i] = mod((a[i] | c) >>> 0); break;
+      case "sq": for (let i = 0; i < WORDS; i++) o[i] = Number((BigInt(a[i]) * BigInt(a[i])) % BigInt(M)); break;
+      case "mul": for (let i = 0; i < WORDS; i++) o[i] = Number((BigInt(a[i]) * BigInt(b[i])) % BigInt(M)); break;
+      case "mulc": for (let i = 0; i < WORDS; i++) o[i] = Number((BigInt(a[i]) * BigInt(c)) % BigInt(M)); break;
+      case "shift": for (let i = 0; i < WORDS; i++) o[i] = mod(a[i] * p); break;
+      case "dadd": for (let i = 0; i < WORDS; i++) o[i] = p === 2 ? (a[i] ^ b[i]) >>> 0 : dadd(a[i], b[i]); break;
+      case "modj": { const m = p ** c; for (let i = 0; i < WORDS; i++) o[i] = a[i] % m; break; }
+      case "from2": for (let i = 0; i < WORDS; i++) o[i] = p === 2 ? mod(a[i]) : (a[i] & 1) + p * ((a[i] >>> 1) % (M / p)); break;
+      case "to2": for (let i = 0; i < WORDS; i++) o[i] = p === 2 ? a[i] : (((a[i] % p) & 1) | ((Math.floor(a[i] / p) << 1) & 0xfffff)) >>> 0; break;
+      case "rot": for (let cell = 0; cell < HEIGHT * WIDTH; cell++) for (let k = 0; k < LANES; k++) o[cell * LANES + k] = a[cell * LANES + ((k + c) & 7)]; break;
+      case "nsum": case "life":
+        for (let y = 0; y < HEIGHT; y++) for (let x = 0; x < WIDTH; x++) {
+          const ns = nb(y, x), base = (y * WIDTH + x) * LANES;
+          for (let k = 0; k < LANES; k++) {
+            if (r.op === "nsum") { let s = 0; for (const q of ns) s += a[q + k]; o[base + k] = mod(s); }
+            else { let live = 0; for (const q of ns) live += (a[q + k] % p) !== 0 ? 1 : 0; const alive = (a[base + k] % p) !== 0; o[base + k] = alive ? (rule.survive >> live) & 1 : (rule.birth >> live) & 1; }
+          }
+        }
+        break;
+    }
+    regs.set(r.output, o);
+  };
+  const ph = (name) => compiled.rows.filter((r) => r.phase === name);
+  ph("init").forEach(runRow);
+  for (let s = 0; s < steps; s++) ph("step").forEach(runRow);
+  ph("final").forEach(runRow);
+  return regs.get("out");
+}
+
+/* ---------------- WGSL kernel (one generic shader, one dispatch per row) ---------------- */
+const WGSL = /* wgsl */ `
+struct P { op: u32, c: u32, p: u32, n: u32, M: u32, birth: u32, survive: u32, pad: u32 };
+@group(0) @binding(0) var<uniform> pr: P;
+@group(0) @binding(1) var<storage, read> a: array<u32>;
+@group(0) @binding(2) var<storage, read> b: array<u32>;
+@group(0) @binding(3) var<storage, read_write> o: array<u32>;
+const W: u32 = 128u; const H: u32 = 128u; const L: u32 = 8u;
+fn modM(x: u32) -> u32 { if (pr.p == 2u) { return x & (pr.M - 1u); } return x % pr.M; }
+fn mulmod(x: u32, y: u32) -> u32 {
+  if (pr.p == 2u) { return (x * y) & (pr.M - 1u); }
+  var r = (x * (y >> 10u)) % pr.M; r = (r << 10u) % pr.M; return (r + (x * (y & 1023u)) % pr.M) % pr.M;
+}
+fn dadd(x0: u32, y0: u32) -> u32 {
+  if (pr.p == 2u) { return x0 ^ y0; }
+  var x = x0; var y = y0; var r = 0u; var pw = 1u;
+  for (var i = 0u; i < pr.n; i++) { r += ((x % pr.p + y % pr.p) % pr.p) * pw; pw *= pr.p; x /= pr.p; y /= pr.p; }
+  return r;
+}
+@compute @workgroup_size(64)
+fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
+  let cell = gid.x; if (cell >= W * H) { return; }
+  let y = cell / W; let x = cell % W; let base = cell * L;
+  let ym = (y + H - 1u) % H; let yp = (y + 1u) % H; let xm = (x + W - 1u) % W; let xp = (x + 1u) % W;
+  var nb = array<u32, 8>((ym*W+xm)*L, (ym*W+x)*L, (ym*W+xp)*L, (y*W+xm)*L, (y*W+xp)*L, (yp*W+xm)*L, (yp*W+x)*L, (yp*W+xp)*L);
+  for (var k = 0u; k < L; k++) {
+    let i = base + k; let av = a[i]; var r = 0u;
+    switch (pr.op) {
+      case 1u: { r = av; }
+      case 2u: { var live = 0u; for (var j = 0u; j < 8u; j++) { if (a[nb[j] + k] % pr.p != 0u) { live++; } }
+                 if (av % pr.p != 0u) { r = (pr.survive >> live) & 1u; } else { r = (pr.birth >> live) & 1u; } }
+      case 3u: { r = a[base + ((k + pr.c) & 7u)]; }
+      case 4u: { var s = 0u; for (var j = 0u; j < 8u; j++) { s += a[nb[j] + k]; } r = modM(s); }
+      case 5u: { r = mulmod(av, av); }
+      case 6u: { r = mulmod(av, b[i]); }
+      case 7u: { r = mulmod(av, pr.c % pr.M); }
+      case 8u: { r = modM(av + b[i]); }
+      case 9u: { r = modM(av + (pr.c % pr.M)); }
+      case 10u: { r = modM(av | (pr.c % pr.M)); }
+      case 11u: { r = dadd(av, b[i]); }
+      case 12u: { r = mulmod(av, pr.p % pr.M); }
+      case 13u: { if (pr.p == 2u) { r = modM(av); } else { r = (av & 1u) + pr.p * ((av >> 1u) % (pr.M / pr.p)); } }
+      case 14u: { if (pr.p == 2u) { r = av; } else { r = ((av % pr.p) & 1u) | (((av / pr.p) << 1u) & 0xFFFFFu); } }
+      case 15u: { var m = 1u; for (var t = 0u; t < min(pr.c, pr.n); t++) { m *= pr.p; } r = av % m; }
+      default: { r = 0u; }
+    }
+    o[i] = r;
+  }
+}`;
+
+/* ---------------- the two ByteFoundry stage programs ---------------- */
+const BF1_SOURCE = `LCUF-A/0.3
+module bytefoundry.bf1.plume2
+ring p=2 n=20
+frame lanes=8 height=128 width=128
+phase | id | op    | inputs | output | arg
+init  | i1 | from2 | in     | x      | -
+step  | s1 | life  | x      | lo     | -
+step  | s2 | rot   | x      | r      | 1
+step  | s3 | nsum  | r      | s      | -
+step  | s4 | sq    | x      | q      | -
+step  | s5 | orc   | q      | qc     | 5
+step  | s6 | add   | x,qc   | t      | -
+step  | s7 | dadd  | t,s    | phi    | -
+step  | s8 | shift | phi    | sp     | -
+step  | s9 | add   | lo,sp  | y      | -
+step  | s10| copy  | y      | x      | -
+final | f1 | to2   | x      | out    | -
+end
+`;
+const BF2_SOURCE = `LCUF-A/0.3
+module bytefoundry.bf2.plume5
+ring p=5 n=8
+frame lanes=8 height=128 width=128
+phase | id | op    | inputs | output | arg
+init  | i1 | from2 | in     | x      | -
+step  | s1 | life  | x      | lo     | -
+step  | s2 | rot   | x      | r      | 1
+step  | s3 | nsum  | r      | s      | -
+step  | s4 | sq    | x      | q      | -
+step  | s5 | mulc  | q      | q5     | 5
+step  | s6 | add   | x,q5   | t      | -
+step  | s7 | addc  | t      | t1     | 1
+step  | s8 | dadd  | t1,s   | phi    | -
+step  | s9 | shift | phi    | sp     | -
+step  | s10| add   | lo,sp  | y      | -
+step  | s11| copy  | y      | x      | -
+final | f1 | to2   | x      | out    | -
+end
+`;
+
+return { BF1_SOURCE, BF2_SOURCE, COLUMNS, HEIGHT, LANES, LCUFA_COMPILER_VERSION, LCUFA_LANGUAGE, LcufaDiagnostic, MAX_ROWS, MAX_SLOTS, MAX_SOURCE_CHARS, MAX_STEPS, OPS, WGSL, WIDTH, WORDS, compile, parse, referenceRun };
+})();
+const __mod_russl = (() => {
+// RUSSL/1.0 reference-profile parser and lowering, in the console's own toolchain.
+// SPDX-License-Identifier: GPL-3.0-only (port of corpus/tooling/russl_reference.py, RUSSL corpus 2.0.0)
+//
+// parseRussl / lowerRussl follow russl_reference.parse_russl / lower_russl rule for rule, so a
+// .russ container can be checked source → IR without Python. Error codes match the reference
+// (RUSSL-E-PARSE-001 …). Strings are handled as Unicode code points, as Python does.
+
+class RusslError extends Error {
+  constructor(code, message, line) { super(`${code}: ${message}${line ? ` at line ${line}` : ""}`); this.code = code; this.line = line; }
+}
+const fail = (code, msg, line) => { throw new RusslError(code, msg, line); };
+
+/* ---------- shared hashing + canonical JSON (also used by russ.js) ---------- */
+const enc = new TextEncoder();
+const hex = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
+const sha256 = async (bytes) => hex(await crypto.subtle.digest("SHA-256", bytes));
+async function domainHash(domain, payload) {
+  const tag = enc.encode(domain), out = new Uint8Array(tag.length + 1 + payload.length);
+  out.set(tag, 0); out[tag.length] = 0; out.set(payload, tag.length + 1); return sha256(out);
+}
+// Python sorts keys by code point; JS sorts strings by UTF-16 unit, so compare code points here.
+const byCodePoint = (a, b) => { const x = [...a], y = [...b]; for (let i = 0; i < Math.min(x.length, y.length); i++) { const d = x[i].codePointAt(0) - y[i].codePointAt(0); if (d) return d; } return x.length - y.length; };
+// json.dumps(sort_keys=True, separators=(',',':'), ensure_ascii=False) for the value set used here
+function canonicalJson(v) {
+  if (v === null) return "null";
+  if (Array.isArray(v)) return "[" + v.map(canonicalJson).join(",") + "]";
+  if (typeof v === "object") return "{" + Object.keys(v).sort(byCodePoint).map((k) => JSON.stringify(k) + ":" + canonicalJson(v[k])).join(",") + "}";
+  if (typeof v === "number" && !Number.isSafeInteger(v)) throw new Error("only safe integers are used in these manifests");
+  if (typeof v !== "number" && typeof v !== "string" && typeof v !== "boolean") throw new Error("unsupported JSON value");
+  return JSON.stringify(v);
+}
+
+/* ---------- reference profile tables ---------- */
+const OPERATORS = { SOURCE_BIND: ["DECL", "source_binding", "read"], CONST: ["DECL", "constant", "read"], FIELD_DEFINE: ["FIELD", "field_descriptor", "derive"], FIELD_POPULATE: ["FIELD", "field_candidate", "derive"], FIELD_SLICE: ["FIELD", "field_slice", "derive"], FIELD_REGION: ["FIELD", "field_region", "derive"], PYRAMID_DEFINE: ["FIELD", "multiresolution_descriptor", "derive"], COUPLING_DEFINE: ["MECHANICS", "coupling_descriptor", "derive"], MSSL_EVAL: ["MECHANICS", "mssl_result", "derive"], MECHANICS_STEP: ["MECHANICS", "mechanics_state", "derive"], ADMISSION_EVAL: ["ADMISSION", "admission_disposition", "derive"], PROJECT: ["PROJECTION", "projection", "project"], VERIFY_SOURCE: ["VERIFY", "verification", "read"], VERIFY_MSSL: ["VERIFY", "verification", "read"], VERIFY_TUPLE: ["VERIFY", "verification", "read"], VERIFY_EVIDENCE: ["VERIFY", "verification", "read"], HASH: ["EVIDENCE", "digest", "read"], EMIT_RECEIPT: ["EVIDENCE", "receipt", "write:evidence"], NODE: ["DISTRIBUTED", "node_descriptor", "read"], SHARD: ["DISTRIBUTED", "shard_descriptor", "derive"], ROUTE: ["DISTRIBUTED", "route_descriptor", "derive"], CHECKPOINT: ["FABRIC", "checkpoint", "derive"], CAS_GET: ["FABRIC", "content_fetch", "read"], CAS_PUT: ["FABRIC", "content_put", "write:state"], ROOT_BUILD: ["FABRIC", "root_descriptor", "derive"], STATE_COMMIT: ["FABRIC", "commit", "commit"], ROLLBACK: ["FABRIC", "rollback", "commit"], REPLICATE: ["FABRIC", "replication", "replicate"], PUBLISH: ["FABRIC", "publication", "publish"], ASSERT: ["CONTROL", "assertion", "read"], BARRIER: ["CONTROL", "barrier", "read"], NOP: ["CONTROL", "nop", "read"] };
+const ALIASES = { SB: "SOURCE_BIND", FD: "FIELD_DEFINE", FP: "FIELD_POPULATE", FS: "FIELD_SLICE", FR: "FIELD_REGION", PY: "PYRAMID_DEFINE", CD: "COUPLING_DEFINE", ME: "MSSL_EVAL", MS: "MECHANICS_STEP", AE: "ADMISSION_EVAL", PJ: "PROJECT", VS: "VERIFY_SOURCE", VM: "VERIFY_MSSL", VT: "VERIFY_TUPLE", VE: "VERIFY_EVIDENCE", H: "HASH", ER: "EMIT_RECEIPT", CP: "CHECKPOINT", CG: "CAS_GET", CT: "CAS_PUT", RB: "ROOT_BUILD", SC: "STATE_COMMIT", RO: "ROLLBACK", RP: "REPLICATE", PB: "PUBLISH", A: "ASSERT", B: "BARRIER", N: "NOP" };
+const ARG_KEYS = { SOURCE_BIND: ["media", "profile"], FIELD_DEFINE: ["shape", "sample", "axes", "sparse"], FIELD_POPULATE: ["mapping"], FIELD_SLICE: ["selector"], FIELD_REGION: ["selector"], PYRAMID_DEFINE: ["levels", "downsample", "spatial_axes"], COUPLING_DEFINE: ["neighborhood", "radius", "representation"], MSSL_EVAL: ["mode", "lab_ids", "coupling"], ADMISSION_EVAL: ["policy", "authorization"], PROJECT: ["selector", "output"], EMIT_RECEIPT: ["content_bound", "expected"], SHARD: ["partition", "count"], ROOT_BUILD: ["hash"], STATE_COMMIT: ["grant"] };
+const STORAGE_LEAK = /(?:\.zarr(?:\b|\/)|ome[-_.]?zarr|zarr[-_]?v[0-9]|logical\/state\.russ\.zarr)/i;
+const COLUMNS = "ID│LANE│OP│OUT│CTRL│IN│ARG│META";
+const SYMBOL = /^[A-Za-z_][A-Za-z0-9_-]*(?:\.[A-Za-z_][A-Za-z0-9_-]*)*$/;
+const KEY = /^[A-Za-z_][A-Za-z0-9_.-]*$/;
+const VERSION = /^(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)(?:\.(?:0|[1-9][0-9]*))?$/;
+const DIGEST = /^sha256:[0-9a-f]{64}$/;
+const LIMITS = { source_bytes: 1048576, line_chars: 65536, cell_chars: 16384, symbol_chars: 256, rows: 10000, frames: 1024, bindings: 256, dependencies_per_row: 128, dependencies_total: 100000, structured_fields: 64 };
+const CTRL_CHAR = /[\p{Cc}\p{Cf}]/u;
+const cps = (s) => Array.from(s);                 // code points
+const plen = (s) => cps(s).length;
+const utf8len = (s) => enc.encode(s).length;
+const wellFormed = (s) => !/[\uD800-\uDFFF]/.test(s.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, ""));
+
+function canonicalSource(text, maxBytes = LIMITS.source_bytes) {
+  if (typeof text !== "string") fail("RUSSL-E-PARSE-001", "source must be text");
+  if (!wellFormed(text)) fail("RUSSL-E-PARSE-001", "source contains invalid Unicode");
+  if (plen(text) > maxBytes || utf8len(text) > maxBytes) fail("RUSSL-E-RESOURCE-001", "source byte limit");
+  if (text.startsWith("﻿")) text = text.slice(1);
+  text = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n").normalize("NFC");
+  for (const ch of text) if ((CTRL_CHAR.test(ch) && ch !== "\n" && ch !== "\t") || ch === " " || ch === " ") fail("RUSSL-E-PARSE-001", "forbidden source controls or line separators");
+  const lines = text.split("\n").map((l) => l.replace(/[ \t]+$/, ""));
+  while (lines.length && lines[lines.length - 1] === "") lines.pop();
+  const result = lines.join("\n") + "\n";
+  if (utf8len(result) > maxBytes) fail("RUSSL-E-RESOURCE-001", "canonical source byte limit");
+  return result;
+}
+
+function splitFields(text, separator) {
+  const ch = cps(text), fields = []; let start = 0, quoted = false, escaped = false;
+  for (let i = 0; i < ch.length; i++) {
+    const c = ch[i];
+    if (quoted) { if (escaped) escaped = false; else if (c === "\\") escaped = true; else if (c === '"') quoted = false; }
+    else if (c === '"') quoted = true;
+    else if ((separator === null && (c === " " || c === "\t")) || c === separator) {
+      if (separator !== null || i > start) fields.push(ch.slice(start, i).join(""));
+      start = i + 1;
+    }
+  }
+  if (quoted || escaped) fail("RUSSL-E-PARSE-002", "unterminated quoted value");
+  if (start < ch.length || separator !== null) fields.push(ch.slice(start).join(""));
+  return fields;
+}
+function fieldValue(raw) {
+  if (!raw) fail("RUSSL-E-PARSE-002", "empty field value");
+  let value;
+  if (raw.startsWith('"')) {
+    try { value = JSON.parse(raw); } catch { fail("RUSSL-E-PARSE-002", "invalid quoted value"); }
+    if (typeof value !== "string") fail("RUSSL-E-PARSE-002", "quoted value must be a string");
+  } else {
+    if (/['"\\ \t]/.test(raw)) fail("RUSSL-E-PARSE-002", "unquoted quote, escape or whitespace");
+    value = raw;
+  }
+  if (!wellFormed(value)) fail("RUSSL-E-PARSE-001", "field value contains invalid Unicode");
+  if (!value || cps(value).some((c) => CTRL_CHAR.test(c) || "│›  ".includes(c))) fail("RUSSL-E-PARSE-002", "forbidden structural characters in field value");
+  return value;
+}
+function parseFields(text, separator, maxFields = LIMITS.structured_fields) {
+  const parts = splitFields(text, separator);
+  if (!parts.length || parts.length > maxFields) fail("RUSSL-E-RESOURCE-001", "structured field count");
+  const result = {};
+  for (const part of parts) {
+    if (!part || !part.includes("=")) fail("RUSSL-E-PARSE-002", "structured field lacks key=value");
+    const k = part.indexOf("="), key = part.slice(0, k), raw = part.slice(k + 1);
+    if (!KEY.test(key)) fail("RUSSL-E-PARSE-002", "invalid field key");
+    if (Object.prototype.hasOwnProperty.call(result, key)) fail("RUSSL-E-PARSE-002", "duplicate field key");
+    result[key] = fieldValue(raw);
+  }
+  return result;
+}
+function keys(record, allowed, required = []) {
+  if (Object.keys(record).some((k) => !allowed.includes(k))) fail("RUSSL-E-PARSE-002", "unknown profile field key");
+  if (required.some((k) => !(k in record))) fail("RUSSL-E-PARSE-002", "missing required profile field");
+}
+function symbol(value, label = "symbol") {
+  if (value === "_" || plen(value) > LIMITS.symbol_chars || !SYMBOL.test(value)) fail("RUSSL-E-PARSE-002", `invalid ${label}`);
+}
+
+function parseRussl(text, rejectStorageLeak = true) {
+  text = canonicalSource(text);
+  if (rejectStorageLeak && STORAGE_LEAK.test(text)) fail("RUSSL-E-STORAGE-001", "storage-specific lexical leakage in core source");
+  const lines = text.split("\n");
+  if (lines[0] !== "RUSSL/1.0") fail("RUSSL-E-PARSE-001", "RUSSL/1.0 header required", 1);
+  let unit = null, defaults = {}, defaultsSeen = false, frame = null, sawColumns = false, dependencyCount = 0;
+  const mssl = [], bindings = Object.create(null), frames = [], frameIds = new Set();
+  const rows = new Map(), outputs = new Map(), ancestors = new Map(), externalConsumed = new Set();
+  const requiredInput = (handle, bits) => {
+    if (outputs.has(handle)) { if (!((bits >> BigInt(outputs.get(handle))) & 1n)) fail("RUSSL-E-DEP-001", "input producer absent from control ancestry"); }
+    else if (handle in bindings) return;
+    else if (handle.startsWith("source.")) externalConsumed.add(handle);
+    else fail("RUSSL-E-BIND-001", "unresolved input symbol");
+  };
+  for (let index = 2; index <= lines.length; index++) {
+    const line = lines[index - 1];
+    if (plen(line) > LIMITS.line_chars) fail("RUSSL-E-RESOURCE-001", "line character limit", index);
+    if (!line || line.startsWith("#")) continue;
+    const dm = /^@(unit|defaults|mssl|frame)[ \t]+(.*)$/s.exec(line);
+    const directive = dm ? dm[1] : null, body = dm ? dm[2] : null;
+    try {
+      if (directive === "unit") {
+        if (unit !== null || mssl.length || frame !== null || frames.length) fail("RUSSL-E-PARSE-001", "unit directive order or duplication");
+        unit = parseFields(body, null);
+        keys(unit, ["id", "version", "profile", "target", "fail"], ["id", "version", "fail"]);
+        symbol(unit.id, "unit ID");
+        if (!/^(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)$/.test(unit.version)) fail("RUSSL-E-PARSE-001", "unit version requires three decimal components");
+        if (unit.fail !== "closed" || (unit.profile ?? "russl.core") !== "russl.core" || (unit.target ?? "russ") !== "russ") fail("RUSSL-E-PARSE-001", "unsupported profile, target or failure policy");
+      } else if (directive === "defaults") {
+        if (unit === null || defaultsSeen || mssl.length || frame !== null || frames.length) fail("RUSSL-E-PARSE-001", "defaults directive order or duplication");
+        defaults = parseFields(body, null);
+        keys(defaults, ["mode", "regime", "effect", "scope"]);
+        if ((defaults.mode ?? "deterministic") !== "deterministic" || (defaults.regime ?? "exact") !== "exact") fail("RUSSL-E-PARSE-001", "unsupported reference execution annotation");
+        if ((defaults.effect ?? "read") !== "read" || (defaults.scope ?? "self") !== "self") fail("RUSSL-E-EFFECT-001", "unsupported reference default effect or scope");
+        defaultsSeen = true;
+      } else if (directive === "mssl") {
+        if (unit === null || frame !== null || frames.length) fail("RUSSL-E-PARSE-001", "MSSL directive outside binding preamble");
+        const b = parseFields(body, null);
+        if (!DIGEST.test(b.digest ?? "")) fail("RUSSL-E-MSSL-001", "missing or invalid SHA-256 module digest");
+        keys(b, ["alias", "module", "source_version", "digest"], ["alias", "module", "source_version", "digest"]);
+        for (const k of ["alias", "module"]) symbol(b[k], `MSSL ${k}`);
+        if (b.alias.startsWith("source.") || b.alias in bindings) fail("RUSSL-E-MSSL-001", "duplicate or reserved MSSL alias");
+        if (!VERSION.test(b.source_version)) fail("RUSSL-E-MSSL-001", "invalid module source version");
+        if (mssl.length >= LIMITS.bindings) fail("RUSSL-E-RESOURCE-001", "MSSL binding count");
+        mssl.push(b); bindings[b.alias] = b;
+      } else if (directive === "frame") {
+        if (unit === null || frame !== null) fail("RUSSL-E-PARSE-001", "frame directive order or nesting");
+        if (frames.length >= LIMITS.frames) fail("RUSSL-E-RESOURCE-001", "frame count");
+        frame = parseFields(body, null);
+        keys(frame, ["id", "parent", "module", "phase"], ["id", "parent", "module"]);
+        for (const k of ["id", "parent", "module"]) symbol(frame[k], `frame ${k}`);
+        if (frame.id === "ROOT" || frameIds.has(frame.id)) fail("RUSSL-E-PARSE-003", "duplicate or reserved frame ID");
+        if (frame.parent !== "ROOT" && !frameIds.has(frame.parent)) fail("RUSSL-E-DEP-001", "unresolved frame parent");
+        frame.rows = []; sawColumns = false;
+      } else if (line === COLUMNS) {
+        if (frame === null || sawColumns || frame.rows.length) fail("RUSSL-E-PARSE-002", "columns must occur once before frame rows");
+        sawColumns = true;
+      } else if (line === "@end") {
+        if (frame === null || !sawColumns || !frame.rows.length) fail("RUSSL-E-PARSE-002", "empty or malformed frame terminator");
+        frames.push(frame); frameIds.add(frame.id); frame = null;
+      } else if (line.startsWith("@")) {
+        fail("RUSSL-E-PARSE-001", "unknown directive");
+      } else if (frame !== null) {
+        if (!sawColumns) fail("RUSSL-E-PARSE-002", "row before columns");
+        const cells = line.split("│");
+        if (cells.length !== 8 || cells.some((c) => !c)) fail("RUSSL-E-PARSE-002", "eight nonempty cells required");
+        if (cells.some((c) => plen(c) > LIMITS.cell_chars)) fail("RUSSL-E-RESOURCE-001", "cell character limit");
+        const [rid, lane, op, out, ctrl, inp, arg, meta] = cells;
+        symbol(rid, "row ID"); symbol(lane, "lane");
+        if (rows.has(rid)) fail("RUSSL-E-PARSE-003", "duplicate row ID");
+        if (rows.size >= LIMITS.rows) fail("RUSSL-E-RESOURCE-001", "row count");
+        const norm = Object.prototype.hasOwnProperty.call(ALIASES, op) ? ALIASES[op] : op;
+        if (!Object.prototype.hasOwnProperty.call(OPERATORS, norm)) fail("RUSSL-E-OP-001", "unregistered operator");
+        const [face, typ, effect] = OPERATORS[norm];
+        if (out === "_") { if (face !== "CONTROL") fail("RUSSL-E-BIND-001", "output required"); }
+        else {
+          symbol(out, "output handle");
+          if (outputs.has(out) || out in bindings || externalConsumed.has(out)) fail("RUSSL-E-BIND-001", "duplicate or shadowed output handle");
+          if (out.startsWith("source.") && norm !== "SOURCE_BIND") fail("RUSSL-E-BIND-001", "source namespace requires SOURCE_BIND");
+        }
+        const deps = ctrl === "_" ? [] : ctrl.split(",");
+        if (deps.length > LIMITS.dependencies_per_row) fail("RUSSL-E-RESOURCE-001", "per-row dependency count");
+        dependencyCount += deps.length;
+        if (dependencyCount > LIMITS.dependencies_total) fail("RUSSL-E-RESOURCE-001", "total dependency count");
+        if (new Set(deps).size !== deps.length) fail("RUSSL-E-DEP-001", "duplicate predecessor");
+        let bits = 0n;
+        for (const dep of deps) {
+          symbol(dep, "control predecessor");
+          if (!rows.has(dep)) fail("RUSSL-E-DEP-001", "predecessor must be prior row");
+          bits |= ancestors.get(dep) | (1n << BigInt(rows.get(dep)));
+        }
+        const inputs = inp === "_" ? [] : inp.split("›");
+        if (inputs.length > 2) fail("RUSSL-E-PARSE-002", "at most two primary operands");
+        for (const h of inputs) { symbol(h, "input handle"); if (h === out) fail("RUSSL-E-BIND-001", "row cannot consume its own output"); requiredInput(h, bits); }
+        if ((norm === "MSSL_EVAL" || norm === "ADMISSION_EVAL") && (inputs.length !== 2 || !(inputs[0] in bindings) || inputs[1] in bindings)) fail("RUSSL-E-MSSL-001", "invocation requires bound alias and data handle");
+        if (!["MSSL_EVAL", "ADMISSION_EVAL", "VERIFY_MSSL"].includes(norm) && inputs.some((h) => h in bindings)) fail("RUSSL-E-MSSL-001", "module alias outside module operation");
+        const args = arg === "_" ? {} : parseFields(arg, ";");
+        const metaObj = meta === "_" ? {} : parseFields(meta, ";");
+        keys(args, ARG_KEYS[norm] || []); keys(metaObj, ["eff", "scope", "proof"]);
+        if ("eff" in metaObj && metaObj.eff !== effect) fail("RUSSL-E-EFFECT-001", "effect differs from operator effect");
+        if ("scope" in metaObj && metaObj.scope !== "self") fail("RUSSL-E-EFFECT-001", "unsupported reference scope");
+        if ("coupling" in args) {
+          symbol(args.coupling, "coupling handle");
+          if (!outputs.has(args.coupling)) fail("RUSSL-E-BIND-001", "unresolved coupling");
+          requiredInput(args.coupling, bits);
+        }
+        frame.rows.push({ id: rid, lane, op: norm, face, type: typ, effect, out, ctrl: deps, inputs, arg: args, meta: metaObj, source_line: index });
+        rows.set(rid, rows.size); ancestors.set(rid, bits);
+        if (out !== "_") outputs.set(out, rows.get(rid));
+      } else fail("RUSSL-E-PARSE-001", "content outside frame");
+    } catch (e) {
+      if (e instanceof RusslError && !e.line) { e.line = index; e.message += ` at line ${index}`; }
+      throw e;
+    }
+  }
+  if (unit === null || frame !== null || !frames.length) fail("RUSSL-E-PARSE-001", "incomplete unit");
+  return { unit, defaults, mssl_bindings: mssl, frames, source: text };
+}
+
+async function lowerRussl(text) {
+  const parsed = parseRussl(text);
+  const obj = { schema: "RUSSL.CanonicalIR/1.0", source_sha256: await domainHash("RUSSL-SOURCE/1.0", enc.encode(parsed.source)),
+    unit: parsed.unit, defaults: parsed.defaults, mssl_bindings: parsed.mssl_bindings, frames: parsed.frames,
+    program: parsed.frames.flatMap((f) => f.rows) };
+  obj.ir_id = "russir:sha256:" + await domainHash("RUSSIR/1.0", enc.encode(canonicalJson(obj)));
+  return obj;
+}
+
+return { LIMITS, RusslError, canonicalJson, canonicalSource, domainHash, lowerRussl, parseRussl, sha256 };
+})();
+const __mod_schemas = (() => {
+// RUSSL corpus 2.0.0 schemas (machine/schemas), embedded for the JS verifier.
+// SPDX-License-Identifier: GPL-3.0-only
+const SCHEMAS = {"manifest": {"$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "urn:russl:schema:russ-tuple:1.0", "type": "object", "required": ["format", "version", "tuple_id", "tuple", "payload", "payload_root_sha256"], "properties": {"format": {"const": "RUSS.TupleExecutable"}, "version": {"const": "1.3.0"}, "tuple_id": {"pattern": "^russ:sha256:[0-9a-f]{64}$", "type": "string", "minLength": 1, "maxLength": 4096}, "tuple": {"type": "array", "minItems": 11, "maxItems": 11, "items": false, "prefixItems": [{"type": "array", "minItems": 2, "maxItems": 2, "prefixItems": [{"const": "identity"}, {"type": "object"}], "items": false}, {"type": "array", "minItems": 2, "maxItems": 2, "prefixItems": [{"const": "language"}, {"type": "object"}], "items": false}, {"type": "array", "minItems": 2, "maxItems": 2, "prefixItems": [{"const": "geometry"}, {"type": "object"}], "items": false}, {"type": "array", "minItems": 2, "maxItems": 2, "prefixItems": [{"const": "state"}, {"type": "object"}], "items": false}, {"type": "array", "minItems": 2, "maxItems": 2, "prefixItems": [{"const": "coupling"}, {"type": "object"}], "items": false}, {"type": "array", "minItems": 2, "maxItems": 2, "prefixItems": [{"const": "mechanics"}, {"type": "object"}], "items": false}, {"type": "array", "minItems": 2, "maxItems": 2, "prefixItems": [{"const": "admission"}, {"type": "object"}], "items": false}, {"type": "array", "minItems": 2, "maxItems": 2, "prefixItems": [{"const": "projection"}, {"type": "object"}], "items": false}, {"type": "array", "minItems": 2, "maxItems": 2, "prefixItems": [{"const": "fabric"}, {"type": "object"}], "items": false}, {"type": "array", "minItems": 2, "maxItems": 2, "prefixItems": [{"const": "evidence"}, {"type": "object"}], "items": false}, {"type": "array", "minItems": 2, "maxItems": 2, "prefixItems": [{"const": "execution"}, {"type": "object"}], "items": false}]}, "payload": {"type": "array", "items": {"type": "object", "required": ["path", "sha256", "size"], "properties": {"path": {"type": "string", "minLength": 1, "maxLength": 4096}, "sha256": {"pattern": "^[0-9a-f]{64}$", "type": "string", "minLength": 1, "maxLength": 4096}, "size": {"type": "integer", "minimum": 0}}, "additionalProperties": false}, "minItems": 1, "maxItems": 1024}, "payload_root_sha256": {"pattern": "^[0-9a-f]{64}$", "type": "string", "minLength": 1, "maxLength": 4096}, "hash": {"type": "string", "minLength": 1, "const": "sha256"}, "container_mode": {"type": "string", "minLength": 1, "const": "portable"}, "status": {"type": "string", "minLength": 1}}, "additionalProperties": false, "$comment": "Corpus 2.0.0 hardened structural profile; schema shape is not semantic, cryptographic, or runtime authorization."}, "ir": {"$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "urn:russl:schema:russir:1.0", "title": "RUSSIR 1.0", "type": "object", "required": ["schema", "source_sha256", "unit", "mssl_bindings", "frames", "program", "ir_id", "defaults"], "properties": {"schema": {"const": "RUSSL.CanonicalIR/1.0"}, "source_sha256": {"pattern": "^[0-9a-f]{64}$", "type": "string", "minLength": 1, "maxLength": 4096}, "ir_id": {"pattern": "^russir:sha256:[0-9a-f]{64}$", "type": "string", "minLength": 1, "maxLength": 4096}, "unit": {"type": "object", "required": ["id", "version", "fail"], "properties": {"id": {"type": "string", "minLength": 1, "maxLength": 4096}, "version": {"type": "string", "minLength": 1, "maxLength": 4096}, "fail": {"const": "closed"}, "profile": {"type": "string", "minLength": 1}, "target": {"type": "string", "minLength": 1}}, "additionalProperties": false}, "mssl_bindings": {"type": "array", "items": {"$ref": "#/$defs/mssl"}}, "frames": {"type": "array", "minItems": 1, "items": {"type": "object", "required": ["id", "rows"], "properties": {"id": {"type": "string", "minLength": 1, "maxLength": 4096}, "rows": {"type": "array", "items": {"$ref": "#/$defs/row"}, "minItems": 1}, "parent": {"type": "string", "minLength": 1}, "module": {"type": "string", "minLength": 1}, "phase": {"type": "string", "minLength": 1}}, "additionalProperties": false}}, "program": {"type": "array", "items": {"$ref": "#/$defs/row"}}, "defaults": {"type": "object", "properties": {"mode": {"type": "string", "minLength": 1}, "regime": {"type": "string", "minLength": 1}, "effect": {"type": "string", "minLength": 1}, "scope": {"type": "string", "minLength": 1}}, "additionalProperties": false}}, "$defs": {"mssl": {"type": "object", "required": ["alias", "module", "digest"], "properties": {"alias": {"type": "string", "minLength": 1, "maxLength": 4096}, "module": {"type": "string", "minLength": 1, "maxLength": 4096}, "digest": {"pattern": "^sha256:[0-9a-f]{64}$", "type": "string", "minLength": 1, "maxLength": 4096}, "source_version": {"type": "string", "minLength": 1, "maxLength": 4096}}, "additionalProperties": false}, "row": {"type": "object", "required": ["id", "op", "face", "effect", "out", "ctrl", "inputs", "arg", "meta", "lane", "type", "source_line"], "properties": {"id": {"type": "string", "minLength": 1, "maxLength": 4096}, "op": {"enum": ["SOURCE_BIND", "CONST", "FIELD_DEFINE", "FIELD_POPULATE", "FIELD_SLICE", "FIELD_REGION", "PYRAMID_DEFINE", "COUPLING_DEFINE", "MSSL_EVAL", "MECHANICS_STEP", "ADMISSION_EVAL", "PROJECT", "VERIFY_SOURCE", "VERIFY_MSSL", "VERIFY_TUPLE", "VERIFY_EVIDENCE", "HASH", "EMIT_RECEIPT", "NODE", "SHARD", "ROUTE", "CHECKPOINT", "CAS_GET", "CAS_PUT", "ROOT_BUILD", "STATE_COMMIT", "ROLLBACK", "REPLICATE", "PUBLISH", "ASSERT", "BARRIER", "NOP"]}, "face": {"type": "string", "minLength": 1, "maxLength": 4096}, "effect": {"enum": ["read", "derive", "project", "write:evidence", "write:state", "commit", "replicate", "publish"]}, "out": {"type": "string", "minLength": 1, "maxLength": 4096}, "ctrl": {"type": "array", "items": {"type": "string", "minLength": 1, "maxLength": 4096}, "uniqueItems": true}, "inputs": {"type": "array", "maxItems": 2, "items": {"type": "string", "minLength": 1, "maxLength": 4096}}, "arg": {"type": ["object", "string"]}, "meta": {"type": "object", "properties": {"eff": {"type": "string"}, "scope": {"type": "string"}, "proof": {"type": "string"}, "mode": {"type": "string"}, "regime": {"type": "string"}}, "additionalProperties": false}, "lane": {"type": "string", "minLength": 1}, "type": {"type": "string", "minLength": 1}, "source_line": {"type": "integer", "minimum": 1}}, "additionalProperties": false}}, "additionalProperties": false, "$comment": "Corpus 2.0.0 hardened structural profile; schema shape is not semantic, cryptographic, or runtime authorization."}, "field": {"$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "urn:russl:schema:field:1.0", "type": "object", "required": ["schema", "rank", "axes", "shape", "sample", "coordinate_map"], "properties": {"schema": {"const": "RUSS.PenteractField/1.0"}, "rank": {"const": 5}, "axes": {"type": "array", "prefixItems": [{"const": "c4"}, {"const": "c5"}, {"const": "c6"}, {"const": "c7"}, {"const": "c8"}], "items": false, "minItems": 5, "maxItems": 5}, "shape": {"type": "array", "minItems": 5, "maxItems": 5, "items": {"type": "integer", "minimum": 1}}, "sample": {"type": "object", "required": ["kind", "dtype"], "properties": {"kind": {"enum": ["scalar", "pixel", "vector", "tensor", "struct"]}, "dtype": {"type": "string", "minLength": 1, "maxLength": 4096}, "channels": {"oneOf": [{"type": "integer", "minimum": 1}, {"type": "string", "pattern": "^axis:c[4-8]$"}]}, "endianness": {"enum": ["little", "big", "not-applicable"]}}, "additionalProperties": false}, "coordinate_map": {"type": "object", "required": ["extent", "singleton_anchor"], "properties": {"extent": {"const": [-1, 1]}, "singleton_anchor": {"type": "number", "minimum": -1, "maximum": 1}}, "additionalProperties": false}, "sparse": {"type": "boolean"}, "levels": {"type": "integer", "minimum": 1}, "population_mapping": {"type": "string", "minLength": 1}}, "additionalProperties": false, "$comment": "Corpus 2.0.0 hardened structural profile; schema shape is not semantic, cryptographic, or runtime authorization."}};
+
+return { SCHEMAS };
+})();
+const __mod_schema = (() => {
+// Port of corpus/tooling/schema_subset.py: the explicitly supported JSON Schema keyword subset.
+// SPDX-License-Identifier: GPL-3.0-only
+// Not a general Draft 2020-12 implementation. Unknown keywords are errors; nothing is skipped.
+class SchemaMismatch extends Error {}
+const KEYWORDS = new Set(["type", "const", "enum", "required", "properties", "additionalProperties", "items", "prefixItems", "minItems", "maxItems", "uniqueItems", "minLength", "maxLength", "pattern", "minimum", "maximum", "minProperties", "maxProperties", "$defs", "$ref", "allOf", "anyOf", "oneOf", "not"]);
+const ANNOTATIONS = new Set(["$schema", "$id", "title", "description", "$comment", "default", "examples"]);
+const isObj = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
+const own = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
+const typeOf = (v, t) => ({ null: v === null, boolean: typeof v === "boolean", integer: Number.isInteger(v), number: typeof v === "number" && Number.isFinite(v),
+  string: typeof v === "string", array: Array.isArray(v), object: isObj(v) })[t] ?? false;
+const plen = (s) => Array.from(s).length;    // Python len() counts code points
+function equal(a, b, budget) {
+  if (--budget.comparisons < 0) throw new Error("schema comparison work limit");
+  if ((typeof a === "boolean") !== (typeof b === "boolean")) return false;
+  if (Array.isArray(a) && Array.isArray(b)) return a.length === b.length && a.every((x, i) => equal(x, b[i], budget));
+  if (isObj(a) && isObj(b)) { const ka = Object.keys(a).sort(), kb = Object.keys(b).sort(); return ka.join("\0") === kb.join("\0") && ka.every((k) => equal(a[k], b[k], budget)); }
+  return a === b;
+}
+function checkSchema(schema, root = schema, depth = 0) {
+  if (depth > 64) throw new Error("schema nesting limit");
+  if (typeof schema === "boolean") return;
+  if (!isObj(schema)) throw new Error("schema must be object or boolean");
+  for (const k of Object.keys(schema)) if (!KEYWORDS.has(k) && !ANNOTATIONS.has(k)) throw new Error("unsupported schema keyword: " + k);
+  if (own(schema, "$ref") && (typeof schema.$ref !== "string" || !schema.$ref.startsWith("#/$defs/") || !own(root.$defs || {}, schema.$ref.slice(8)))) throw new Error("only local $defs references supported");
+  for (const k of ["properties", "$defs"]) if (own(schema, k)) for (const c of Object.values(schema[k])) checkSchema(c, root, depth + 1);
+  for (const k of ["items", "additionalProperties", "not"]) if (own(schema, k)) checkSchema(schema[k], root, depth + 1);
+  for (const k of ["prefixItems", "allOf", "anyOf", "oneOf"]) if (own(schema, k)) for (const c of schema[k]) checkSchema(c, root, depth + 1);
+}
+function validate(value, schema, root = schema, path = "$", depth = 0, budget = { nodes: 100000, comparisons: 100000 }) {
+  if (--budget.nodes < 0) throw new Error("instance validation work limit");
+  if (depth > 64) throw new Error(path + ": instance/schema nesting limit");
+  if (schema === false) throw new SchemaMismatch(path + ": forbidden");
+  if (schema === true) return;
+  const fail = (m) => { throw new SchemaMismatch(path + ": " + m); };
+  if (own(schema, "$ref")) validate(value, root.$defs[schema.$ref.slice(8)], root, path, depth + 1, budget);
+  if (own(schema, "type")) { const ts = Array.isArray(schema.type) ? schema.type : [schema.type]; if (!ts.some((t) => typeOf(value, t))) fail("type " + JSON.stringify(ts)); }
+  if (own(schema, "const") && !equal(value, schema.const, budget)) fail("const mismatch");
+  if (own(schema, "enum") && !schema.enum.some((x) => equal(value, x, budget))) fail("enum mismatch");
+  if (isObj(value)) {
+    const missing = (schema.required || []).filter((k) => !own(value, k)); if (missing.length) fail("missing keys " + missing.sort().join(","));
+    for (const [k, v] of Object.entries(value)) {
+      const child = schema.properties && own(schema.properties, k) ? schema.properties[k] : (own(schema, "additionalProperties") ? schema.additionalProperties : true);
+      validate(v, child, root, path + "." + k, depth + 1, budget);
+    }
+    const n = Object.keys(value).length; if (n < (schema.minProperties ?? 0) || n > (schema.maxProperties ?? Infinity)) fail("object size");
+  }
+  if (Array.isArray(value)) {
+    if (value.length < (schema.minItems ?? 0) || value.length > (schema.maxItems ?? Infinity)) fail("array size");
+    if (schema.uniqueItems) { if (value.length * (value.length - 1) / 2 > budget.comparisons) throw new Error("uniqueItems comparison work limit");
+      for (let i = 0; i < value.length; i++) for (let j = 0; j < i; j++) if (equal(value[i], value[j], budget)) fail("duplicate array item"); }
+    const pre = schema.prefixItems || [];
+    value.forEach((v, i) => validate(v, i < pre.length ? pre[i] : (own(schema, "items") ? schema.items : true), root, `${path}[${i}]`, depth + 1, budget));
+  }
+  if (typeof value === "string") {
+    const n = plen(value); if (n < (schema.minLength ?? 0) || n > (schema.maxLength ?? Infinity)) fail("string size");
+    if (own(schema, "pattern") && !new RegExp(schema.pattern, "u").test(value)) fail("pattern mismatch");
+  }
+  if (typeOf(value, "number") && (value < (schema.minimum ?? -Infinity) || value > (schema.maximum ?? Infinity))) fail("number bounds");
+  for (const c of schema.allOf || []) validate(value, c, root, path, depth + 1, budget);
+  for (const kw of ["anyOf", "oneOf"]) if (own(schema, kw)) {
+    let count = 0; for (const c of schema[kw]) { try { validate(value, c, root, path, depth + 1, budget); count++; } catch (e) { if (!(e instanceof SchemaMismatch)) throw e; } }
+    if ((kw === "anyOf" && count === 0) || (kw === "oneOf" && count !== 1)) fail(kw + " mismatch");
+  }
+  if (own(schema, "not")) { let matched = true; try { validate(value, schema.not, root, path, depth + 1, budget); } catch (e) { if (!(e instanceof SchemaMismatch)) throw e; matched = false; } if (matched) fail("not mismatch"); }
+}
+function validateDocument(value, schema) { checkSchema(schema); validate(value, schema); }
+
+return { SchemaMismatch, checkSchema, validate, validateDocument };
+})();
+const __mod_russ = (() => {
+const {  WORDS, LANES, HEIGHT, WIDTH  } = __mod_lcufa;
+const {  sha256, domainHash, canonicalJson, lowerRussl, RusslError  } = __mod_russl;
+const {  validateDocument, SchemaMismatch  } = __mod_schema;
+const {  SCHEMAS  } = __mod_schemas;
+// RUSS 1.3 tuple-executable containers for the plume pipeline (R0, R1, R2).
+// Byte layout and identities follow corpus/tooling/russ_container.py (RUSSL corpus 2.0.0):
+//   header  '>8sHHIQ'  magic RUSS\r\n\x1a\n, 1, 3, flags 1, manifest length
+//   manifest (corpus-canonical JSON: sorted keys, compact, UTF-8)
+//   records '>IQ32s' path length, data length, sha256 + path + data, sorted by path
+// The .russl source and its IR come from r-templates.json; readRuss re-lowers the source with
+// russl.js (the console's own RUSSL lowering) and requires the stored IR to match it.
+
+const enc = new TextEncoder(), dec = new TextDecoder("utf-8", { fatal: true });
+const MAGIC = [0x52, 0x55, 0x53, 0x53, 0x0d, 0x0a, 0x1a, 0x0a];
+const hex = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
+const concat = (parts) => { const n = parts.reduce((s, p) => s + p.length, 0); const o = new Uint8Array(n); let c = 0; for (const p of parts) { o.set(p, c); c += p.length; } return o; };
+
+// chunky (y, x, lane) <-> planar Penteract order (c6 = lane, c7 = y, c8 = x)
+function toPlanar(chunky) {
+  const out = new Uint32Array(WORDS);
+  for (let c = 0; c < HEIGHT * WIDTH; c++) for (let k = 0; k < LANES; k++) out[k * HEIGHT * WIDTH + c] = chunky[c * LANES + k];
+  return out;
+}
+function toChunky(planar) {
+  const out = new Uint32Array(WORDS);
+  for (let c = 0; c < HEIGHT * WIDTH; c++) for (let k = 0; k < LANES; k++) out[c * LANES + k] = planar[k * HEIGHT * WIDTH + c];
+  return out;
+}
+// little-endian bytes of u32 words (a plain byte copy on little-endian machines, which is all of them in practice)
+const LITTLE = new Uint8Array(new Uint32Array([1]).buffer)[0] === 1;
+const leBytes = (u32) => {
+  if (LITTLE) return new Uint8Array(u32.buffer.slice(u32.byteOffset, u32.byteOffset + u32.byteLength));
+  const b = new Uint8Array(u32.length * 4); const v = new DataView(b.buffer); u32.forEach((x, i) => v.setUint32(i * 4, x, true)); return b;
+};
+
+async function pyramid(planar) {
+  const levels = [], red = new Uint32Array(planar.length);
+  for (let j = 1; j <= 20; j++) {
+    const m = (1 << j) - 1; for (let i = 0; i < planar.length; i++) red[i] = planar[i] & m;
+    levels.push({ level: j, modulus: `2^${j}`, sha256: await sha256(leBytes(red)) });
+  }
+  return levels;
+}
+
+const FIELD_DESCRIPTOR = {
+  schema: "RUSS.PenteractField/1.0", rank: 5, axes: ["c4", "c5", "c6", "c7", "c8"], shape: [1, 1, 8, 128, 128],
+  sample: { kind: "scalar", dtype: "u32", endianness: "little" },
+  coordinate_map: { extent: [-1, 1], singleton_anchor: 0 }, sparse: false, levels: 20, population_mapping: "identity5",
+};
+
+async function buildRuss(templates, stage, chunky, provenance) {
+  const t = templates.stages[stage];
+  const planar = toPlanar(chunky);
+  const levels = await pyramid(planar);
+  const files = {
+    "evidence/provenance.json": enc.encode(canonicalJson({ schema: "RUSS.Provenance/1.0", corpus: "RUSSL Research & Institutional Corpus 2.0.0",
+      note: "Plume pipeline frame; no external authorization or empirical validation implied.", pipeline: provenance })),
+    "language/main.russir.json": enc.encode(t.ir),
+    "language/main.russl": enc.encode(t.source),
+    "mssl/final_admission.mssl": enc.encode(templates.mssl.final_admission),
+    "mssl/master_coupled_mechanics.mssl": enc.encode(templates.mssl.master_coupled_mechanics),
+    "state/field.u32le": leBytes(planar),
+    "state/field_descriptor.json": enc.encode(canonicalJson(FIELD_DESCRIPTOR)),
+    "state/pyramid.json": enc.encode(canonicalJson({ schema: "PlumeLattice.Pyramid2/1.0", levels })),
+  };
+  const paths = Object.keys(files).sort();
+  const payload = [];
+  for (const p of paths) payload.push({ path: p, sha256: await sha256(files[p]), size: files[p].length });
+  const root = await domainHash("RUSS-PAYLOAD/1.0", enc.encode(canonicalJson(payload)));
+  const tuple = [
+    ["identity", { format: "RUSS", version: "1.3.0", profile: "russl.penteract.corpus", media_type: "application/vnd.russ.tuple-executable" }],
+    ["language", { source: "language/main.russl", ir: "language/main.russir.json", ir_id: t.ir_id }],
+    ["geometry", { base: "P5", axes: ["c4", "c5", "c6", "c7", "c8"], normalized_extent: [-1, 1], field_descriptor: "state/field_descriptor.json" }],
+    ["state", { model: "RUSS.PenteractField/1.0", mutation: "immutable-candidate-root", physical_backend: null }],
+    ["coupling", { model: "declared-by-field-or-mssl", representation: "logical" }],
+    ["mechanics", { modules: ["mssl/master_coupled_mechanics.mssl", "mssl/final_admission.mssl"], authority: "digest-bound MSSL" }],
+    ["admission", { policy: "mssl/final_admission.mssl", commit_requires_independent_authorization: true }],
+    ["projection", { model: "derived-view", canonical: false }],
+    ["fabric", { addressing: "sha256", payload_root_sha256: root, storage_adapter: "unspecified" }],
+    ["evidence", { provenance: "evidence/provenance.json", immutable: true }],
+    ["execution", { model: "declarative-allowlist", arbitrary_code: false, entrypoint: "verify-resolve-evaluate-authorize-evidence" }],
+  ];
+  const tuple_id = "russ:sha256:" + await domainHash("RUSS-TUPLE/1.0", enc.encode(canonicalJson(tuple)));
+  const manifest = { format: "RUSS.TupleExecutable", version: "1.3.0", tuple_id, tuple, payload, payload_root_sha256: root,
+    hash: "sha256", container_mode: "portable", status: "plume-pipeline-candidate" };
+  const raw = enc.encode(canonicalJson(manifest));
+  const head = new Uint8Array(24); const hv = new DataView(head.buffer);
+  head.set(MAGIC, 0); hv.setUint16(8, 1); hv.setUint16(10, 3); hv.setUint32(12, 1); hv.setBigUint64(16, BigInt(raw.length));
+  const parts = [head, raw];
+  for (const e of payload) {
+    const p = enc.encode(e.path), rec = new Uint8Array(44), rv = new DataView(rec.buffer);
+    rv.setUint32(0, p.length); rv.setBigUint64(4, BigInt(e.size));
+    rec.set(e.sha256.match(/../g).map((h) => parseInt(h, 16)), 12);
+    parts.push(rec, p, files[e.path]);
+  }
+  return { bytes: concat(parts), tuple_id, root, levels, source: t.source, unit: t.unit };
+}
+
+// Read + verify a .russ container. Mirrors russ_container.verify_bytes (RUSSL corpus 2.0.0):
+// structural failures throw RussError; content findings are returned in `problems`.
+// Re-lowering the .russl source to IR is left to the Python reference (Verify R files.cmd);
+// here the IR is checked for integrity: its ir_id and source_sha256 must recompute.
+class RussError extends Error {}
+const MAX_BYTES = 64 * 1024 * 1024, MAX_MANIFEST = 1024 * 1024, MAX_RECORDS = 1024;
+const COMPONENTS = ["identity", "language", "geometry", "state", "coupling", "mechanics", "admission", "projection", "fabric", "evidence", "execution"];
+const RESERVED = /^(CON|PRN|AUX|NUL|COM[0-9]|LPT[0-9])(\..*)?$/i;
+function safeMember(path) {
+  if (typeof path !== "string" || path.length > 1024 || !/^[A-Za-z0-9_.\-/]+$/.test(path)) throw new RussError("unsafe payload path");
+  for (const part of path.split("/")) {
+    if (part === "" || part === "." || part === ".." || part.endsWith(".") || part.endsWith(" ")) throw new RussError("unsafe payload path: " + path);
+    if (RESERVED.test(part)) throw new RussError("Windows reserved payload path: " + path);
+  }
+  return path;
+}
+// Like rr.strict_json_loads: UTF-8, no duplicate keys, no NaN/Infinity, bounded depth and size.
+function strictJson(bytes, label, maxBytes = 4194304) {
+  if (bytes.length > maxBytes) throw new RussError(`${label} is larger than ${maxBytes} bytes`);
+  let text; try { text = dec.decode(bytes); } catch { throw new RussError(`${label} is not UTF-8`); }
+  let value; try { value = JSON.parse(text); } catch { throw new RussError(`${label} is not JSON`); }
+  // duplicate-key scan over the raw text (JSON.parse silently keeps the last duplicate)
+  const stack = []; let i = 0;
+  while (i < text.length) {
+    const ch = text[i];
+    if (ch === '"') {
+      let j = i + 1, str = ""; while (text[j] !== '"') { if (text[j] === "\\") { str += text.slice(j, j + 2); j += 2; } else str += text[j++]; }
+      const top = stack[stack.length - 1]; let k = j + 1; while (" \t\n\r".includes(text[k])) k++;
+      if (top && top.obj && text[k] === ":") { const key = JSON.parse('"' + str + '"'); if (top.keys.has(key)) throw new RussError(`${label} has a duplicate key "${key}"`); top.keys.add(key); }
+      i = j + 1; continue;
+    }
+    if (ch === "{" || ch === "[") stack.push({ obj: ch === "{", keys: new Set() });
+    else if (ch === "}" || ch === "]") stack.pop();
+    i++;
+  }
+  // like _json_object_valid: count every value, bound depth, refuse lone surrogates and non-finite numbers
+  let nodes = 0;
+  const walk = (v, depth) => {
+    if (++nodes > 100000 || depth > 64) throw new RussError(`${label} exceeds the JSON resource limit`);
+    if (typeof v === "string") { if (!wellFormedText(v)) throw new RussError(`${label} contains invalid Unicode`); }
+    else if (typeof v === "number") { if (!Number.isFinite(v)) throw new RussError(`${label} has a non-finite number`); }
+    else if (Array.isArray(v)) { if (v.length + nodes > 100000) throw new RussError(`${label} exceeds the JSON resource limit`); v.forEach((x) => walk(x, depth + 1)); }
+    else if (v !== null && typeof v === "object") { for (const [k, x] of Object.entries(v)) { if (!wellFormedText(k)) throw new RussError(`${label} has a key with invalid Unicode`); walk(x, depth + 1); } }
+  };
+  walk(value, 0);
+  return value;
+}
+const isObj = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
+const wellFormedText = (s) => !/[\uD800-\uDFFF]/.test(s.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, ""));
+function schemaCheck(value, schema, label) {
+  try { validateDocument(value, schema); } catch (e) { throw new RussError(`${label} does not match the corpus schema: ${e.message}`); }
+}
+
+async function readRuss(input) {
+  const bytes = input instanceof Uint8Array ? input : new Uint8Array(input);
+  if (bytes.length > MAX_BYTES) throw new RussError("container is larger than 64 MB");
+  if (bytes.length < 24 || MAGIC.some((m, i) => bytes[i] !== m)) throw new RussError("not a RUSS container (bad magic)");
+  const v = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  if (v.getUint16(8) !== 1 || v.getUint16(10) !== 3 || v.getUint32(12) !== 1) throw new RussError("unsupported RUSS version or flags (need 1.3, flags 1)");
+  const mlen64 = v.getBigUint64(16);
+  if (mlen64 === 0n || mlen64 > BigInt(MAX_MANIFEST) || 24n + mlen64 > BigInt(bytes.length)) throw new RussError("manifest length out of bounds");
+  const mlen = Number(mlen64);
+  const raw = bytes.subarray(24, 24 + mlen);
+  const manifest = strictJson(raw, "manifest");
+  if (!isObj(manifest)) throw new RussError("manifest is not an object");
+  const problems = [];
+  let canon; try { canon = canonicalJson(manifest); } catch (e) { throw new RussError("manifest: " + e.message); }
+  if (canon !== dec.decode(raw)) throw new RussError("manifest is not corpus canonical JSON");
+  if (manifest.format !== "RUSS.TupleExecutable" || manifest.version !== "1.3.0") throw new RussError("manifest format/version is not RUSS.TupleExecutable 1.3.0");
+  schemaCheck(manifest, SCHEMAS.manifest, "manifest");
+  const entries = manifest.payload;
+  if (!Array.isArray(entries) || entries.length < 1 || entries.length > MAX_RECORDS) throw new RussError("payload cardinality");
+  let off = 24 + mlen; const files = new Map(); const observed = []; const seen = new Set();
+  for (const e of entries) {
+    if (!isObj(e) || Object.keys(e).sort().join() !== "path,sha256,size") throw new RussError("payload entry keys");
+    const path = safeMember(e.path);
+    if (seen.has(path.toLowerCase())) throw new RussError("duplicate or case-colliding payload path: " + path);
+    seen.add(path.toLowerCase());
+    if (!Number.isInteger(e.size) || e.size < 0 || e.size > MAX_BYTES) throw new RussError("declared payload size");
+    if (typeof e.sha256 !== "string" || !/^[0-9a-f]{64}$/.test(e.sha256)) throw new RussError("declared payload digest");
+    if (off + 44 > bytes.length) throw new RussError("truncated record header");
+    const pl = v.getUint32(off), dl64 = v.getBigUint64(off + 4), dg = hex(bytes.subarray(off + 12, off + 44)); off += 44;
+    if (pl === 0 || pl > 1024 || dl64 !== BigInt(e.size) || off + pl + e.size > bytes.length) throw new RussError(`record bounds or declared size mismatch at ${path}`);
+    let rpath; try { rpath = dec.decode(bytes.subarray(off, off + pl)); } catch { throw new RussError("record path is not UTF-8"); }
+    off += pl;
+    const data = bytes.subarray(off, off + e.size); off += e.size;
+    const actual = await sha256(data);
+    if (rpath !== path || actual !== e.sha256 || dg !== actual) throw new RussError(`record ${path}: path or digest mismatch`);
+    files.set(path, data); observed.push({ path, sha256: actual, size: e.size });
+  }
+  const order = observed.map((o) => o.path);
+  if (off !== bytes.length) throw new RussError("trailing data after the last record");
+  if (order.some((p, i) => i > 0 && order[i - 1] >= p)) throw new RussError("payload records are not sorted by path");
+  const root = await domainHash("RUSS-PAYLOAD/1.0", enc.encode(canonicalJson(observed)));
+  if (root !== manifest.payload_root_sha256) throw new RussError("payload root mismatch");
+  const tuples = manifest.tuple;
+  if (!Array.isArray(tuples) || tuples.length !== 11) throw new RussError("tuple arity");
+  tuples.forEach((c, i) => { if (!Array.isArray(c) || c.length !== 2 || c[0] !== COMPONENTS[i] || !isObj(c[1])) throw new RussError("tuple component ordering/type"); });
+  const parts = Object.fromEntries(tuples);
+  const id = parts.identity;
+  if (id.format !== "RUSS" || id.version !== "1.3.0" || id.profile !== "russl.penteract.corpus" || id.media_type !== "application/vnd.russ.tuple-executable"
+      || parts.geometry.base !== "P5" || parts.state.model !== "RUSS.PenteractField/1.0") throw new RussError("unsupported identity/geometry/state profile");
+  let tupleJson; try { tupleJson = canonicalJson(tuples); } catch (e) { throw new RussError("tuple: " + e.message); }
+  const tid = "russ:sha256:" + await domainHash("RUSS-TUPLE/1.0", enc.encode(tupleJson));
+  if (tid !== manifest.tuple_id) throw new RussError("tuple id mismatch");
+  if (parts.fabric.payload_root_sha256 !== root) throw new RussError("fabric payload root mismatch");
+  if (parts.state.physical_backend !== null || parts.admission.commit_requires_independent_authorization !== true) throw new RussError("state/authorization boundary");
+  if (parts.execution.arbitrary_code !== false) throw new RussError("execution allowlist boundary (arbitrary_code must be false)");
+  const member = (p) => { safeMember(p); if (!files.has(p)) throw new RussError("missing referenced payload: " + p); return files.get(p); };
+  // language: IR integrity (ids recompute from content); the Python reference also re-lowers
+  const srcBytes = member(parts.language.source), irBytes = member(parts.language.ir);
+  let source; try { source = dec.decode(srcBytes); } catch { throw new RussError("RUSSL source is not UTF-8"); }
+  const ir = strictJson(irBytes, "IR");
+  schemaCheck(ir, SCHEMAS.ir, "IR");
+  if (!isObj(ir) || !Array.isArray(ir.program) || !Array.isArray(ir.mssl_bindings)) throw new RussError("IR is not a RUSSL canonical IR object");
+  const { ir_id, ...rest } = ir;
+  let irJson; try { irJson = canonicalJson(rest); } catch (e) { throw new RussError("IR: " + e.message); }
+  if (ir_id !== "russir:sha256:" + await domainHash("RUSSIR/1.0", enc.encode(irJson)) || parts.language.ir_id !== ir_id) throw new RussError("IR id does not recompute");
+  if (ir.source_sha256 !== await domainHash("RUSSL-SOURCE/1.0", enc.encode(source))) throw new RussError("IR does not belong to this .russl source");
+  let lowered;
+  try { lowered = await lowerRussl(source); } catch (e) { throw new RussError("RUSSL source does not validate: " + (e instanceof RusslError ? e.message : String(e))); }
+  if (canonicalJson(lowered) !== canonicalJson(ir)) throw new RussError("source/IR binding mismatch: the stored IR is not the lowering of the .russl source");
+  // mechanics: unique modules, each bound by digest, none unbound; admission policy bound to ADMISSION_EVAL
+  const mods = parts.mechanics.modules;
+  if (!Array.isArray(mods) || new Set(mods).size !== mods.length) throw new RussError("mechanics module list");
+  const declared = new Set(), aliases = Object.create(null);
+  for (const b of ir.mssl_bindings) {
+    if (!isObj(b) || typeof b.module !== "string" || typeof b.digest !== "string") throw new RussError("MSSL binding shape");
+    const mp = "mssl/" + b.module + ".mssl";
+    if (!mods.includes(mp) || "sha256:" + await sha256(member(mp)) !== b.digest) throw new RussError(`MSSL binding ${b.module} does not match its digest`);
+    declared.add(mp); aliases[b.alias] = mp;
+  }
+  if (declared.size !== mods.length || mods.some((m) => !declared.has(m))) throw new RussError("unbound mechanics module");
+  const policy = parts.admission.policy;
+  const admissionModules = new Set(ir.program.filter((r) => isObj(r) && r.op === "ADMISSION_EVAL" && Array.isArray(r.inputs) && r.inputs[0] in aliases).map((r) => aliases[r.inputs[0]]));
+  if (!mods.includes(policy) || !admissionModules.has(policy)) throw new RussError("admission policy does not bind an ADMISSION_EVAL module");
+  member(policy);
+  member(parts.evidence.provenance);
+  // geometry: descriptor axes = geometry axes, one FIELD_DEFINE matching the descriptor
+  const fd = strictJson(member(parts.geometry.field_descriptor), "field descriptor");
+  schemaCheck(fd, SCHEMAS.field, "field descriptor");
+  if (!isObj(fd) || canonicalJson(parts.geometry.axes ?? null) !== canonicalJson(fd.axes ?? null) || fd.rank !== 5) throw new RussError("geometry/field mismatch");
+  const defs = ir.program.filter((r) => isObj(r) && r.op === "FIELD_DEFINE");
+  if (defs.length !== 1 || !isObj(defs[0].arg)) throw new RussError("golden field binding requires exactly one FIELD_DEFINE");
+  const arg = defs[0].arg;
+  if (typeof arg.shape !== "string" || typeof arg.axes !== "string" || canonicalJson(fd.shape) !== "[" + arg.shape + "]" || canonicalJson(fd.axes) !== canonicalJson(arg.axes.split(",")) || fd.sample?.dtype !== arg.sample)
+    throw new RussError("source/field shape, axes or dtype binding mismatch");
+  if (arg.shape !== "1,1,8,128,128" || arg.sample !== "u32") throw new RussError(`field is ${arg.shape} ${arg.sample}; this console reads 1,1,8,128,128 u32`);
+  const fb = files.get("state/field.u32le");
+  if (!fb || fb.length !== WORDS * 4) throw new RussError("container has no 8x128x128 u32 field (state/field.u32le)");
+  const planar = new Uint32Array(WORDS); const fv = new DataView(fb.buffer, fb.byteOffset, fb.byteLength);
+  let wide = 0;
+  for (let i = 0; i < WORDS; i++) { const x = fv.getUint32(i * 4, true); if (x > 0xfffff) wide++; planar[i] = x & 0xfffff; }
+  const warnings = [];
+  if (wide) warnings.push(`${wide} words had bits above bit 19; they were masked to 20 bits`);
+  const pyr = files.has("state/pyramid.json") ? strictJson(files.get("state/pyramid.json"), "pyramid") : null;
+  if (pyr) { const again = await pyramid(planar); if (!isObj(pyr) || !Array.isArray(pyr.levels) || again.some((l, i) => l.sha256 !== pyr.levels[i]?.sha256)) problems.push("pyramid level digests do not match the field"); }
+  else problems.push("no state/pyramid.json (20-layer digests)");
+  const provenance = strictJson(files.get(parts.evidence.provenance), "provenance");
+  return { manifest, files, chunky: toChunky(planar), tuple_id: manifest.tuple_id, root, problems, warnings, source, provenance, pyramid: pyr };
+}
+
+return { RussError, buildRuss, canonicalJson, domainHash, pyramid, readRuss, sha256, toChunky, toPlanar };
+})();
+const { RussError, buildRuss, canonicalJson, domainHash, pyramid, readRuss, sha256, toChunky, toPlanar } = __mod_russ;
+
+const $ = (id) => document.getElementById(id);
+$("ver").textContent = "1.1.0";
+const token = document.querySelector('meta[name="plume-token"]')?.content ?? null;
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+async function check(name, bytes) {
+  try {
+    if (bytes.length > 64 * 1024 * 1024) return { name, ok: false, detail: "larger than 64 MB" };
+    const r = await readRuss(bytes);
+    if (r.problems.length) return { name, ok: false, detail: r.problems.join("; ") };
+    const p = r.provenance?.pipeline || {};
+    return { name, ok: true, detail: `${r.tuple_id} (${p.stage ?? "?"}${p.input_tuple_id ? ", input " + p.input_tuple_id : ""})${r.warnings.length ? "; note: " + r.warnings.join("; ") : ""}` };
+  } catch (e) { return { name, ok: false, detail: e.message }; }
+}
+function show(results, sizes) {
+  $("rows").innerHTML = results.map((r, i) => `<tr><td>${esc(r.name)}</td><td class="num">${sizes[i].toLocaleString()}</td><td class="res ${r.ok ? "ok" : "err"}">${r.ok ? "verified" : "refused"}</td><td class="det">${esc(r.detail)}</td></tr>`).join("");
+  const bad = results.filter((r) => !r.ok).length, v = $("verdict");
+  v.className = "verdict " + (bad ? "err" : "ok");
+  v.textContent = bad ? `${bad} of ${results.length} file${results.length === 1 ? "" : "s"} refused` : `all ${results.length} file${results.length === 1 ? "" : "s"} verified`;
+}
+async function local(files) {
+  const list = [...files]; if (!list.length) return;
+  $("verdict").className = "verdict"; $("verdict").textContent = `checking ${list.length} file${list.length === 1 ? "" : "s"}…`;
+  const results = [], sizes = [];
+  for (const f of list) { sizes.push(f.size); results.push(f.size > 64 * 1024 * 1024 ? { name: f.name, ok: false, detail: "larger than 64 MB" } : await check(f.name, new Uint8Array(await f.arrayBuffer()))); }
+  show(results, sizes);
+}
+$("pick").addEventListener("change", (e) => { local(e.target.files); e.target.value = ""; });
+const drop = $("drop");
+drop.addEventListener("dragover", (e) => { e.preventDefault(); drop.classList.add("over"); });
+drop.addEventListener("dragleave", () => drop.classList.remove("over"));
+drop.addEventListener("drop", (e) => { e.preventDefault(); drop.classList.remove("over"); local(e.dataTransfer.files); });
+
+// On the Photon host (python host/plume_photon.py --verify FILE.russ ...), the files come from the host,
+// and the results go back to it: it prints them and exits with 0 only if every file verified.
+if (token) (async () => {
+  try {
+    const host = await (await fetch("/api/host")).json();
+    if (!host.verify) return;
+    $("verdict").textContent = "the host sent files: checking…";
+    const { files } = await (await fetch("/api/verify")).json(), results = [], sizes = [];
+    for (const f of files) { sizes.push(f.bytes); results.push(await check(f.name, new Uint8Array(await (await fetch(`/api/verify/${f.index}`)).arrayBuffer()))); }
+    show(results, sizes);
+    const r = await fetch("/api/verify/report", { method: "POST", headers: { "Content-Type": "application/json", "X-Plume-Token": token }, body: JSON.stringify({ results }) });
+    $("verdict").textContent += r.ok ? " · report sent to the host; you can close this window" : ` · the host refused the report (${r.status})`;
+  } catch (e) { $("verdict").className = "verdict err"; $("verdict").textContent = "could not talk to the host: " + e.message; }
+})();
+</script>
