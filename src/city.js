@@ -17,6 +17,7 @@ import { compile, WORDS, LANES } from "./lcufa.js";
 import { sha256Hex, pyDumps } from "./simmy.js";
 import { dayInfo, epochOf, RULE_SOURCES, payrollYear, federalYear, clearRuleCaches, electionDay } from "./rules.js";
 import { N, CELLS, SECTORS, CATS, NCAT, CITY_NAME } from "./citydata.js";
+import { SCALE, NSHIFT } from "./scale.js";
 import { Books, E_H0, E_F0, E_B0, E_CITY, E_SCHOOL, E_STATE, E_FEDGOV, E_FED, E_ROW, E_N, HCAP, FCAP, AC } from "./books.js";
 import { Nation } from "./nation.js";
 import { Slots, latticePolicy, projectFounder, TRUST_SPEC, MECHANISMS, BOOT_SHA, priorTrust } from "./core.js";
@@ -39,9 +40,9 @@ import { civicDay, civicMonth, civicYear, civicGenesis, election } from "./civic
 import { housingDay, housingMonth, attachHousing } from "./housing.js";
 import { attachDevelop, developDay, developMonth } from "./develop.js";
 
-export const CITY_VERSION = "1.3.0";
+export const CITY_VERSION = "1.3.1";
 export const SAVE_FORMAT = "PLUME-CITY/1";
-export const PCAP = 24576, LCAP = 32768;
+export const PCAP = SCALE.people, LCAP = SCALE.loans;
 
 /* ------------------------------------------------------------------ the street-life law (LCUF-A) */
 // P' = Life(P) + 2·nsum(P mod 2) + 16·(P - P mod 2). Bit 0: the lane is alive in the cell (enough people
@@ -248,7 +249,7 @@ export class City {
   vitality(d) {
     const X = this.xout, V = this.vital, W = this.world;
     for (let c = 0; c < CELLS; c++) {
-      const dead = W.water[c] || (c >> 7) < 2 || (c >> 7) > N - 3;
+      const dead = W.water[c] || (c >> NSHIFT) < 2 || (c >> NSHIFT) > N - 3;
       for (let k = 0; k < LANES; k++) {
         const q = c * LANES + k; let w = X[q];
         if (dead) { w = 0; X[q] = 0; }

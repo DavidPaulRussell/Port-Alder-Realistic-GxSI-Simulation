@@ -1,5 +1,38 @@
 # Changelog
 
+## 1.3.1 — 2026-11-18 (the engine at any size)
+
+The first step of the full-scale city (`docs/STAGE2.md`). The one-in-ten city is unchanged: the same digests, day
+for day.
+
+### Added
+- **`src/scale.js`: the size of the city is set before its modules load.** The map's side and every table's
+  capacity come from one object (`PLUME_SCALE`, a name or sizes as JSON; unset, the one-in-ten city). The cell
+  arithmetic that was written out for 128 cells (`& 127`, `>> 7`) now follows the map's side, and a building's
+  column and row take two bytes on a map wider than 256 cells.
+- **The engine founds and runs a much larger city.** On the invented map at sixteen times the area it founds
+  214,951 citizens in 97,290 households with 2,956 businesses, and its books balance every day
+  (`PLUME_SCALE='{"n":512,...}' node tools/run_city.mjs 5`). A day takes about 4.6 s there, against 0.25 s for the
+  one-in-ten city. `test/scale.test.mjs` founds four times the map (49,464 citizens) and checks its audit.
+- **Shopping looks near home first.** A household's choice among a trade's businesses was a pass over every one of
+  them. They are now kept in squares of eight cells and blocks of eight squares; a household looks at the squares
+  around its home, then passes over every block and square in which nothing could beat its second choice. The
+  choice is exactly what looking at every business gives (the test compares the two, digest for digest). What does
+  not change during the day's shopping (street life at the door, the business's name, its prices against its
+  trade's) is worked out once a day, not once a comparison.
+- The tables' rows are walked by a plain iterator, not a generator.
+- A snapshot records the size of the city it was taken from, and is refused by a city of another size.
+- **`COPYRIGHT`, `LICENSE` and `NOTICE`.** Copyright (C) 2026 Russell Philip Smithson; the GNU General Public
+  License, version 3 only, in full; and what in the repository is under other terms (WorldPop's CC BY 4.0 tables,
+  the EDHX runtime inside the `.edhx` files, the Corpus Compendium the laws are cited from). The repository is now
+  https://github.com/DavidPaulRussell/Port-Alder-Realistic-GxSI-Simulation.
+- The EDHX format is credited to its author, Russell Philip Smithson (1.3.0 named him by his GitHub handle).
+
+### Not yet
+- The full-scale map itself (real streets, buildings, water and ground; all 391,000 people) waits for the
+  OpenStreetMap and elevation files that `tools/map_fetch.py` writes.
+- The 3D view and the page still serve the one-in-ten city only.
+
 ## 1.3.0 — 2026-11-18 (the movement matrix, the layer files, snapshots)
 
 ### Fixed

@@ -37,7 +37,7 @@ except Exception:  # numpy is optional
     np = None
 
 SOUTH, NORTH, WEST, EAST = 47.845, 48.034, -122.325, -122.043
-AGENT = "PortAlder-map-fetch/1.0 (+https://github.com/DavidPaulRussell/Port-Alder)"
+AGENT = "PortAlder-map-fetch/1.0 (+https://github.com/DavidPaulRussell/Port-Alder-Realistic-GxSI-Simulation)"
 OVERPASS = ["https://overpass-api.de/api/interpreter", "https://overpass.private.coffee/api/interpreter",
             "https://lz4.overpass-api.de/api/interpreter", "https://z.overpass-api.de/api/interpreter",
             "http://overpass-api.de/api/interpreter"]

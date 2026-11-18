@@ -10,6 +10,7 @@ import { ppm } from "./rules.js";
 import { B as BK, SECTORS, S as SK, O as OC, MAT, MATERIALS, CELL_M, N, NEIGHBOURHOODS, personName } from "./citydata.js";
 import { AC, K, E_H0, E_F0, E_B0, E_CITY, E_ROW, E_STATE } from "./books.js";
 import { sat, admitE1, trustScore, Slots } from "./core.js";
+import { SCALE, NSHIFT, NMASK, CoordArray } from "./scale.js";
 import { columnLoad, effectiveStress, headLeft, drag, gutenberg, npv, potential, miner } from "./laws.js";
 import { members, ageYears, addMemory, M, trait, homeBuilding, T_O, T_C, T_E, T_A, T_N, T_RISK, T_THRIFT, T_CIVIC } from "./people.js";
 import { annuity, lenderOf, ROW_LENDER, originate } from "./finance.js";
@@ -56,7 +57,7 @@ const FACADE_WORD = { [MAT.brick_red]: "red-brick", [MAT.brick_yellow]: "buff-br
   [MAT.metal_panel]: "metal-panel", [MAT.sandstone]: "sandstone", [MAT.rust_steel]: "weathered-steel", [MAT.marble]: "marble-faced", [MAT.timber_deck]: "timber-clad" };
 const MB = { evicted: 1, rentUp: 2, robbed: 4, started: 8, failed: 16, empty: 32, meal: 64 };
 
-export const PROJECT_SPEC = [["alive", Uint8Array], ["stage", Uint8Array], ["site", Int32Array], ["x", Uint8Array], ["y", Uint8Array], ["w", Uint8Array], ["h", Uint8Array], ["hood", Uint8Array],
+export const PROJECT_SPEC = [["alive", Uint8Array], ["stage", Uint8Array], ["site", Int32Array], ["x", CoordArray], ["y", CoordArray], ["w", Uint8Array], ["h", Uint8Array], ["hood", Uint8Array],
   ["owner", Int32Array], ["why", Uint8Array], ["opened", Int32Array], ["stageAt", Int32Array], ["due", Int32Array], ["design", Int32Array], ["builder", Int32Array], ["loan", Int32Array],
   ["build", Float64Array], ["demo", Float64Array], ["paid", Float64Array], ["tax", Float64Array], ["equity", Float64Array], ["credit", Float64Array], ["drawn", Float64Array], ["interest", Float64Array],
   ["hours", Float64Array], ["done", Float64Array], ["progress", Uint16Array], ["minDays", Uint16Array], ["bld", Int32Array], ["voters", Uint16Array], ["nprop", Uint8Array],
@@ -69,7 +70,7 @@ export const PROPOSAL_SPEC = [["alive", Uint8Array], ["proj", Int32Array], ["aut
   ["area", Int32Array], ["feasible", Uint8Array], ["won", Uint8Array]];
 
 export function attachDevelop(c) {
-  c.projects = new Slots(1024, PROJECT_SPEC); c.proposals = new Slots(8192, PROPOSAL_SPEC);
+  c.projects = new Slots(SCALE.projects, PROJECT_SPEC); c.proposals = new Slots(SCALE.proposals, PROPOSAL_SPEC);
   c.gov.dev = { demolished: 0, built: 0, homes: 0, afford: 0, designs: 0, votes: 0, shelved: 0, renovated: 0, relocated: 0, left: 0, closed: 0, abated: 0, relief: 0 };
   incomes(c);
 }
@@ -139,7 +140,7 @@ export function siteContext(c, x0, y0, w, h, self = -1) {
     shopRent: sn[0] ? Math.round(sr[0] / sn[0]) : 250000, officeRent: sn[1] ? Math.round(sr[1] / sn[1]) : 300000, workRent: sn[2] ? Math.round(sr[2] / sn[2]) : 400000,
     homeVac: du ? Math.round((vac * 1000) / du) : 50, spaceVac: st ? Math.round((sv * 1000) / st) : 100,
     shopping: v(1), dining: v(2), work: v(3), night: v(4), parks: v(5), transit: v(6), disorder: v(7),
-    stop: stop >= 0 && Math.max(Math.abs((stop & 127) - (fc & 127)), Math.abs((stop >> 7) - (fc >> 7))) <= 2 };
+    stop: stop >= 0 && Math.max(Math.abs((stop & NMASK) - (fc & NMASK)), Math.abs((stop >> NSHIFT) - (fc >> NSHIFT))) <= 2 };
 }
 const zoneOf = (ctx) => ZONES[ctx.hood] || ZONES[3];
 const houseCover = (z, ctx) => Math.min(z.cover, Math.floor(160000 / (ctx.w * ctx.h * CELL_M * CELL_M)));
@@ -582,7 +583,7 @@ function premisesFor(c, p) {
   const W = c.world, SP = W.spaces, T = W.buildings, home = W.frontCell(SP.bld[p]); let best = -1, bd = 1e9;
   for (const q of SP.each()) {
     if (SP.tenant[q] !== -1 || SP.kind[q] !== SP.kind[p] || T.stage[SP.bld[q]]) continue;
-    const fc = W.frontCell(SP.bld[q]), dd = Math.abs((fc & 127) - (home & 127)) + Math.abs((fc >> 7) - (home >> 7)); if (dd < bd) { bd = dd; best = q; }
+    const fc = W.frontCell(SP.bld[q]), dd = Math.abs((fc & NMASK) - (home & NMASK)) + Math.abs((fc >> NSHIFT) - (home >> NSHIFT)); if (dd < bd) { bd = dd; best = q; }
   }
   return bd <= 24 ? best : -1;
 }

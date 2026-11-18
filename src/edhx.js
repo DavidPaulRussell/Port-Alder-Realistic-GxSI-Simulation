@@ -1,5 +1,5 @@
 // EDHX/1 (Entangled Data Hologram eXecutable) in plain JavaScript, for Node and the browser: the container format of
-// David Paul Russell's EDHX 1.0.0 (spec/FORMAT.md), read and written byte for byte as that specification lays out.
+// Russell Philip Smithson's EDHX 1.0.0 (spec/FORMAT.md), read and written byte for byte as that specification lays out.
 //
 //   HEAD     UTF-8 text in ED's lexical grammar ("edhx 1.0;" + container/artifact/entangle blocks), then 0A 1A 0A
 //   RUNTIME  "EDHXRT01" | u64 n | SHA-512(zip) | ZIP of the EDHX runtime (what makes a container self-executing)

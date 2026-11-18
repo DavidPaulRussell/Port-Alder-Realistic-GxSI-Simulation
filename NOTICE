@@ -1,0 +1,92 @@
+Port Alder: a realistic GxSI simulation
+COPYRIGHT (C) 2026 RUSSELL PHILIP SMITHSON.
+
+This NOTICE accompanies the program published at
+https://github.com/DavidPaulRussell/Port-Alder-Realistic-GxSI-Simulation.
+The program is licensed under the GNU General Public License, version 3
+only (see LICENSE). It comes with NO WARRANTY, to the extent permitted by
+law. Any copy made under the LICENSE must keep the copyright line above
+and this credit:
+
+  "Port Alder, (C) 2026 Russell Philip Smithson,
+  https://github.com/DavidPaulRussell/Port-Alder-Realistic-GxSI-Simulation"
+
+
+1. What the simulation is, and is not
+
+Port Alder is a simulation. "Sentient" is a design word, not a claim of
+consciousness: every agent carries needs, a mood, a personality, memories
+and expectations, updates them from what happens to it, and decides from
+them.
+
+Port Alder is modelled on Everett, Washington, and on the county, state
+and nation around it. Its citizens, households, businesses, banks and
+officials are invented. Any resemblance to a real person or business is
+coincidence. A Social Information Number is not a Social Security number
+and identifies no real person.
+
+
+2. Laws, rules and figures
+
+The simulation restates tax, payroll, benefit, housing and other rules of
+the United States and of Washington State, and published figures such as
+populations, wages, rents and rates, as they stood when it was written.
+They are quoted for the simulation's purposes and are not warranted. Check
+them against the primary sources (src/rules.js and src/periphery.js name
+them) before relying on them. Nothing here is legal, tax, financial,
+medical, engineering or safety advice.
+
+
+3. Material under other terms, or belonging to others
+
+  - Corpus Compendium on Rails, (C) 2026 Russell Philip Smithson, is a
+    separate work under its own licence
+    (https://github.com/LKVexa/Corpus-Compendium). This repository cites
+    its entries by number and title and implements equations, which are
+    not subject to copyright. It contains none of the Compendium's text.
+
+  - EDHX 1.0.0, the container format of the files in layers/ and
+    loader/, and the EDHX runtime that each .edhx file carries inside it
+    (a ZIP of Python source, as the format requires), are a separate work
+    of Russell Philip Smithson. The runtime is included unmodified so the
+    files can be read and written. It is not part of the program licensed
+    here; its terms are its own. src/edhx.js, the JavaScript reader in
+    this repository, was written for this program and is under the
+    LICENSE.
+
+  - Population counts: WorldPop (www.worldpop.org), R2025A v1, population
+    2026, 3 arc-second constrained, licensed under Creative Commons
+    Attribution 4.0 International (CC BY 4.0). The raster is not in this
+    repository. Two tables taken from it are: the movement geography in
+    src/movement_data.js (computed) and the population of the full-scale
+    map's area in data/pop/ and in layers/city.edhx (cut out as it is).
+    They remain under CC BY 4.0.
+
+  - Map and terrain sources are not in this repository. tools/map_fetch.py
+    fetches them to the user's own machine: map data (C) OpenStreetMap
+    contributors, under the Open Database License 1.0
+    (https://www.openstreetmap.org/copyright), and elevation from the U.S.
+    Geological Survey's 3D Elevation Program (public domain). Map data
+    made from OpenStreetMap stays under the Open Database License.
+
+  - src/lcufa.js is offered under "MIT OR GPL-3.0-only", as its header
+    says; as part of this program it is used under GPL-3.0-only.
+
+  - Files that carry their own licence line (an SPDX-License-Identifier)
+    are under the licence that line names.
+
+
+4. Names and trademarks
+
+Names of places, companies, products, agencies, programs and standards
+that appear in the program or its documentation - for example Everett,
+Boeing, Paine Field, Apple Health, Basic Food, OpenStreetMap, WorldPop,
+GitHub and WebGPU - belong to their respective owners. They are used for
+identification only and imply no endorsement of, or affiliation with, the
+program.
+
+
+5. Corrections
+
+Errors can be reported by opening an issue at
+https://github.com/DavidPaulRussell/Port-Alder-Realistic-GxSI-Simulation/issues.

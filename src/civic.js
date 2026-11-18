@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 import { ppm, mulDiv, divRound, LEVY, electionDay, epochOf } from "./rules.js";
 import { SECTORS, S as SK, CATS, NCAT, O } from "./citydata.js";
+import { N, NSHIFT, NMASK } from "./scale.js";
 import { AC, K, E_H0, E_F0, E_B0, E_CITY, E_SCHOOL, E_STATE, E_FEDGOV, E_ROW } from "./books.js";
 import { sat } from "./core.js";
 import { members, ageYears, addMemory, M, trait, T_CIVIC, T_N, T_A, T_THRIFT, homeCell, schoolDay } from "./people.js";
@@ -35,7 +36,7 @@ export function civicDay(c, d, g) {
   const hot = []; for (let cc = 0; cc < W.land.length; cc++) { const v = c.vital[cc * 8 + 7]; if (v) hot.push([v, cc]); }
   hot.sort((a, b) => b[0] - a[0] || a[1] - b[1]);
   c.patrol = hot.slice(0, patrols).map((x) => x[1]);
-  for (const cc of c.patrol) for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) { const x = (cc & 127) + dx, y = (cc >> 7) + dy; if (x < 0 || y < 0 || x > 127 || y > 127) continue; const q = (((y << 7) | x) << 3) + 7; c.frame[q] &= ~1; }
+  for (const cc of c.patrol) for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) { const x = (cc & NMASK) + dx, y = (cc >> NSHIFT) + dy; if (x < 0 || y < 0 || x > N - 1 || y > N - 1) continue; const q = (((y << NSHIFT) | x) << 3) + 7; c.frame[q] &= ~1; }
   let crimes = 0;
   for (const [v, cc] of hot.slice(patrols, patrols + 40)) {
     const life = c.vital[cc * 8] + c.vital[cc * 8 + 1] + c.vital[cc * 8 + 2];
@@ -45,7 +46,7 @@ export function civicDay(c, d, g) {
     if (v2 >= 1) {
       crimes++;
       const b = W.bldOf[cc]; let victim = -1;
-      let vd = 99; for (const i of P.each()) { const h = P.hh[i]; if (h < 0 || H.home[h] < 0 || !(P.today[i] & 1) || ageYears(c, i) < 16) continue; const dd = Math.abs((homeCell(c, h) & 127) - (cc & 127)) + Math.abs((homeCell(c, h) >> 7) - (cc >> 7)); if (dd <= 3 && dd < vd) { vd = dd; victim = i; } }   // the nearest resident out on the street
+      let vd = 99; for (const i of P.each()) { const h = P.hh[i]; if (h < 0 || H.home[h] < 0 || !(P.today[i] & 1) || ageYears(c, i) < 16) continue; const dd = Math.abs((homeCell(c, h) & NMASK) - (cc & NMASK)) + Math.abs((homeCell(c, h) >> NSHIFT) - (cc >> NSHIFT)); if (dd <= 3 && dd < vd) { vd = dd; victim = i; } }   // the nearest resident out on the street
       if (victim >= 0) { addMemory(c, victim, M.was_robbed); P.cDe[victim] += 2; P.need[victim * 8 + 3] = Math.max(0, P.need[victim * 8 + 3] - 60); const he = E_H0 + P.hh[victim], loss = Math.min(B.get(he, AC.DEPOSITS), 4000 + v * 2500); if (loss > 0) B.pay(he, E_ROW, loss, AC.X_OTHER, AC.R_OTHER, K.other); }
     }
   }

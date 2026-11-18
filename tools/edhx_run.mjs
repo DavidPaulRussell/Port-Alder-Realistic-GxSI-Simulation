@@ -70,7 +70,7 @@ if (prior) {
     if (o !== b.bytes) throw new Error('a table of the state has the wrong length'); blobs.push(out);
   }
   const tree = JSON.parse(inflateSync(await E.getRecordVersion(cont, 'state/tree', prior.tree, inflate)).toString('utf8'));
-  restore(city, { format: prior.format, cfg: prior.cfg, tree, blobs });
+  restore(city, { format: prior.format, cfg: prior.cfg, scale: prior.scale, tree, blobs });
   if (city.digest !== prior.digest || city.epoch !== prior.epoch) throw new Error('the restored city is not the one the last run sealed');
   say(`restored day ${prior.epoch} (${prior.date}) exactly: digest ${city.digest.slice(0, 16)}… (${Date.now() - t0} ms)`);
 } else say(`founded: ${city.people.count} citizens, ${city.hh.count} households, ${city.firms.count} firms; digest ${city.digest.slice(0, 16)}… (${Date.now() - t0} ms)`);
@@ -109,7 +109,7 @@ snap.blobs.forEach((blob, n) => {
 });
 const treeZ = deflateSync(Buffer.from(JSON.stringify(snap.tree), 'utf8'), { level: 6 });
 add(0, 'state/tree', treeZ, 'binary', ['state']);
-add(0, 'state/manifest', Buffer.from(JSON.stringify({ format: snap.format, cfg: snap.cfg, epoch: city.epoch, date: last.date, digest: city.digest, engine: CITY_VERSION, sealedOn: rootBefore, tree: E.sha512Hex(treeZ), volumes: Math.max(...room.keys(), 0) + 1, blobs: manifestBlobs }, null, 1)), 'json', ['state']);
+add(0, 'state/manifest', Buffer.from(JSON.stringify({ format: snap.format, cfg: snap.cfg, scale: snap.scale, epoch: city.epoch, date: last.date, digest: city.digest, engine: CITY_VERSION, sealedOn: rootBefore, tree: E.sha512Hex(treeZ), volumes: Math.max(...room.keys(), 0) + 1, blobs: manifestBlobs }, null, 1)), 'json', ['state']);
 add(0, `sim/chain/${String(chain[0][0]).padStart(6, '0')}`, Buffer.from(JSON.stringify({ from: chain[0][0], to: chain[chain.length - 1][0], startedOn: rootBefore, days: chain }, null, 1)), 'json', ['sim']);
 add(0, 'sim/measures/latest', Buffer.from(JSON.stringify(measures, null, 1)), 'json', ['sim']);
 // the pieces first, the manifest last: until city.edhx is committed the files still hold the state the last run

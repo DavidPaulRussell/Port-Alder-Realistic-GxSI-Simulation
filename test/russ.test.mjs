@@ -2,7 +2,16 @@ import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { compile, BF1_SOURCE, BF2_SOURCE } from '../src/lcufa.js';
 import { createWasm1T } from '../src/engines.js';
 import { buildRuss, readRuss, sha256 } from '../src/russ.js';
+import { existsSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 const T = JSON.parse(readFileSync(new URL('../web/r-templates.json', import.meta.url)));
+// the NumPy references (test/*.bin) are written locally, not kept in the repository: make them if they are missing
+if (!existsSync(new URL('in.bin', import.meta.url))) {
+  let made = false;
+  for (const exe of [process.env.PYTHON, 'python3', 'python'].filter(Boolean)) { try { execFileSync(exe, ['test/ref_numpy.py'], { cwd: fileURLToPath(new URL('..', import.meta.url)), stdio: 'ignore' }); made = existsSync(new URL('in.bin', import.meta.url)); if (made) break; } catch { /* try the next */ } }
+  if (!made) { console.log('SKIP  the NumPy references are not here: run "python3 test/ref_numpy.py" from the repository folder (it needs numpy)'); process.exit(0); }
+}
 const input = new Uint32Array(readFileSync(new URL('in.bin', import.meta.url)).buffer.slice(0));
 const w1 = await createWasm1T(readFileSync(new URL('../web/xpu.wasm', import.meta.url)));
 const enc = new TextEncoder();

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 import { ppm, mulDiv, divRound, STATE_SALES, LOCAL_SALES } from "./rules.js";
 import { SECTORS, S as SK, CATS, NCAT, OCCS, O, PUBLIC_JOBS, CELL_M } from "./citydata.js";
+import { N, NSHIFT, NMASK, SHOP_ALL } from "./scale.js";
 import { AC, ACCOUNTS, CONS_ACC, K, E_H0, E_F0, E_B0, E_CITY, E_SCHOOL, E_STATE, E_ROW, E_FEDGOV } from "./books.js";
 // the units a member of staff serves on a day the firm is open: eight hours at the trade's rate per quarter-hour, shared
 // over the open days when the firm opens more days than a person works (five)
@@ -42,7 +43,7 @@ export function attach(c) {
   c.firmBld = (f) => W.spaces.bld[F.space[f]];
   c.firmCell = (f) => (F.space[f] >= 0 ? W.frontCell(W.spaces.bld[F.space[f]]) : -1);
   c.workCell = (i) => { const e = P.emp[i]; if (e >= E_F0 && e < E_B0) return c.firmCell(e - E_F0); if (e === E_CITY) return c.gov.cityCell ?? -1; if (e === E_SCHOOL) return P.school[i] >= 0 ? W.frontCell(P.school[i]) : c.gov.schoolCell ?? -1; if (e >= E_B0 && e < E_CITY) return c.banks[e - E_B0]?.cell ?? -1; return W.routes[0].cells[W.routes[0].cells.length - 1]; };
-  c.parkNear = (cell) => { const x0 = cell & 127, y0 = cell >> 7; for (let r = 1; r < 8; r++) for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) { const x = x0 + dx, y = y0 + dy; if (x < 0 || y < 2 || x > 127 || y > 125) continue; const cc = (y << 7) | x; if (W.land[cc] === 2) return cc; } return -1; };
+  c.parkNear = (cell) => { const x0 = cell & NMASK, y0 = cell >> NSHIFT; for (let r = 1; r < 8; r++) for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) { const x = x0 + dx, y = y0 + dy; if (x < 0 || y < 2 || x > N - 1 || y > N - 3) continue; const cc = (y << NSHIFT) | x; if (W.land[cc] === 2) return cc; } return -1; };
   c.firmsOf = (cat) => { const out = []; for (const f of F.each()) if (F.status[f] === 0 && SECTORS[F.sector[f]].cat === cat) out.push(f); return out; };
   // the people someone spends the week with: the most like-minded coworker and neighbour (homophily)
   const likeness = (i, j) => [T_O, T_C, T_E, T_A].reduce((s2, k) => s2 + Math.abs(trait(P.traits[i], k) - trait(P.traits[j], k)), 0);
@@ -54,7 +55,7 @@ export function attach(c) {
   c.leaveJob = (i, laidOff) => leaveJob(c, i, laidOff);
   c.closeFirm = (f, why) => closeFirm(c, f, why);
 }
-const dist = (a, b) => Math.abs((a & 127) - (b & 127)) + Math.abs((a >> 7) - (b >> 7));
+const dist = (a, b) => Math.abs((a & NMASK) - (b & NMASK)) + Math.abs((a >> NSHIFT) - (b >> NSHIFT));
 // an urge to do something builds each day by its drive (what used to be the day's odds) and the person acts when it
 // reaches one (law 57.9, without leak, so the long-run frequency is the drive itself)
 export const URGE = { dine: 0, goods: 1, salon: 2, sickVisit: 3, checkup: 4, hospital: 5, gym: 6, bar: 7, busLate: 8, busPraise: 9, counselling: 10, vaccine: 11, refill: 12, seek: 13, quit: 14, pair: 15, leave: 16, split: 17 }, URGE_N = 18;
@@ -324,24 +325,74 @@ export function shopping(c, d, g) {
   const cell = new Int32Array(F.top); for (const f of F.each()) cell[f] = c.firmCell(f);
   const style = new Int32Array(F.top); for (const f of F.each()) { const ot = c.ownerTraits(f); style[f] = trait(ot, T_O) | (trait(ot, T_E) << 4) | (trait(ot, T_A) << 8) | (trait(ot, T_C) << 12); }
   const lsl = (cc) => c.vital[cc * 8 + 1] + c.vital[cc * 8 + 2];
+  // what does not change while the day's shopping goes on: the street life at a business's door, its name (reputations
+  // are brought up to date after the day's custom), its quality, and its prices against its trade's
+  const fixed = new Int32Array(F.top), dear = new Float64Array(F.top);
+  for (const f of F.each()) { fixed[f] = lsl(cell[f]) * 6 + Math.min(300, trustScore(c.P, F, "cr", f) >> 7) + (F.quality[f] >> 3); dear[f] = (F.price[f] * 100) / SECTORS[F.sector[f]].price; }
   // the household's two best choices in a category: distance, street life, reputation, quality, price, exploration
   // a category, or a trade within it ("cat:key"): a car goes to a repair shop, not to the nearest fuel station
   const byKey = new Map();
+  // On a large map a category holds thousands of businesses, and nearly all are too far to matter. They are kept in
+  // squares of eight cells, and those in blocks of eight squares. A household looks at the squares around its home,
+  // then at each block, and passes over every block and square in which nothing could beat its second choice (the
+  // most a business can score but for the distance is known). The choice is the same as if it had looked at every
+  // business, ties going to the earlier in the list.
+  const SQ = 3, NB = N >> SQ, BQ = 3, NC = NB >> BQ, squares = new Map();
+  const squaresOf = (list) => {
+    let ix = squares.get(list); if (ix) return ix;
+    const cells = new Array(NB * NB), top = new Float64Array(NB * NB).fill(-1e18), cheap = new Float64Array(NB * NB).fill(1e18), loose = [];
+    const btop = new Float64Array(NC * NC).fill(-1e18), bcheap = new Float64Array(NC * NC).fill(1e18), filled = new Array(NC * NC);
+    list.forEach((f, k) => {
+      if (!F.capa[f]) return; const cc = cell[f]; if (cc < 0) { loose.push(k); return; }
+      const sx = (cc & NMASK) >> SQ, sy = (cc >> NSHIFT) >> SQ, b = sy * NB + sx, q = (sy >> BQ) * NC + (sx >> BQ);
+      if (!cells[b]) { cells[b] = []; if (!filled[q]) filled[q] = []; filled[q].push(b); } cells[b].push(k);
+      // the most a business here can score but for the distance, and the least its prices cost the thrifty
+      const m = fixed[f] - dear[f] * 4;
+      if (m > top[b]) top[b] = m; if (dear[f] < cheap[b]) cheap[b] = dear[f]; if (m > btop[q]) btop[q] = m; if (dear[f] < bcheap[q]) bcheap[q] = dear[f];
+    });
+    ix = { cells, top, cheap, btop, bcheap, filled, loose }; squares.set(list, ix); return ix;
+  };
   const choose2 = (cat, from, t, salt) => {
     let list = byCat[cat];
     if (typeof cat === "string") { list = byKey.get(cat); if (!list) { const [cc, key] = cat.split(":"); list = byCat[Number(cc)].filter((ff) => SECTORS[F.sector[ff]].key === key); byKey.set(cat, list); } }
     let best = -1, bs = -1e18, second = -1, ss = -1e18;
     if (!list.length) return [best, second];
     const explore = trait(t, T_O) >= 11, thrift = trait(t, T_THRIFT);   // the open try the places with room
-    for (const f of list) {
-      if (!F.capa[f]) continue;
-      const pr = (F.price[f] * 100) / SECTORS[F.sector[f]].price, st = style[f];
+    const score = (f) => {
+      const pr = dear[f], st = style[f];
       // taste: people favour places whose owners are like them (homophily on openness, extraversion, agreeableness and
       // conscientiousness), so a city's custom spreads over its businesses instead of piling onto the most known
       const like = Math.abs(trait(t, T_O) - (st & 15)) + Math.abs(trait(t, T_E) - ((st >> 4) & 15)) + Math.abs(trait(t, T_A) - ((st >> 8) & 15)) + Math.abs(trait(t, T_C) - ((st >> 12) & 15));
-      let sc = -dist(cell[f], from) * 12 + lsl(cell[f]) * 6 + Math.min(300, trustScore(c.P, F, "cr", f) >> 7) + (F.quality[f] >> 3) - pr * (4 + thrift) - like * 14 - (F.sold[f] >= F.capa[f] ? 400 : 0);
+      let sc = -dist(cell[f], from) * 12 + fixed[f] - pr * (4 + thrift) - like * 14 - (F.sold[f] >= F.capa[f] ? 400 : 0);
       if (explore) sc += Math.min(400, Math.max(0, F.capa[f] - F.sold[f]) * 3);
-      if (sc > bs) { second = best; ss = bs; bs = sc; best = f; } else if (sc > ss) { ss = sc; second = f; }
+      return sc;
+    };
+    if (list.length <= 128 || from < 0 || SHOP_ALL) {
+      for (const f of list) {
+        if (!F.capa[f]) continue;
+        const sc = score(f);
+        if (sc > bs) { second = best; ss = bs; bs = sc; best = f; } else if (sc > ss) { ss = sc; second = f; }
+      }
+      return [best, second];
+    }
+    const ix = squaresOf(list), fx = from & NMASK, fy = from >> NSHIFT, bx = fx >> SQ, by = fy >> SQ, room = explore ? 400 : 0; let bi = -1, si = -1;
+    const see = (k) => {
+      const f = list[k], sc = score(f);
+      if (sc > bs || (sc === bs && k < bi)) { second = best; ss = bs; si = bi; bs = sc; best = f; bi = k; } else if (sc > ss || (sc === ss && k < si)) { ss = sc; second = f; si = k; }
+    };
+    for (const k of ix.loose) see(k);
+    // the squares around home first, so there is a second choice to measure the rest against
+    for (let y = Math.max(0, by - 1); y <= Math.min(NB - 1, by + 1); y++) for (let x = Math.max(0, bx - 1); x <= Math.min(NB - 1, bx + 1); x++) { const a = ix.cells[y * NB + x]; if (a) for (const k of a) see(k); }
+    // how far the nearest cell of a span is (0 inside it)
+    const gap = (v, lo, hi) => (v < lo ? lo - v : v > hi ? v - hi : 0), W1 = (1 << SQ) - 1, W2 = (1 << (SQ + BQ)) - 1;
+    for (let qy = 0; qy < NC; qy++) for (let qx = 0; qx < NC; qx++) {
+      const q = qy * NC + qx, some = ix.filled[q]; if (!some) continue;
+      if (ix.btop[q] - thrift * ix.bcheap[q] + room - (gap(fx, qx << (SQ + BQ), (qx << (SQ + BQ)) + W2) + gap(fy, qy << (SQ + BQ), (qy << (SQ + BQ)) + W2)) * 12 + 1e-6 < ss) continue;
+      for (const b of some) {
+        const x = b % NB, y = (b - x) / NB; if (Math.abs(x - bx) <= 1 && Math.abs(y - by) <= 1) continue;      // seen above
+        if (ix.top[b] - thrift * ix.cheap[b] + room - (gap(fx, x << SQ, (x << SQ) + W1) + gap(fy, y << SQ, (y << SQ) + W1)) * 12 + 1e-6 < ss) continue;
+        for (const k of ix.cells[b]) see(k);
+      }
     }
     return [best, second];
   };

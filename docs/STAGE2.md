@@ -1,6 +1,7 @@
 # Stage 2: the full-scale city
 
-Status on 18 November 2026: **groundwork only**. This note is the plan and the record of what is decided, so the
+Status on 18 November 2026 (release 1.3.1): **step 1 of 6 done** (the engine runs at any size; 214,951 citizens
+founded and audited on the invented map at sixteen times the area). The real map waits for its sources. This note is the plan and the record of what is decided, so the
 work can be picked up without rereading the conversation that led to it.
 
 ## What it is
@@ -64,10 +65,12 @@ street grid and buildings sized so each block holds the raster's people.
 4. **Who lives there.** The founding census places households in real buildings so that each population cell holds
    the people the raster counts, with household types and incomes by tract-like area (the census still closes at
    genesis; nothing is drawn after).
-5. **Speed.** A day takes about 0.25 s at 11,900 citizens. At 391,000 that is about 8 s if nothing changes. Known
-   hot spots: `findHome` scans every dwelling; the weekly labour market scans every firm for every seeker; shopping
-   looks at every firm in reach. They need indexes by cell and by occupation. The page has to step in a worker.
-6. **Memory.** The tables are about 44 MB at one in ten; about 1.3 GB at full scale if nothing changes. The people
+5. **Speed.** A day takes about 0.25 s at 11,900 citizens and 4.6 s at 215,000 (measured, after shopping was
+   indexed); about 9 s is expected at 391,000. What is left is spread thin: the daily digest and audit over every
+   table, `findHome` over every dwelling, the weekly labour market over every firm for every seeker, the minds.
+   The page has to step in a worker.
+6. **Memory.** The tables are about 44 MB at one in ten and the process about 1.1 GB at 215,000 citizens (measured);
+   about 2 GB is expected at full scale if nothing changes. The people
    table is the bulk; fields that are per-person but mostly empty have to move to side tables.
 7. **State files.** A full-scale snapshot is hundreds of megabytes deflated. `tools/edhx_run.mjs` already spreads
    a state over as many files as it needs, each under 24 MB, and rewrites only the pieces that changed; snapshots
@@ -81,7 +84,9 @@ street grid and buildings sized so each block holds the raster's people.
 
 ## The order of work
 
-1. Scale object and grid arithmetic, with the one-in-ten city still passing every test and its digest unchanged.
+1. **Done (1.3.1).** Scale object (`src/scale.js`) and grid arithmetic, with the one-in-ten city passing every test
+   and its digests unchanged; shopping indexed by squares; the engine founds 214,951 citizens at `n = 512` and
+   balances its books (4.6 s a day).
 2. The map builder (`tools/make_map.mjs`): OpenStreetMap and terrain into `layers/city.map-*.edhx`.
 3. `World` from the map; the founding census on real buildings; jurisdictions.
 4. Indexes and the worker; a full-scale founding and a first audited month.

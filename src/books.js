@@ -9,6 +9,8 @@
 // The audit checks every one of those pairings, and that all financial claims in the closed system
 // (the city with the State, the United States, the Federal Reserve and the rest of the world) sum to zero.
 
+import { SCALE } from "./scale.js";
+
 /* ------------------------------------------------------------------ the chart of accounts */
 // [key, name, type] with type A asset (financial), R real asset, C contra asset, L liability, Q equity, I income, X expense
 export const ACCOUNTS = [
@@ -51,7 +53,7 @@ export const TAX_PAIRS = [
 export const LOAN_PAIRS = [["mortgage", AC.LOAN_MORT, AC.L_MORT], ["business", AC.LOAN_BIZ, AC.L_BIZ], ["auto", AC.LOAN_AUTO, AC.L_AUTO], ["card", AC.LOAN_CARD, AC.L_CARD]];
 
 /* ------------------------------------------------------------------ entities */
-export const HCAP = 8192, FCAP = 2048, BCAP = 4;
+export const HCAP = SCALE.households, FCAP = SCALE.firms, BCAP = 4;
 export const E_H0 = 0, E_F0 = HCAP, E_B0 = HCAP + FCAP;
 export const E_CITY = E_B0 + BCAP, E_SCHOOL = E_CITY + 1, E_STATE = E_CITY + 2, E_FEDGOV = E_CITY + 3, E_FED = E_CITY + 4, E_ROW = E_CITY + 5, E_N = E_CITY + 6;
 export const SECTOR_NAMES = { H: "Households", F: "Firms", K: "Banks", C: "City", S: "School district", W: "State of Washington", U: "United States", R: "Federal Reserve", X: "Rest of the world" };

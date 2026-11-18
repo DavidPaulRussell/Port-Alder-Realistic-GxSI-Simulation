@@ -2,10 +2,11 @@
 // SPDX-License-Identifier: GPL-3.0-only
 import { N, CELLS, CELL_M, L, B, BKIND, MAT, NEIGHBOURHOODS } from "./citydata.js";
 import { Slots, sat } from "./core.js";
+import { SCALE, NSHIFT, NMASK, CoordArray, cellOf } from "./scale.js";
 // the founding survey of the land draws from the city's founding census (law 12.42); nothing after genesis may
 let DRAW = () => { throw new Error("the land is surveyed only at the founding"); };
 
-export const cellOf = (x, y) => (y << 7) | x;
+export { cellOf };
 export const inside = (x, y) => x >= 0 && y >= 0 && x < N && y < N;
 export const ROAD = { NONE: 0, LOCAL: 1, ARTERIAL: 2, BRIDGE: 3, PROMENADE: 4 };
 export const ARTERIAL_X = [16, 40, 64, 88, 112], ARTERIAL_Y = [12, 36, 60, 84, 108];
@@ -20,7 +21,7 @@ export function vnoise(seed, salt, x, y, step) {
   return Math.floor((a * (1 - sx) + b * sx) * (1 - sy) + (c * (1 - sx) + d * sx) * sy);
 }
 
-export const BUILDING_SPEC = [["alive", Uint8Array], ["x", Uint8Array], ["y", Uint8Array], ["w", Uint8Array], ["h", Uint8Array], ["kind", Uint8Array], ["floors", Uint8Array],
+export const BUILDING_SPEC = [["alive", Uint8Array], ["x", CoordArray], ["y", CoordArray], ["w", Uint8Array], ["h", Uint8Array], ["kind", Uint8Array], ["floors", Uint8Array],
   ["units", Uint16Array], ["spaces", Uint8Array], ["built", Int16Array], ["facade", Uint8Array], ["roof", Uint8Array], ["tint", Uint8Array], ["cond", Uint16Array],
   ["owner", Int32Array], ["value", Float64Array], ["land", Float64Array], ["hood", Uint8Array], ["civic", Uint8Array], ["occupied", Uint16Array], ["seed", Uint32Array], ["started", Int32Array],
   // redevelopment (develop.js): the stage a building is in (0 standing, 2 tenants on notice, 3 coming down, 4 going up), progress in
@@ -39,7 +40,7 @@ export class World {
     this.land = new Uint8Array(CELLS); this.height = new Int32Array(CELLS); this.water = new Uint8Array(CELLS); this.road = new Uint8Array(CELLS);
     this.hood = new Uint8Array(CELLS); this.bldOf = new Int32Array(CELLS).fill(-1); this.landValue = new Int32Array(CELLS); this.tree = new Uint8Array(CELLS);
     this.cond = new Uint16Array(CELLS).fill(900);                                   // road condition
-    this.buildings = new Slots(8192, BUILDING_SPEC); this.dwellings = new Slots(12288, DWELLING_SPEC); this.spaces = new Slots(4096, SPACE_SPEC);
+    this.buildings = new Slots(SCALE.buildings, BUILDING_SPEC); this.dwellings = new Slots(SCALE.dwellings, DWELLING_SPEC); this.spaces = new Slots(SCALE.spaces, SPACE_SPEC);
     this.shore = new Int16Array(N); this.rev = 0;                                   // rev: bumped whenever a building comes down or goes up
     this.makeGround(); this.makeStreets(); this.makeDistricts(); this.makeParcels(); this.makeRoutes(); this.valueLand();
   }
@@ -200,14 +201,14 @@ export class World {
     this.stopNear = new Int32Array(CELLS).fill(-1);
     for (let c = 0; c < CELLS; c++) {
       if (this.water[c]) continue; let best = -1, bd = 7;
-      for (const r of this.routes) for (const st of r.stops) { const d = Math.max(Math.abs((st & 127) - (c & 127)), Math.abs((st >> 7) - (c >> 7))); if (d < bd) { bd = d; best = st; } }
+      for (const r of this.routes) for (const st of r.stops) { const d = Math.max(Math.abs((st & NMASK) - (c & NMASK)), Math.abs((st >> NSHIFT) - (c >> NSHIFT))); if (d < bd) { bd = d; best = st; } }
       this.stopNear[c] = best;
     }
   }
   // land value, dollars per square metre in cents: downtown, the water, parks and the hills' views
   valueLand() {
     const pk = new Uint8Array(CELLS);
-    for (let c = 0; c < CELLS; c++) if (this.land[c] === L.park) for (let dy = -3; dy <= 3; dy++) for (let dx = -3; dx <= 3; dx++) { const x = (c & 127) + dx, y = (c >> 7) + dy; if (inside(x, y)) pk[cellOf(x, y)] = 1; }
+    for (let c = 0; c < CELLS; c++) if (this.land[c] === L.park) for (let dy = -3; dy <= 3; dy++) for (let dx = -3; dx <= 3; dx++) { const x = (c & NMASK) + dx, y = (c >> NSHIFT) + dy; if (inside(x, y)) pk[cellOf(x, y)] = 1; }
     for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
       const c = cellOf(x, y); if (this.water[c]) continue;
       const dd = Math.abs(x - 26) + Math.abs(y - 62), shoreD = x - this.shore[y];

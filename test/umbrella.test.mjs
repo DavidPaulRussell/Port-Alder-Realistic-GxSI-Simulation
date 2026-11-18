@@ -45,7 +45,7 @@ check('the corpus is cited by title and entry, not copied', typeof CORPUS.title 
 
 // 3. no random numbers, no clocks in the state, no hashing outside core.js
 {
-  const SIM = ['books', 'citydata', 'city', 'civic', 'core', 'develop', 'economy', 'finance', 'health', 'housing', 'kpis', 'laws', 'motion', 'movement', 'movement_data', 'nation', 'payroll', 'people', 'periphery', 'registry', 'rules', 'snapshot', 'tables', 'variables', 'welfare', 'world'];
+  const SIM = ['books', 'citydata', 'city', 'civic', 'core', 'develop', 'economy', 'finance', 'health', 'housing', 'kpis', 'laws', 'motion', 'movement', 'movement_data', 'nation', 'payroll', 'people', 'periphery', 'registry', 'rules', 'scale', 'snapshot', 'tables', 'variables', 'welfare', 'world'];
   const offenders = [], clocks = [], hashes = [];
   for (const m of SIM) {
     const s = readFileSync(new URL(`../src/${m}.js`, import.meta.url), 'utf8').replace(/\/\/[^\n]*/g, '');

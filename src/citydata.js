@@ -3,10 +3,11 @@
 // Prices and wages are 2026 cents and are the city's own calibration (illustrative), anchored to the
 // Washington average weekly wage; statutes live in rules.js.
 import { BO } from "./rules.js";
+import { N, CELLS } from "./scale.js";
 
 export const CITY_NAME = "Port Alder";
-export const CELL_M = 20;                        // one map cell is 20 m; the city is 128 x 128 cells (2.56 km)
-export const N = 128, CELLS = N * N;
+export const CELL_M = 20;                        // one map cell is 20 m (the one-in-ten city is 128 x 128 cells, 2.56 km)
+export { N, CELLS };
 
 /* ------------------------------------------------------------------ household spending */
 // unit: what one unit buys, base: 2026 price of a unit in cents, tax: share of sales taxable (ppm)

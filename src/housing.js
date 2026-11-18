@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 import { ppm, mulDiv, divRound, rentCap, RENT_NOTICE_DAYS } from "./rules.js";
 import { B as BK, SECTORS, S as SK } from "./citydata.js";
+import { NSHIFT, NMASK } from "./scale.js";
 import { AC, K, E_H0, E_F0, E_B0, E_CITY, E_ROW, E_STATE, E_FEDGOV } from "./books.js";
 import { sat, admitE1, trustScore, priorTrust, tickTrust, F_RUNNING, F_FAULT } from "./core.js";
 import { lif } from "./laws.js";
@@ -44,7 +45,7 @@ function bestHome(c, inc, size, wc, maxRent) {
     if (D.hh[d] >= 0 || D.forSale[d] || !LETS(D.owner[d]) || W.buildings.stage[D.bld[d]]) continue;
     if (D.afford[d] && inc > (c.gov.affordLimit || 0)) continue;                              // income-restricted homes go to those who qualify
     const r = D.rent[d]; if (r > maxRent) continue;
-    const fc = W.frontCell(D.bld[d]), dd = wc >= 0 ? Math.abs((fc & 127) - (wc & 127)) + Math.abs((fc >> 7) - (wc >> 7)) : 20;
+    const fc = W.frontCell(D.bld[d]), dd = wc >= 0 ? Math.abs((fc & NMASK) - (wc & NMASK)) + Math.abs((fc >> NSHIFT) - (wc >> NSHIFT)) : 20;
     const sc = -(r / 1000) - dd * 8 + Math.min(D.rooms[d], size) * 60 + c.vital[fc * 8] * 4 - c.vital[fc * 8 + 7] * 10;
     if (sc > bs) { bs = sc; best = d; }
   }

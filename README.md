@@ -1,4 +1,4 @@
-# Port Alder 1.3.0
+# Port Alder 1.3.1
 
 A sentient, deterministic city on the Plume XPU, modelled on Everett, Washington.
 
@@ -38,12 +38,12 @@ ballot; redevelopment; the law book; the umbrella of variables; interventions; a
 digest, the save). A save holds the configuration, the interventions and the digest chain, and replays to the
 same digests.
 
-To put it on GitHub as one repository:
+The repository is https://github.com/DavidPaulRussell/Port-Alder-Realistic-GxSI-Simulation. To start one of your own:
 
     git init
     git config core.hooksPath tools/git-hooks      # the size gatekeeper runs before every commit
     git add -A
-    git commit -m "Port Alder 1.3.0"
+    git commit -m "Port Alder 1.3.1"
 
 The repository is about ten megabytes, far under GitHub's 25 MB per file and 1 GB per repository
 (`python3 tools/check_github_limits.py` checks; every tool that writes a layer file refuses to pass 24 MB).
@@ -114,7 +114,7 @@ constrained, CC BY 4.0. `tools/pop_extract.py` cuts the tables out of the raster
 
 ## The layer files
 
-Each layer of the Matryoshka is one EDHX container (`layers/*.edhx`, format EDHX/1 by David Paul Russell):
+Each layer of the Matryoshka is one EDHX container (`layers/*.edhx`, format EDHX/1 by Russell Philip Smithson):
 
 | File | Holds |
 |---|---|
@@ -159,6 +159,7 @@ tax credit bonus) and its citizens vote in November; the state's voters decide i
 | `src/registry.js` | Social Information Numbers |
 | `src/kpis.js` | the measures |
 | `src/variables.js` | the umbrella of variables |
+| `src/scale.js` | the size of the city (the one-in-ten city, or any other; see `docs/STAGE2.md`) |
 | `src/movement.js`, `movement_data.js` | the movement matrix and its measured geography |
 | `src/snapshot.js` | an exact snapshot of a running city, and its restoration |
 | `src/edhx.js` | EDHX/1 in JavaScript: pages, frames, records, SHA-512 |
@@ -173,14 +174,19 @@ tax credit bonus) and its citizens vote in November; the state's voters decide i
 
 Build: `./build.sh` (clang for the Wasm XPU, Python 3.10+ for the bundle; Node and Playwright only for the
 developer checks). After a change to `src/`, `node tools/make_layers.mjs` puts the new engine into `layers/city.edhx`.
-Tests: `node test/city.test.mjs`, `node test/umbrella.test.mjs`, `node test/edhx.test.mjs`, `node test/xpu.test.mjs`,
-`node test/simmy.test.mjs`, `node test/russ.test.mjs`.
+Tests: `node test/city.test.mjs`, `node test/umbrella.test.mjs`, `node test/edhx.test.mjs`, `node test/scale.test.mjs`, `node test/xpu.test.mjs`,
+`node test/simmy.test.mjs`, `node test/russ.test.mjs`. (The XPU and R-file tests compare against NumPy references,
+which `python3 test/ref_numpy.py` writes into `test/`; the tests run it themselves when the references are missing.)
 
 ## Licence
 
-GPL-3.0-only, as the source files state. *Corpus Compendium on Rails* is © its author; Port Alder cites its
-entries and implements equations only. The EDHX format and the runtime inside each `.edhx` file are David Paul
-Russell's (EDHX 1.0.0). The loading sequence in `loader/everett/` is his as well.
+Copyright (C) 2026 Russell Philip Smithson. Licensed under the GNU General Public License, version 3 only
+(`LICENSE`); `COPYRIGHT` says what the copyright covers and `NOTICE` lists what is under other terms. Keep all three
+with any copy.
+
+*Corpus Compendium on Rails* is a separate work of the same author under its own licence; Port Alder cites its
+entries and implements equations only. The EDHX format and the runtime inside each `.edhx` file (EDHX 1.0.0) are
+also a separate work of his, included unmodified so the files can be read and written.
 
 Data: population counts from WorldPop (www.worldpop.org), R2025A v1, CC BY 4.0 (derived tables only). The
 full-scale map's sources, fetched by `tools/map_fetch.py` on your own machine, are © OpenStreetMap contributors

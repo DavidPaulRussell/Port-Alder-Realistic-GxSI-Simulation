@@ -35,7 +35,11 @@ export class Slots {
     this.alive[i] = 1; this.count++; return i;
   }
   release(i) { if (!this.alive[i]) return; this.alive[i] = 0; this.free.push(i); this.count--; }
-  *each() { for (let i = 0; i < this.top; i++) if (this.alive[i]) yield i; }
+  // the rows in use, in order (a plain iterator: the tables are walked millions of times a day, and a generator is slow)
+  each() {
+    const t = this, alive = this.alive, r = { value: 0, done: false }; let i = -1;
+    return { [Symbol.iterator]() { return this; }, next() { while (++i < t.top) if (alive[i]) { r.value = i; return r; } r.value = undefined; r.done = true; return r; } };
+  }
   bytes() {
     const parts = this.spec.map(([k, , w]) => new Uint8Array(this[k].buffer, 0, this.top * (w || 1) * this[k].BYTES_PER_ELEMENT));
     const head = new Uint32Array([this.top, this.count, ...this.free]);

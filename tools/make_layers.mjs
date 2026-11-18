@@ -70,7 +70,8 @@ const lawRecord = (id) => { const L = C.LAWS[id]; return { id, title: L.title, c
 const layers = [];
 const layer = (key, name, level) => { const L = { key, name, level, records: [] }; layers.push(L); return L; };
 const put = (L, key, bytes, type, tags = []) => L.records.push({ key, bytes: Buffer.from(bytes), type, tags });
-const about = (L, extra) => put(L, 'layer/about', json({ format: 'PLUME-LAYER/1', layer: L.key, name: L.name, level: L.level, simulation: 'Port Alder ' + C.CITY_VERSION, basis: PER.LAYERS[L.level].basis,
+// (only the city's file names the engine's version: the outer layers' files change when their own records do)
+const about = (L, extra) => put(L, 'layer/about', json({ format: 'PLUME-LAYER/1', layer: L.key, name: L.name, level: L.level, ...(L.level === 0 ? { simulation: 'Port Alder ' + C.CITY_VERSION } : {}), basis: PER.LAYERS[L.level].basis,
   people: PER.LAYERS[L.level].pop, ...extra }), 'json', ['layer']);
 const lawsInto = (L, ids) => { put(L, 'laws/index', json({ corpus: C.CORPUS, laws: ids.map((id) => [id, C.LAWS[id].title]) }), 'json', ['law']); for (const id of ids) put(L, 'laws/' + id, json(lawRecord(id)), 'json', ['law']); };
 const variablesInto = (L, groups) => { for (const [specName, group] of Object.entries(VARS.TABLE_GROUPS)) if (groups.includes(group) && SPECS[specName]) put(L, 'variables/' + group, json({ table: group, fields: specOf(SPECS[specName]), how: VARS.VARIABLES[group] || [] }), 'json', ['variable']); };
@@ -165,7 +166,7 @@ for (const L of layers) {
   rebuilt.push(L.key); if (!opt('runtime', '')) runtime = file;
 }
 // the layers are nested: each is entangled with the one that holds it (their joint SHA-512 is in both)
-if (rebuilt.length) for (let k = 0; k + 1 < layers.length; k++) { const a = join(OUT, layers[k].key + '.edhx'), b = join(OUT, layers[k + 1].key + '.edhx'); JSON.parse(py(['entangle', a, b, '--ceiling', String(CEILING)])); }
+for (let k = 0; k + 1 < layers.length; k++) { if (!rebuilt.includes(layers[k].key) && !rebuilt.includes(layers[k + 1].key)) continue; const a = join(OUT, layers[k].key + '.edhx'), b = join(OUT, layers[k + 1].key + '.edhx'); JSON.parse(py(['entangle', a, b, '--ceiling', String(CEILING)])); }
 let total = 0;
 for (const L of layers) {
   const file = join(OUT, L.key + '.edhx'), v = JSON.parse(py(['verify', file])), size = statSync(file).size; total += size;

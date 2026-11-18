@@ -162,6 +162,11 @@ def main(argv):
     if cmd == "entangle":
         Container = load_runtime(runtime_zip(opts.get("runtime", args[1])))
         a, b = Container.open(args[1]), Container.open(args[2])
+        # a file that was rebuilt is a new container: what its neighbour held of the old one is dropped first
+        for me, other in ((a, b), (b, a)):
+            hint = os.path.basename(other.path)
+            for k in [k for k, e in me.state["entanglements"].items() if e.get("kind") == "edhx-peer" and e.get("path_hint") == hint]:
+                del me.state["entanglements"][k]
         r = a.entangle_peer(b)
         check_size(args[1], ceiling)
         check_size(args[2], ceiling)

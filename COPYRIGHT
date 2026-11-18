@@ -1,0 +1,62 @@
+COPYRIGHT (C) 2026 RUSSELL PHILIP SMITHSON.
+
+Port Alder: a realistic GxSI simulation
+A sentient, deterministic city on the Plume XPU, modelled on Everett,
+Washington, inside its county, state and nation
+
+Copyright (C) 2026 Russell Philip Smithson.
+Repository: https://github.com/DavidPaulRussell/Port-Alder-Realistic-GxSI-Simulation
+
+Licensed under the GNU General Public License, version 3 only (see LICENSE).
+
+
+SCOPE OF THE CLAIM
+
+Copyright is claimed in the original authorship contained in this
+repository, namely:
+
+  1. The source code of the simulation, its pages, its tools and its tests
+     (src/, tools/, test/, host/, the build and start scripts), and the
+     pages built from it (web/, dist/).
+
+  2. The documentation as written: README.md, CHANGELOG.md and docs/.
+
+  3. The selection, coordination and arrangement of the simulation's
+     tables, rules, variables and laws, and the layer files built from
+     them (layers/), to the extent they are original.
+
+  4. The loading sequence in loader/everett/: its director program, its
+     configuration, its site survey and the cartridge built from them.
+
+
+MATERIAL NOT CLAIMED
+
+No claim is made in, and nothing in this repository restricts the use of:
+
+  - mathematical and scientific facts, equations, laws, constants,
+    theorems, algorithms, methods, concepts or ideas, including the laws
+    the simulation implements (see 17 U.S.C. Sec. 102(b));
+
+  - statutes, regulations, tax and benefit rules, rates, thresholds and
+    published statistics of governments and public agencies, which the
+    simulation restates as facts;
+
+  - the names of places, people, laws, programs, products, companies,
+    agencies, software and standards, which identify their originators or
+    owners (see NOTICE);
+
+  - any third-party material, including the data and works listed in
+    NOTICE, or any material generated without human authorship.
+
+
+FILES COVERED
+
+Every file in this repository, except where NOTICE says a file or a part
+of a file is under other terms or belongs to someone else.
+
+
+NOTICES TO KEEP
+
+Anyone who conveys this program, or a work based on it, must keep the
+copyright line at the top of this file, the LICENSE file and the NOTICE
+file with it, as sections 4 and 5 of the License require.

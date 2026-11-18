@@ -1,6 +1,6 @@
 // Run Port Alder headless in Node for a number of days and print what happens: each month's measures for the city
 // and its three outer layers, the books' audits, the events, and which laws of the law book ran.
-// usage: node tools/run_city.mjs [days] [seed] [--events]
+// usage: node tools/run_city.mjs [days] [seed] [--events]      (PLUME_SCALE=full, or sizes as JSON, runs another size)
 // SPDX-License-Identifier: GPL-3.0-only
 import { readFileSync } from 'node:fs';
 import { createWasm1T } from '../src/engines.js';

@@ -10,6 +10,8 @@
 // Nothing here draws, hashes or reads a clock. Sharing is kept: two names for one object are two names for one object
 // after the restore. Maps and sets keep their order. What the configuration alone determines (the Simmy replay, the
 // compiled law, the policy lattice) is not stored.
+import { SCALE } from "./scale.js";
+
 export const SNAP_FORMAT = "PLUME-CITY-STATE/1";
 const TYPED = { Int8Array, Uint8Array, Uint8ClampedArray, Int16Array, Uint16Array, Int32Array, Uint32Array, Float32Array, Float64Array, BigInt64Array, BigUint64Array };
 // what the configuration alone determines, by where it hangs
@@ -68,7 +70,7 @@ export function snapshot(city) {
     return tag(out);
   };
   const tree = enc(city, true);
-  return { format: SNAP_FORMAT, cfg: encPlain(city.cfg), tree, blobs };
+  return { format: SNAP_FORMAT, cfg: encPlain(city.cfg), scale: { ...SCALE }, tree, blobs };
 }
 
 // put a snapshot back into a city founded from the same configuration
@@ -120,6 +122,7 @@ export function restore(city, snap) {
   };
   const tree = snap.tree;
   if (JSON.stringify(snap.cfg) !== JSON.stringify(encPlain(city.cfg))) throw new Error("restore: the snapshot was taken from a city of another configuration");
+  if (snap.scale && JSON.stringify(snap.scale) !== JSON.stringify({ ...SCALE })) throw new Error(`restore: the snapshot was taken from a city of another size (${snap.scale.name}); this one is ${SCALE.name}`);
   if (tree.$id) made.set(tree.$id, city);
   // the top level: every stored field back in its place; what the configuration determines stays as founded
   const liveKeys = Object.keys(city).filter((k) => typeof city[k] !== "function" && !SKIP_TOP.has(k));
@@ -138,7 +141,7 @@ function encPlain(v) {
 // One file's worth of bytes: the tree as JSON and the blobs, behind a small header.
 //   "PLUMESNP" | u32 version | u32 tree length | tree (UTF-8 JSON) | u32 blob count | (u32 length | bytes)*
 export function snapshotBytes(snap) {
-  const tree = new TextEncoder().encode(JSON.stringify({ cfg: snap.cfg, tree: snap.tree })); let n = 8 + 4 + 4 + tree.length + 4; for (const b of snap.blobs) n += 4 + b.length;
+  const tree = new TextEncoder().encode(JSON.stringify({ cfg: snap.cfg, scale: snap.scale, tree: snap.tree })); let n = 8 + 4 + 4 + tree.length + 4; for (const b of snap.blobs) n += 4 + b.length;
   const out = new Uint8Array(n), dv = new DataView(out.buffer); let o = 0;
   out.set(new TextEncoder().encode("PLUMESNP"), 0); o = 8; dv.setUint32(o, 1, true); o += 4; dv.setUint32(o, tree.length, true); o += 4; out.set(tree, o); o += tree.length;
   dv.setUint32(o, snap.blobs.length, true); o += 4; for (const b of snap.blobs) { dv.setUint32(o, b.length, true); o += 4; out.set(b, o); o += b.length; }
@@ -150,5 +153,5 @@ export function snapshotFromBytes(bytes) {
   const tl = dv.getUint32(o, true); o += 4; const head = JSON.parse(new TextDecoder().decode(bytes.subarray(o, o + tl))); o += tl;
   const nb = dv.getUint32(o, true); o += 4; const blobs = []; for (let k = 0; k < nb; k++) { const l = dv.getUint32(o, true); o += 4; blobs.push(bytes.subarray(o, o + l)); o += l; }
   if (o !== bytes.length) throw new Error("the city snapshot has trailing bytes");
-  return { format: SNAP_FORMAT, cfg: head.cfg, tree: head.tree, blobs };
+  return { format: SNAP_FORMAT, cfg: head.cfg, scale: head.scale, tree: head.tree, blobs };
 }

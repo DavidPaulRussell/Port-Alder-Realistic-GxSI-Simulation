@@ -4,6 +4,7 @@
 // noise, and the day's light.
 // SPDX-License-Identifier: GPL-3.0-only
 import { NEIGHBOURHOODS, LAND, L } from "./citydata.js";
+import { N, NSHIFT, NMASK } from "./scale.js";
 import { AC, E_H0, E_F0, E_B0, E_CITY, E_ROW } from "./books.js";
 import { expectation, gini, dissimilarity, entropy, kl, mad, unionSize, stochastic, betti, connectivity, centrality, deflate, dbAdd, dbAt, sun, julian, beerLambert, okun, dijkstra, continuity, greenshields } from "./laws.js";
 import { ageYears, members, friendOf } from "./people.js";
@@ -34,7 +35,7 @@ export function measureMonth(c) {
   const gi = [], gmap = new Map(); for (let x = 0; x < adj.length; x++) if (comp[x] === best) { gmap.set(x, gi.length); gi.push(x); }
   c.cohesion = gi.length > 2 && gi.length < 20000 ? connectivity(gi.map((x) => adj[x].filter((y) => gmap.has(y)).map((y) => gmap.get(y)))) : 0; c.giant = bestN;
   // jobs as masses for the access potential; comparable rents per room for asking rents
-  c.jobMasses = []; for (const f of F.each()) if (F.status[f] === 0 && F.staff[f] > 0) { const cell = c.firmCell(f); if (cell >= 0) c.jobMasses.push([cell & 127, cell >> 7, F.staff[f]]); }
+  c.jobMasses = []; for (const f of F.each()) if (F.status[f] === 0 && F.staff[f] > 0) { const cell = c.firmCell(f); if (cell >= 0) c.jobMasses.push([cell & NMASK, cell >> NSHIFT, F.staff[f]]); }
   c.rentComps = []; for (const d of D.each()) if (D.hh[d] >= 0 && D.rent[d] && D.rooms[d] && !D.afford[d]) { const b = D.bld[d]; c.rentComps.push([T.x[b], T.y[b], D.rent[d] / D.rooms[d]]); if (c.rentComps.length > 2500) break; }
   // street noise at each building: traffic on the street in front, heavier on arterials (laws 31.17 and 31.18)
   const noise = new Int16Array(T.top);
@@ -48,7 +49,7 @@ export function measureMonth(c) {
   // slows it (Greenshields); Dijkstra's algorithm gives every cell its time from the centre (law 58.36)
   const N2 = W.land.length, speed = new Float32Array(N2);
   for (let x = 0; x < N2; x++) { if (!W.road[x]) continue; const rho = continuity(0, c.vital[x * 8 + 6] * 8 + c.vital[x * 8 + 3] * 5, 0, 1); speed[x] = greenshields(W.road[x] === 2 ? 13.9 : 8.3, rho, 120); }
-  const centre = c.gov.cityCell ?? (64 * 128 + 64), dist = dijkstra(N2, centre, (u, visit) => { const ux = u & 127, uy = u >> 7; for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const vx = ux + dx, vy = uy + dy; if (vx < 0 || vy < 0 || vx > 127 || vy > 127) continue; const v = (vy << 7) | vx; if (!W.road[v] && !W.road[u]) continue; visit(v, 20 / Math.max(1.4, (speed[u] || 1.4) + (speed[v] || 1.4)) * 2); } });
+  const centre = c.gov.cityCell ?? ((N >> 1) * N + (N >> 1)), dist = dijkstra(N2, centre, (u, visit) => { const ux = u & NMASK, uy = u >> NSHIFT; for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const vx = ux + dx, vy = uy + dy; if (vx < 0 || vy < 0 || vx > N - 1 || vy > N - 1) continue; const v = (vy << NSHIFT) | vx; if (!W.road[v] && !W.road[u]) continue; visit(v, 20 / Math.max(1.4, (speed[u] || 1.4) + (speed[v] || 1.4)) * 2); } });
   let tsum = 0, tn = 0; for (const h of c.hh.each()) { const hd = c.hh.home[h]; if (hd < 0) continue; const t = dist[W.frontCell(D.bld[hd])]; if (Number.isFinite(t)) { tsum += t; tn++; } }
   c.travelToCentre = tn ? Math.round(tsum / tn / 60 * 10) / 10 : 0;
   c.noiseAt = (h) => { const hd = c.hh.home[h]; if (hd < 0 || !c.noise) return 0; const L = c.noise[D.bld[hd]] || 0; return Math.max(0, L - 55) * 3; };
@@ -106,7 +107,7 @@ export function cityBoard(c) {
   // the city's land, streets and social fabric
   const landCount = new Array(LAND.length).fill(0); for (let x = 0; x < W.land.length; x++) landCount[W.land[x]]++;
   const roadEdges = [], roadId = new Int32Array(W.land.length).fill(-1); let rn = 0; for (let x = 0; x < W.land.length; x++) if (W.road[x]) roadId[x] = rn++;
-  for (let x = 0; x < W.land.length; x++) { if (roadId[x] < 0) continue; const cx = x & 127, cy = x >> 7; if (cx < 127 && roadId[x + 1] >= 0) roadEdges.push([roadId[x], roadId[x + 1]]); if (cy < 127 && roadId[x + 128] >= 0) roadEdges.push([roadId[x], roadId[x + 128]]); }
+  for (let x = 0; x < W.land.length; x++) { if (roadId[x] < 0) continue; const cx = x & NMASK, cy = x >> NSHIFT; if (cx < N - 1 && roadId[x + 1] >= 0) roadEdges.push([roadId[x], roadId[x + 1]]); if (cy < N - 1 && roadId[x + N] >= 0) roadEdges.push([roadId[x], roadId[x + N]]); }
   const bt = betti(rn, roadEdges);
   const fabric = { landMix: Math.round(entropy(landCount.filter((_, k) => k !== L.water && k !== L.road)) * 1000) / 1000, streetComponents: bt.b0, streetLoops: bt.b1, cohesion: Math.round((c.cohesion || 0) * 10000) / 10000, connected: c.giant || 0,
     trustCity: [0, 1, 2, 3].map((lv) => { let m = 0; for (const i of P.each()) if (P.tcLv[i] === lv) m++; return Math.round((m * 1000) / n); }) };

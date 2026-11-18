@@ -3,6 +3,15 @@ import { Worker } from 'node:worker_threads';
 import os from 'node:os';
 import { compile, referenceRun, BF1_SOURCE, BF2_SOURCE, LcufaDiagnostic } from '../src/lcufa.js';
 import { createWasm1T, createWasmMT, createWasm1TWorker } from '../src/engines.js';
+import { existsSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+// the NumPy references (test/*.bin) are written locally, not kept in the repository: make them if they are missing
+if (!existsSync(new URL('in.bin', import.meta.url))) {
+  let made = false;
+  for (const exe of [process.env.PYTHON, 'python3', 'python'].filter(Boolean)) { try { execFileSync(exe, ['test/ref_numpy.py'], { cwd: fileURLToPath(new URL('..', import.meta.url)), stdio: 'ignore' }); made = existsSync(new URL('in.bin', import.meta.url)); if (made) break; } catch { /* try the next */ } }
+  if (!made) { console.log('SKIP  the NumPy references are not here: run "python3 test/ref_numpy.py" from the repository folder (it needs numpy)'); process.exit(0); }
+}
 const rd = (f) => new Uint32Array(readFileSync(new URL(f, import.meta.url)).buffer.slice(0));
 const eq = (a, b) => a.length === b.length && a.every((v, i) => v === b[i]);
 let pass = 0, fail = 0; const check = (n, ok, info = '') => { ok ? pass++ : fail++; console.log(`${ok ? 'PASS' : 'FAIL'}  ${n} ${info}`); };
