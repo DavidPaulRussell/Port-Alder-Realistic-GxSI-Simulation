@@ -165,7 +165,8 @@ void main() {
 
 /* ------------------------------------------------------------------ the real roads: ribbons along their centre lines */
 // a_road: how far across the road (-1 at one edge, 1 at the other; beyond that, the side of a bridge's deck), how
-// far along it in metres, and its kind (0 motorway, 1 highway, 2 and 3 main roads, 4 a road between neighbourhoods; 16 more: a ramp)
+// far along it in metres, and its kind (0 motorway, 1 highway, 2 and 3 main roads, 4 a road between neighbourhoods; 16 more: a
+// ramp; 32 more: one carriageway of a divided road, drawn in its direction of travel)
 export const ROAD_VS = HEAD + `
 in vec3 a_pos; in vec3 a_road;
 uniform mat4 u_VP;
@@ -176,11 +177,17 @@ in vec3 v_wp; in vec3 v_road; out vec4 o;
 float dash(float along, float len) { return step(0.5, fract(along / len)); }
 float stripe(float x, float at, float w) { return step(abs(x - at), w); }
 void main() {
-  int code = int(v_road.z + 0.5), cls = code & 7; bool ramp = (code & 16) != 0;
-  float hw = ramp ? 3.5 : cls == 0 ? 12.0 : cls == 1 ? 10.0 : cls == 2 ? 6.5 : cls == 3 ? 5.5 : 4.5;
+  int code = int(v_road.z + 0.5), cls = code & 7; bool ramp = (code & 16) != 0, one = (code & 32) != 0;
+  float hw = ramp ? 3.5 : one ? (cls == 0 ? 5.8 : cls == 1 ? 4.3 : cls == 2 ? 3.6 : cls == 3 ? 3.4 : 3.0) : cls == 0 ? 12.0 : cls == 1 ? 10.0 : cls == 2 ? 6.5 : cls == 3 ? 5.5 : 4.5;
   float x = v_road.x * hw, ax = abs(x), s = v_road.y; int m = 0; vec3 tint = vec3(0.86); float white = 0.0, yellow = 0.0, spec = 0.06;
   if (abs(v_road.x) > 1.02) { m = 10; tint = vec3(0.75); }                         // the side of a deck
   else if (ramp) white = stripe(ax, hw - 0.45, 0.07);
+  else if (one) {
+    // one carriageway of a divided road: a yellow line on its left, a white line on its right, its lanes between
+    int lanes = cls == 0 ? 3 : cls <= 3 ? 2 : 1; float lane = (2.0 * hw - 2.0) / float(lanes);
+    yellow = stripe(x, -hw + 0.55, 0.07); white = stripe(x, hw - 0.55, 0.07);
+    for (int k = 1; k < 3 + u_keepLoops; k++) if (k < lanes) white = max(white, stripe(x, -hw + 1.0 + lane * float(k), 0.06) * dash(s, 12.0));
+  }
   else if (cls <= 1) {
     // a freeway: two carriageways about a median with its barrier, a yellow line inside, a white line outside, lanes between
     float med = cls == 0 ? 1.0 : 0.8, lane = 3.2; int lanes = cls == 0 ? 3 : 2;

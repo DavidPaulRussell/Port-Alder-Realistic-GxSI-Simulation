@@ -52,8 +52,8 @@ function reHeight(src, S, D) {
 function linesIn(list, size, times) {
   const Wd = GROUND.world, lonSpan = Wd.east - Wd.west, latSpan = Wd.north - Wd.south, per = size / times, off = ((Wd.times - times) / 2) * per;
   const sx = (Wd.unit / lonSpan) * Wd.times * per, sy = (Wd.unit / latSpan) * Wd.times * per;
-  // (a line's class is its low three bits; 8 more marks a bridge, 16 more a ramp)
-  return list.map(([code, d]) => { const pts = new Float32Array(d.length); let X = 0, Y = 0; for (let i = 0; i < d.length; i += 2) { X += d[i]; Y += d[i + 1]; pts[i] = X * sx - off; pts[i + 1] = Y * sy - off; } return [code & 7, pts, (code & 8) !== 0, (code & 16) !== 0]; });
+  // (a line's class is its low three bits; 8 more marks a bridge, 16 more a ramp, 32 more a one-way road, drawn in its direction)
+  return list.map(([code, d]) => { const pts = new Float32Array(d.length); let X = 0, Y = 0; for (let i = 0; i < d.length; i += 2) { X += d[i]; Y += d[i + 1]; pts[i] = X * sx - off; pts[i + 1] = Y * sy - off; } return [code & 7, pts, (code & 8) !== 0, (code & 16) !== 0, (code & 32) !== 0]; });
 }
 // every cell of a grid `size` across that a line passes through, in order (no gaps: corners are stepped round)
 export function walkLine(pts, size, each) {
@@ -62,6 +62,20 @@ export function walkLine(pts, size, each) {
     const ax = pts[i], ay = pts[i + 1], bx = pts[i + 2], by = pts[i + 3], n = Math.max(1, Math.ceil(Math.max(Math.abs(bx - ax), Math.abs(by - ay)) * 2));
     for (let k = 0; k <= n; k++) { const x = Math.floor(ax + ((bx - ax) * k) / n), y = Math.floor(ay + ((by - ay) * k) / n); if (x === px && y === py) continue; if (px !== -9 && x !== px && y !== py && inside(px, y)) each(px, y); px = x; py = y; if (inside(x, y)) each(x, y); }
   }
+}
+
+// a place on the real ground (latitude, longitude) in the map's cells, as fractions; null off the map
+export function placeCell(lat, lon) { const T = GROUND.pop, x = ((lon - T.west) / (T.cols * T.dLon)) * N, y = ((T.north - lat) / (T.rows * T.dLat)) * N; return x >= 0 && y >= 0 && x < N && y < N ? [x, y] : null; }
+
+// the public traffic cameras on the map: what each looks at, its live picture's address, where it stands in the map's
+// cells, and (from its title, "I-5 at MP 192.6: 41st St") the number of its road and its milepost, which is how a
+// flow sensor on the same road finds the camera it stands beside (route -1, milepost NaN where the title names none)
+export function mapCameras() {
+  const Wd = GROUND.world;
+  return (GROUND.cameras || []).map(([title, url, dir, X, Y]) => {
+    const p = placeCell(Wd.north - Y * Wd.unit, Wd.west + X * Wd.unit), m = /^(?:I-|US |SR )\s*(\d+)\b(?:.*?\bMP\s*(\d+(?:\.\d+)?))?/.exec(title);
+    return p ? { title, url, dir, x: p[0], y: p[1], route: m ? Number(m[1]) : -1, mp: m && m[2] !== undefined ? Number(m[2]) : NaN } : null;
+  }).filter(Boolean);
 }
 
 export function layGround() {

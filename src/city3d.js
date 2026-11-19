@@ -12,7 +12,7 @@ import { Perf } from "./perf.js";
 import { CITY_PROGRAMS, LIGHTS_W, LIGHTS_H } from "./city3d_shaders.js";
 import { N, CELL_M, MATERIALS, SECTORS, B as BK, L as LAND } from "./citydata.js";
 import { SCALE, NSHIFT, NMASK } from "./scale.js";
-import { layWorld, walkLine, KIND } from "./ground.js";
+import { layWorld, walkLine, placeCell, mapCameras, KIND } from "./ground.js";
 import { E_F0, E_B0, E_CITY, E_SCHOOL, E_ROW } from "./books.js";
 import { dayInfo, DAY0 } from "./rules.js";
 import { along, sunAt, LAMP, tideAt } from "./motion.js";
@@ -21,7 +21,7 @@ import { along, sunAt, LAMP, tideAt } from "./motion.js";
 const weyl = (n, a = 0.6180339887498949) => (((n * a) % 1) + 1) % 1, look = (n) => Math.floor(weyl(n) * 4294967296) >>> 0;
 import { homeCell } from "./people.js";
 
-export const CITY3D_VERSION = "1.3.0";
+export const CITY3D_VERSION = "1.4.0";
 const WORLD = N * CELL_M, LAT = 47.6, LON = -122.6;
 // base colours of the 24 materials (linear), used in safe graphics and until the library is loaded
 const MAT_COL = [[0.05, 0.05, 0.055], [0.42, 0.41, 0.39], [0.36, 0.16, 0.10], [0.30, 0.29, 0.28], [0.10, 0.22, 0.05], [0.20, 0.14, 0.08], [0.62, 0.55, 0.42], [0.16, 0.11, 0.07],
@@ -178,7 +178,8 @@ export class City3D {
       if (shore) bed[c] = Math.max(bed[c], W.level[c] - 1.1);
     }
     // where a vehicle on a cell drives: the cell's middle, or on a real road the nearest point of its centre line (buildRoads)
-    this.snapX = new Float32Array(N * N); this.snapZ = new Float32Array(N * N); for (let c = 0; c < N * N; c++) { this.snapX[c] = ((c & NMASK) + 0.5) * CELL_M; this.snapZ[c] = ((c >> NSHIFT) + 0.5) * CELL_M; }
+    this.snapX = new Float32Array(N * N); this.snapZ = new Float32Array(N * N); this.snapT = new Float32Array(N * N * 3);      // snapT: the road's direction there (x, z) and its half-width
+    for (let c = 0; c < N * N; c++) { this.snapX[c] = ((c & NMASK) + 0.5) * CELL_M; this.snapZ[c] = ((c >> NSHIFT) + 0.5) * CELL_M; }
     this.landTex = texture(gl, N, N, { filter: gl.NEAREST, data: this.landData() });
     this.lightsData = new Uint8Array(LIGHTS_W * LIGHTS_H * 4); this.lightsTex = texture(gl, LIGHTS_W, LIGHTS_H, { filter: gl.NEAREST, data: this.lightsData });
     // the ground: a 257 x 257 grid, ten metres apart, heights smoothed from the cells
@@ -257,8 +258,9 @@ export class City3D {
     // the ground under a point and the level of the water there (none: far below), from the map's tables or the world's
     const earth = (x, z) => (inMap(x, z) ? read(this.bed, N, x / CELL_M, z / CELL_M) : read(hg, C, x / CELL_M + N, z / CELL_M + N));
     const level = (x, z) => { if (inMap(x, z)) { const c = (Math.floor(z / CELL_M) << NSHIFT) | Math.floor(x / CELL_M); return W.water[c] ? W.level[c] : -99; } const cx = Math.floor(x / CELL_M) + N, cz = Math.floor(z / CELL_M) + N; if (cx < 0 || cz < 0 || cx >= C || cz >= C) return -99; const k = A.kind[cz * C + cx]; return k >= 1 && k <= 3 ? lvl[cz * C + cx] : -99; };
-    for (const [cls, pts, bridge, ramp] of A.roads) {
-      const half = ramp ? 3.5 : HALF[cls], code = cls + (ramp ? 16 : 0), P = [];
+    this.runs = [];
+    for (const [cls, pts, bridge, ramp, oneway] of A.roads) {
+      const half = ramp ? 3.5 : oneway ? [5.8, 4.3, 3.6, 3.4, 3.0][cls] : HALF[cls], code = cls + (ramp ? 16 : 0) + (oneway ? 32 : 0), P = [];
       for (let i = 0; i + 1 < pts.length; i += 2) { const x = (pts[i] - N) * CELL_M, z = (pts[i + 1] - N) * CELL_M; if (P.length) { const [px, pz] = P[P.length - 1], n = Math.ceil(Math.hypot(x - px, z - pz) / 12); for (let k = 1; k < n; k++) P.push([px + ((x - px) * k) / n, pz + ((z - pz) * k) / n]); } P.push([x, z]); }
       if (P.length < 2) continue;
       const S = [0]; for (let i = 1; i < P.length; i++) S.push(S[i - 1] + Math.hypot(P[i][0] - P[i - 1][0], P[i][1] - P[i - 1][1]));
@@ -270,15 +272,30 @@ export class City3D {
         if (bridge) { const e = Math.min(1, Math.min(S[i], L - S[i]) / 45), rise = long ? 5 * e * e * (3 - 2 * e) : 0.5; yl = yr = Math.max(y0 + ((y1 - y0) * S[i]) / L, earth(x, z), level(x, z) + 1) + rise + lift; }
         else { const wl = level(x, z) + 0.8; yl = Math.max(earth(lx, lz), wl) + lift; yr = Math.max(earth(rx, rz), wl) + lift; }
         VP.push(lx, yl, lz, rx, yr, rz); VR.push(-1, S[i], code, 1, S[i], code);
-        if (inMap(x, z)) { const c = (Math.floor(z / CELL_M) << NSHIFT) | Math.floor(x / CELL_M), d = Math.hypot(x - ((c & NMASK) + 0.5) * CELL_M, z - ((c >> NSHIFT) + 0.5) * CELL_M); if (d < near[c]) { near[c] = d; this.snapX[c] = x; this.snapZ[c] = z; if (bridge) this.hgt[c] = Math.max(this.hgt[c], (yl + yr) / 2 - lift); } }
+        if (inMap(x, z)) { const c = (Math.floor(z / CELL_M) << NSHIFT) | Math.floor(x / CELL_M), d = Math.hypot(x - ((c & NMASK) + 0.5) * CELL_M, z - ((c >> NSHIFT) + 0.5) * CELL_M); if (d < near[c]) { near[c] = d; this.snapX[c] = x; this.snapZ[c] = z; this.snapT[c * 3] = nz; this.snapT[c * 3 + 1] = -nx; this.snapT[c * 3 + 2] = half; } this.hgt[c] = Math.max(this.hgt[c], (yl + yr) / 2 - 0.03); }
       }
       for (let i = 0; i + 1 < P.length; i++) { const a = first + i * 2; I.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
+      // the run the passing traffic drives on: the line at even steps, and its lanes (how far to the right of the line, which way)
+      if (L > 40 && P.some(([x, z]) => inMap(x, z))) {
+        const n = Math.max(2, Math.ceil(L / 10) + 1), X = new Float32Array(n), Z = new Float32Array(n); let k = 0, minx = 1e9, maxx = -1e9, minz = 1e9, maxz = -1e9;
+        for (let j = 0; j < n; j++) { const sj = (j * L) / (n - 1); while (k < P.length - 2 && S[k + 1] < sj) k++; const u = Math.max(0, Math.min(1, (sj - S[k]) / Math.max(1e-6, S[k + 1] - S[k]))); X[j] = P[k][0] + (P[k + 1][0] - P[k][0]) * u; Z[j] = P[k][1] + (P[k + 1][1] - P[k][1]) * u; if (X[j] < minx) minx = X[j]; if (X[j] > maxx) maxx = X[j]; if (Z[j] < minz) minz = Z[j]; if (Z[j] > maxz) maxz = Z[j]; }
+        const count = ramp || cls === 4 ? 1 : cls === 0 ? 3 : 2, lanes = [], most = Math.max(1, Math.ceil((L / 1000) * 110));          // (a lane's places for vehicles: one every 9 m, which is a standing queue)
+        if (oneway) { const w = (2 * half - 2) / count; for (let q = 0; q < count; q++) lanes.push({ off: -half + 1 + w * (q + 0.5), dir: 1, n: most, quick: 1 + 0.07 * (count - 1 - q) }); }
+        else { const base = cls === 0 ? 3.1 : cls === 1 ? 2.9 : cls === 2 ? 1.7 : cls === 3 ? 1.4 : ramp ? 1.6 : 2.1; for (let q = 0; q < count; q++) for (const dir of [1, -1]) lanes.push({ off: dir * (base + 3.1 * q), dir, n: most, quick: 1 + 0.07 * (count - 1 - q) }); }
+        this.runs.push({ cls: ramp ? 5 : cls, L, step: L / (n - 1), n, X, Z, minx, maxx, minz, maxz, lanes, obs: -1, id: this.runs.length });
+      }
       if (long) for (const side of [0, 1]) {                           // the sides of the deck
         const sf = VP.length / 3; for (let i = 0; i < P.length; i++) { const o = (first + i * 2 + side) * 3, u = side ? 1.1 : -1.1; VP.push(VP[o], VP[o + 1], VP[o + 2], VP[o], VP[o + 1] - 1.4, VP[o + 2]); VR.push(u, S[i], code, u, S[i], code); }
         for (let i = 0; i + 1 < P.length; i++) { const a = sf + i * 2; I.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
       }
     }
     this.roads = I.length ? { count: I.length, va: vao(gl, [[gl.getAttribLocation(this.P.road.p, "a_pos"), buffer(gl, new Float32Array(VP)), 3], [gl.getAttribLocation(this.P.road.p, "a_road"), buffer(gl, new Float32Array(VR)), 3]], buffer(gl, new Uint32Array(I), gl.ELEMENT_ARRAY_BUFFER)) } : null;
+    // The traffic cameras on the map, and the stretch of road each one watches: every point of a run takes the nearest
+    // camera of its own kind of road (freeway or main road) within about 1.3 km.
+    this.cams = mapCameras().map((k, i) => ({ ...k, i, sx: k.x * CELL_M, sz: k.y * CELL_M, level: -1, flow: null, kind: -1 }));
+    const kindOf = (cls) => (cls <= 1 || cls === 5 ? 0 : cls <= 3 ? 1 : 2);
+    for (const k of this.cams) { let bd = 150; for (const r of this.runs) { if (r.maxx < k.sx - 150 || r.minx > k.sx + 150 || r.maxz < k.sz - 150 || r.minz > k.sz + 150 || r.cls === 5) continue; for (let j = 0; j < r.n; j += 2) { const d = Math.hypot(r.X[j] - k.sx, r.Z[j] - k.sz) + (r.cls <= 1 ? 0 : 25); if (d < bd) { bd = d; k.kind = kindOf(r.cls); } } } }
+    for (const r of this.runs) { r.camAt = new Int16Array(r.n).fill(-1); r.watched = false; const g = kindOf(r.cls); if (g > 1) continue; for (let j = 0; j < r.n; j++) { let bd = 1300; for (const k of this.cams) { if (k.kind !== g) continue; const dx = r.X[j] - k.sx, dz = r.Z[j] - k.sz; if (Math.abs(dx) > bd || Math.abs(dz) > bd) continue; const d = Math.hypot(dx, dz); if (d < bd) { bd = d; r.camAt[j] = k.i; r.watched = true; } } } }
     // piers: the top of the deck, and a side wherever the next cell is not pier
     const dp = [], dn = [], di = [], quad = (p, n) => { const o = dp.length / 3; dp.push(...p); for (let k = 0; k < 4; k++) dn.push(...n); di.push(o, o + 1, o + 2, o, o + 2, o + 3); };
     const pier = (x, y) => x >= 0 && y >= 0 && x < N && y < N && W.cover[(y << NSHIFT) | x] === KIND.pier;
@@ -399,12 +416,18 @@ export class City3D {
     // (one search of the streets serves every trip to the same place, so the trips are taken place by place; the way home is the way there, backwards)
     const jobs = this.trips.concat(this.walkers.filter((w) => w.to !== undefined && w.to >= 0)).sort((a, b) => a.to - b.to);
     for (const t of jobs) { t.path = this.path(t.from, t.to); if (t.back && t.path) t.path = t.path.slice().reverse(); }
+    // the rhythm of the streets through the day, in half hours: when the city's own workers set out and come home
+    // (their shifts), with the errands of the day between; quieter when it is not a working day
+    const bins = new Float32Array(48), put = (min, w) => { const b = ((Math.floor(min / 30) % 48) + 48) % 48; bins[b] += w; bins[(b + 1) % 48] += w * 0.5; bins[(b + 47) % 48] += w * 0.5; };
+    const step = Math.max(1, Math.ceil(P.count / 6000)); for (const i of P.each()) { if (i % step || P.emp[i] < 0 || !P.hours[i]) continue; const a = P.shift[i]; put(a - 20, 1); put(a + P.hours[i] * 60 + (P.hours[i] >= 8 ? 30 : 0) + 10, 1); }
+    let top = 0; for (const v of bins) if (v > top) top = v; const work = c.today && c.today.workday === false ? 0.4 : 1;
+    this.act = new Float32Array(48); for (let b = 0; b < 48; b++) { const hour = b / 2, errands = hour >= 9 && hour <= 20 ? 0.42 : hour >= 6 && hour < 22 ? 0.2 : 0.05; this.act[b] = Math.min(1, Math.max(errands, top ? (bins[b] / top) * work : 0)); }
     this.trips = this.trips.filter((t) => t.path && t.path.length > 1);
   }
   traffic() {
     const c = this.city, m = this.minutes, out = [], buses = [];
     if (this.dayKey !== c.epoch && !c.stepping) this.planDay();
-    const pos = (path, f) => { const L = path.length - 1, x = f * L, k = Math.min(L - 1, Math.floor(x)), u = x - k, a = path[k], b = path[k + 1]; const ax = this.snapX[a], az = this.snapZ[a], bx = this.snapX[b], bz = this.snapZ[b]; const dx = bx - ax, dz = bz - az, len = Math.hypot(dx, dz) || 1; return [ax + dx * u + (dz / len) * 3, az + dz * u - (dx / len) * 3, Math.atan2(dx, dz)]; };
+    const pos = (path, f) => { const L = path.length - 1, x = f * L, k = Math.min(L - 1, Math.floor(x)), u = x - k, a = path[k], b = path[k + 1]; const ax = this.snapX[a], az = this.snapZ[a], bx = this.snapX[b], bz = this.snapZ[b]; const dx = bx - ax, dz = bz - az, len = Math.hypot(dx, dz) || 1; return [ax + dx * u - (dz / len) * 3, az + dz * u + (dx / len) * 3, Math.atan2(dx, dz)]; };   // (keeping to the right)
     for (const t of this.trips) {
       const dur = t.path.length * 1.7 / 60 * (t.kind === 2 ? 1.4 : 1); if (m < t.at || m > t.at + dur) continue;
       const [x, z, hd] = pos(t.path, t.kind === 2 ? (m - t.at) / dur : along((m - t.at) / dur)), col = t.col;   // pulling away and braking (motion.js)
@@ -413,21 +436,124 @@ export class City3D {
     // buses: evenly spaced around each route, more often at the city's chosen frequency
     const W = c.world, freq = (c.gov.busFreq || 100) / 100;
     if (m > 330 && m < 1410) W.routes.forEach((r, ri) => { const L = r.cells.length, n = Math.max(1, Math.round(L / 40 * freq)); for (let k = 0; k < n; k++) { const f = ((m / 60 * 0.9 + k / n + ri * 0.13) % 1 + 1) % 1, path = r.cells; const [x, z, hd] = pos(path, f); const col = r.colour; out.push(x, z, hd, 1, col[0], col[1], col[2], 0); } });
+    this.passing(out, m);
     return new Float32Array(out);
+  }
+  // how busy the streets are at a minute of the day, 0 to 1 (planDay's rhythm, read between its half hours)
+  busy(m) { const a = this.act; if (!a) return 0.35; const f = ((m / 30) % 48 + 48) % 48, i = Math.floor(f), u = f - i; return a[i] * (1 - u) + a[(i + 1) % 48] * u; }
+  // The passing traffic of the real roads: every lane of every run near the camera carries vehicles, as thickly and
+  // as fast as its level says (0 wide open, 1 moderate, 2 heavy, 3 stop and go). The level is the one known for the
+  // stretch (reading: set for the camera that watches it, or reported by the flow sensors beside that camera for the
+  // lane's direction of travel) or, without one, the day's rhythm. The vehicles are drawn, not simulated: they stand
+  // for the flow, they move with the clock on the wall, and a lane keeps its own vehicles.
+  passing(out, m) {
+    const c = this.cam, runs = this.runs, t = this.wall || 0, dt = Math.min(0.25, Math.max(0, t - (this.passed ?? t))); this.passed = t;
+    if (!runs || !runs.length || (c.mode !== "walk" && c.dist > 5200)) return;
+    const R = c.mode === "walk" ? 1100 : Math.min(2600, 500 + c.dist * 1.4), busy = this.busy(m), lights = m > 1140 || m < 420 ? 0.4 : 0, cams = this.cams;
+    // vehicles to a kilometre of lane at each level, and metres a second for each kind of road at each level
+    const DENS = [7, 16, 32, 95], SPEED = [[27, 23, 12, 4], [24, 20, 11, 4], [15, 13, 8, 3], [13, 11, 7, 3], [11, 10, 6, 3], [12, 10, 6, 3]], at = (a, v) => { const i = Math.min(2, Math.floor(v)), u = v - i; return a[i] * (1 - u) + a[i + 1] * u; };
+    const thin = 0.15 + 0.85 * Math.min(1, busy * 2), WAVE = 180, TURN = (2 * Math.PI) / WAVE; let shown = 0;
+    for (const r of runs) {
+      if (r.maxx < c.tx - R || r.minx > c.tx + R || r.maxz < c.tz - R || r.minz > c.tz + R) continue;
+      // the level without a reading: the day's rhythm
+      const plain = Math.max(0, Math.min(3, (r.cls <= 1 ? 2.2 : r.cls === 5 ? 1.2 : 1.5) * Math.pow(busy, 1.3)));
+      for (let q = 0; q < r.lanes.length; q++) {
+        // the lane's speed, from the readings along it where there are any; its vehicles move on by it, and come to a
+        // new speed gently
+        const lane = r.lanes[q], seed = r.id * 977 + q * 131; let seen = 0, sum = 0;
+        if (r.watched) for (let j = 0; j < r.n - 1; j += 8) { const w = r.camAt[j]; if (w < 0) continue; const v = this.reading(cams[w], (r.X[j + 1] - r.X[j]) * lane.dir, (r.Z[j + 1] - r.Z[j]) * lane.dir); if (v >= 0) { seen++; sum += v; } }
+        const want = at(SPEED[r.cls], seen ? sum / seen : plain) * lane.quick;
+        if (lane.v === undefined) { lane.v = want; lane.s = (want * t) % r.L; } else lane.v += (want - lane.v) * Math.min(1, dt * 0.7);
+        lane.s = (lane.s + lane.v * dt) % r.L;
+        for (let k = 0; k < lane.n; k++) {
+          let s = (((k + 0.5) / lane.n) * r.L + lane.s * lane.dir) % r.L; if (s < 0) s += r.L;
+          const i0 = Math.min(r.n - 2, Math.floor(s / r.step)), w = r.watched ? r.camAt[i0] : -1; let level = plain;
+          if (w >= 0) { const v = this.reading(cams[w], (r.X[i0 + 1] - r.X[i0]) * lane.dir, (r.Z[i0 + 1] - r.Z[i0]) * lane.dir); if (v >= 0) level = v; }
+          // (a free road is emptier still at night)
+          if (weyl(seed + k * 7) >= (at(DENS, level) * (level < 1 ? thin + (1 - thin) * level : 1)) / 110) continue;
+          // in heavy traffic the vehicles close up and open out, in waves that travel back along the lane
+          if (level > 1.5) { s += lane.dir * Math.min(1, (level - 1.5) / 1.5) * 8 * Math.sin(TURN * s * lane.dir + t * 0.157 + q); s %= r.L; if (s < 0) s += r.L; }
+          const f = s / r.step, i = Math.min(r.n - 2, Math.floor(f)), u = f - i;
+          const dx = r.X[i + 1] - r.X[i], dz = r.Z[i + 1] - r.Z[i], len = Math.hypot(dx, dz) || 1;
+          const x = r.X[i] + dx * u - (dz / len) * lane.off, z = r.Z[i] + dz * u + (dx / len) * lane.off;
+          if (x < 0 || z < 0 || x >= WORLD || z >= WORLD || Math.abs(x - c.tx) > R || Math.abs(z - c.tz) > R) continue;
+          const h = look(seed + k * 13 + 5), lorry = r.cls <= 1 && (h & 15) === 0;
+          out.push(x, z, Math.atan2(dx * lane.dir, dz * lane.dir), lorry ? 2 : (h & 7) === 1 ? 3 : 0, lorry ? 0.82 : ((h >> 8) & 255) / 300 + 0.05, lorry ? 0.82 : ((h >> 16) & 255) / 300 + 0.05, lorry ? 0.8 : ((h >> 24) & 255) / 300 + 0.05, lights);
+          if (++shown > 9000) return;
+        }
+      }
+    }
+  }
+  // What is known of the traffic a camera watches, for vehicles heading (hx, hz) on the map (x east, z south): the
+  // level set for the camera, else what the flow sensors beside it report for that direction of travel, else -1.
+  reading(k, hx, hz) {
+    if (k.level >= 0) return k.level; const f = k.flow; if (!f) return -1;
+    const len = Math.hypot(hx, hz) || 1; hx /= len; hz /= len; let best = 0.2, v = -1;
+    if (f[0] >= 0 && -hz > best) { best = -hz; v = f[0]; } if (f[1] >= 0 && hx > best) { best = hx; v = f[1]; }
+    if (f[2] >= 0 && hz > best) { best = hz; v = f[2]; } if (f[3] >= 0 && -hx > best) { best = -hx; v = f[3]; }
+    return v;
+  }
+  // A walker keeps off the surface of a real road they are walking along: where (x, z) lies on such a road and the
+  // walker is heading along it (hx, hz: a unit vector; both 0 for someone standing, who keeps off any road), the place
+  // is moved sideways to just beyond the road's edge. Someone crossing a road is left to cross it. The roads looked at
+  // are those of the cell and its eight neighbours; where two run side by side (the carriageways of a divided road)
+  // the walker is moved on the same way past the second.
+  kerb(x, z, hx, hz) {
+    const T = this.snapT, at = this.kerbAt || (this.kerbAt = [0, 0]), still = !hx && !hz; let px = 0, pz = 0;
+    for (let pass = 0; pass < 3; pass++) {
+      const cx = Math.floor(x / CELL_M), cz = Math.floor(z / CELL_M); let best = 1e9, mx = 0, mz = 0;
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+        const X = cx + dx, Z = cz + dy; if (X < 0 || Z < 0 || X >= N || Z >= N) continue; const c = (Z << NSHIFT) | X, half = T[c * 3 + 2]; if (!(half > 0)) continue;
+        const tx = T[c * 3], tz = T[c * 3 + 1]; if (!still && Math.abs(hx * tx + hz * tz) < 0.7) continue;
+        const rx = x - this.snapX[c], rz = z - this.snapZ[c]; if (Math.abs(rx * tx + rz * tz) > CELL_M * 1.2) continue;
+        const d = rz * tx - rx * tz, ad = Math.abs(d); if (ad >= half + 1.2 || ad >= best) continue;
+        let way = d < 0 ? -1 : 1; if (pass && (-tz * px + tx * pz) * way < 0) way = -way;
+        best = ad; const push = way * (half + 1.3) - d; mx = -tz * push; mz = tx * push;
+      }
+      if (best === 1e9) break; x += mx; z += mz; px += mx; pz += mz;
+    }
+    at[0] = x; at[1] = z; return at;
+  }
+  // The people on the pavements near the camera: along every street, walking its length on one side or the other, more
+  // of them in the centre and by the shops and when the day is busy. Like the passing traffic they are drawn, not
+  // simulated: the city's own citizens on their way to work and school are the walkers planDay sets out.
+  strollers(out, m) {
+    const c = this.cam, W = this.city.world; if (c.mode !== "walk" && c.dist > 950) return;
+    const R = c.mode === "walk" ? 260 : Math.min(420, 140 + c.dist * 0.45), t = this.wall || 0, busy = this.busy(m), GAP = 26, cx0 = Math.max(0, Math.floor((c.tx - R) / CELL_M)), cx1 = Math.min(N - 1, Math.floor((c.tx + R) / CELL_M)), cz0 = Math.max(0, Math.floor((c.tz - R) / CELL_M)), cz1 = Math.min(N - 1, Math.floor((c.tz + R) / CELL_M));
+    const lively = (cell) => { if (!W.road[cell] || W.road[cell] === 3 || (W.hwy && W.hwy[cell])) return 0; const hd = W.hood[cell], cov = W.cover ? W.cover[cell] : 0; return busy * (hd <= 1 ? 0.95 : cov === KIND.commercial ? 0.8 : cov === KIND.industrial || hd === 6 ? 0.18 : 0.34); };
+    const walk = (line, lo, hi, across) => {
+      // one street line (a row or a column of cells): walkers every GAP metres, half going each way
+      for (const dir of [1, -1]) {
+        const shift = dir * 1.25 * t + weyl(line * 31 + (dir > 0 ? 7 : 3) + (across ? 500 : 0)) * GAP;
+        for (let k = Math.floor((lo - shift) / GAP); k <= Math.ceil((hi - shift) / GAP); k++) {
+          const p = k * GAP + shift; if (p < lo || p >= hi) continue;
+          const cell = across ? (Math.floor(p / CELL_M) << NSHIFT) | line : (line << NSHIFT) | Math.floor(p / CELL_M), h = look(line * 7919 + k * 31 + (dir > 0 ? 1 : 2) + (across ? 9000 : 0));
+          const nbA = across ? cell - N : cell - 1, nbB = across ? cell + N : cell + 1; if (!(nbA >= 0 && W.road[nbA]) && !(nbB < N * N && W.road[nbB])) continue;       // the street runs the other way here
+          if (((h >>> 8) % 1000) / 1000 >= lively(cell)) continue;
+          const edge = dir > 0 ? CELL_M - 2.1 : 2.1, q = line * CELL_M + edge; let x = across ? q : p, z = across ? p : q;
+          if (W.real && W.real[cell] && this.snapT[cell * 3 + 2] > 0 && Math.abs(this.snapT[cell * 3 + (across ? 1 : 0)]) >= 0.7) { const T = this.snapT, tx = T[cell * 3], tz = T[cell * 3 + 1], out2 = (T[cell * 3 + 2] + 1.3) * (dir > 0 ? 1 : -1), a = (p / CELL_M - Math.floor(p / CELL_M) - 0.5) * CELL_M * (across ? Math.sign(tz || 1) : Math.sign(tx || 1)); x = this.snapX[cell] + tx * a - tz * out2; z = this.snapZ[cell] + tz * a + tx * out2; const at = this.kerb(x, z, tx, tz); x = at[0]; z = at[1]; }       // beside the road's own line (where it runs the walker's way), and off any beside it
+          else if (W.real) { const at = this.kerb(x, z, across ? 0 : 1, across ? 1 : 0); x = at[0]; z = at[1]; }
+          out.push(x, z, across ? (dir > 0 ? 0 : Math.PI) : (dir > 0 ? Math.PI / 2 : -Math.PI / 2), h % 50, ((h >> 4) % 100) / 100, ((h >> 12) % 100) / 100, 0.9 + ((h >> 20) % 18) / 100, 1);
+        }
+      }
+    };
+    for (let y = cz0; y <= cz1; y++) walk(y, cx0 * CELL_M, (cx1 + 1) * CELL_M, false);
+    for (let x = cx0; x <= cx1; x++) walk(x, cz0 * CELL_M, (cz1 + 1) * CELL_M, true);
   }
   people() {
     const m = this.minutes, out = [], s = this.city.cfg.seed;
     for (const w of this.walkers) {
-      if (w.stay !== undefined) { if (m < w.at || m > w.back) continue; const cx = (w.stay & NMASK) * CELL_M, cz = (w.stay >> NSHIFT) * CELL_M, h = look(w.i * 131 + w.at); const jx = (h % 100) / 100, jz = ((h >> 8) % 100) / 100; out.push(cx + 2 + jx * 16, cz + 1 + jz * 3, (h % 628) / 100, h % 50, ((h >> 4) % 100) / 100, ((h >> 12) % 100) / 100, 0.92 + ((h >> 20) % 16) / 100, ((m - w.at) % 7 < 2) ? 0.8 : 0); continue; }
+      if (w.stay !== undefined) { if (m < w.at || m > w.back) continue; const cx = (w.stay & NMASK) * CELL_M, cz = (w.stay >> NSHIFT) * CELL_M, h = look(w.i * 131 + w.at); const jx = (h % 100) / 100, jz = ((h >> 8) % 100) / 100, at = this.kerb(cx + 2 + jx * 16, cz + 1 + jz * 3, 0, 0); out.push(at[0], at[1], (h % 628) / 100, h % 50, ((h >> 4) % 100) / 100, ((h >> 12) % 100) / 100, 0.92 + ((h >> 20) % 16) / 100, ((m - w.at) % 7 < 2) ? 0.8 : 0); continue; }
       if (!w.path || w.path.length < 2) continue;
       const dur = (w.path.length * CELL_M) / w.speed / 60; let f = -1, path = w.path;
       if (m >= w.at && m <= w.at + dur) f = (m - w.at) / dur; else if (m >= w.back && m <= w.back + dur) { f = 1 - (m - w.back) / dur; }
       if (f < 0) continue;
       const L = path.length - 1, x = f * L, k = Math.min(L - 1, Math.floor(x)), u = x - k, a = path[k], b = path[k + 1];
       const ax = this.snapX[a], az = this.snapZ[a], bx = this.snapX[b], bz = this.snapZ[b], dx = bx - ax, dz = bz - az, len = Math.hypot(dx, dz) || 1;
-      const side = (w.i & 1 ? 1 : -1) * 7.6, h = look(w.i * 131 + 7), back = m >= w.back;
-      out.push(ax + dx * u + (dz / len) * side, az + dz * u - (dx / len) * side, Math.atan2(back ? -dx : dx, back ? -dz : dz), h % 50, ((h >> 4) % 100) / 100, ((h >> 12) % 100) / 100 * 0 + (w.kid ? 0.66 : 0.95 + ((h >> 20) % 12) / 100), w.speed > 2 ? 2.2 : 1.0);
+      const side = (w.i & 1 ? 1 : -1) * 7.6, h = look(w.i * 131 + 7), back = m >= w.back, at = this.kerb(ax + dx * u + (dz / len) * side, az + dz * u - (dx / len) * side, dx / len, dz / len);
+      out.push(at[0], at[1], Math.atan2(back ? -dx : dx, back ? -dz : dz), h % 50, ((h >> 4) % 100) / 100, ((h >> 12) % 100) / 100 * 0 + (w.kid ? 0.66 : 0.95 + ((h >> 20) % 12) / 100), w.speed > 2 ? 2.2 : 1.0);
     }
+    this.strollers(out, m);
     return new Float32Array(out);
   }
   // window lights for the hour: homes by how many residents are in, businesses while open, vacancies dark
@@ -451,17 +577,67 @@ export class City3D {
 
   /* -------------------------------------------------------------- the camera and input */
   inputs() {
-    const cv = this.canvas; let drag = null;
-    this.onDown = (e) => { drag = { x: e.clientX, y: e.clientY, b: e.button, yaw: this.cam.yaw, pitch: this.cam.pitch, tx: this.cam.tx, tz: this.cam.tz, moved: false }; cv.setPointerCapture?.(e.pointerId); };
-    this.onMove = (e) => { if (!drag) return; const dx = e.clientX - drag.x, dy = e.clientY - drag.y; if (Math.abs(dx) + Math.abs(dy) > 3) drag.moved = true;
-      if (drag.b === 2 || e.shiftKey) { const s = this.cam.dist / 900, c = Math.cos(this.cam.yaw), sn = Math.sin(this.cam.yaw); this.cam.tx = Math.max(0, Math.min(WORLD, drag.tx - (dx * c - dy * sn) * s)); this.cam.tz = Math.max(0, Math.min(WORLD, drag.tz - (dx * sn + dy * c) * s)); }
-      else { this.cam.yaw = drag.yaw + dx * 0.005; this.cam.pitch = Math.max(0.05, Math.min(1.45, drag.pitch + dy * 0.004)); } this.cam.mode = "orbit"; };
-    this.onUp = (e) => { if (drag && !drag.moved && drag.b === 0) this.pick(e); drag = null; };
-    this.onWheel = (e) => { e.preventDefault(); this.cam.dist = Math.max(25, Math.min(this.reach, this.cam.dist * Math.exp(e.deltaY * 0.0012))); };
+    const cv = this.canvas, fingers = new Map(); let drag = null, pinch = null;
+    // Travelling. Drag moves across the ground; right-drag (or Ctrl-drag) turns and tilts; the wheel zooms toward the
+    // pointer; W A S D and the arrow keys travel, Q and E turn; a double-click flies to the place under the pointer.
+    // On a touch screen two fingers zoom (pinch) and turn (twist). At street level (cam.mode "walk") a drag looks
+    // around, the keys walk (Shift goes at a car's speed) and a double-click walks to the place under the pointer.
+    this.keys = new Set(); this.fly = null;
+    this.onDown = (e) => { cv.focus?.({ preventScroll: true }); this.fly = null; try { cv.setPointerCapture?.(e.pointerId); } catch { /* not a pointer that can be held */ }
+      if (e.pointerType === "touch") { fingers.set(e.pointerId, [e.clientX, e.clientY]); if (fingers.size > 2) return; if (fingers.size === 2) { const [a, b] = [...fingers.values()]; pinch = { d: Math.hypot(a[0] - b[0], a[1] - b[1]) || 1, ang: Math.atan2(b[1] - a[1], b[0] - a[0]), dist: this.cam.dist, yaw: this.cam.yaw }; drag = null; return; } }
+      drag = { x: e.clientX, y: e.clientY, b: e.button, turn: e.button === 2 || e.ctrlKey || e.altKey || this.cam.mode === "walk", yaw: this.cam.yaw, pitch: this.cam.pitch, look: this.cam.look || 0, tx: this.cam.tx, tz: this.cam.tz, moved: false }; };
+    this.onMove = (e) => { if (fingers.has(e.pointerId)) fingers.set(e.pointerId, [e.clientX, e.clientY]);
+      if (pinch) { if (fingers.size === 2 && this.cam.mode !== "walk") { const [a, b] = [...fingers.values()], d = Math.hypot(a[0] - b[0], a[1] - b[1]) || 1, da = Math.atan2(b[1] - a[1], b[0] - a[0]) - pinch.ang; this.cam.dist = Math.max(25, Math.min(this.reach, (pinch.dist * pinch.d) / d)); this.cam.yaw = pinch.yaw + Math.atan2(Math.sin(da), Math.cos(da)); } return; }
+      if (!drag) return; const dx = e.clientX - drag.x, dy = e.clientY - drag.y; if (Math.abs(dx) + Math.abs(dy) > 3) drag.moved = true;
+      if (this.cam.mode === "walk") { this.cam.yaw = drag.yaw - dx * 0.004; this.cam.look = Math.max(-1.2, Math.min(1.2, drag.look + dy * 0.003)); return; }
+      if (drag.turn) { this.cam.yaw = drag.yaw + dx * 0.005; this.cam.pitch = Math.max(0.05, Math.min(1.45, drag.pitch + dy * 0.004)); }
+      else { const s = (this.cam.dist / 900) * (900 / Math.max(300, this.H / (window.devicePixelRatio || 1))), c = Math.cos(this.cam.yaw), sn = Math.sin(this.cam.yaw); this.cam.tx = Math.max(0, Math.min(WORLD, drag.tx - (dx * c - dy * sn) * s)); this.cam.tz = Math.max(0, Math.min(WORLD, drag.tz - (dx * sn + dy * c) * s)); } };
+    this.onUp = (e) => { fingers.delete(e.pointerId); if (pinch) { if (!fingers.size) pinch = null; drag = null; return; } if (drag && !drag.moved && drag.b === 0 && e.type === "pointerup") this.pick(e); drag = null; };
+    this.onWheel = (e) => { e.preventDefault(); const c = this.cam; if (c.mode === "walk") return; const was = c.dist, g = this.groundUnder(e); c.dist = Math.max(25, Math.min(this.reach, c.dist * Math.exp(e.deltaY * 0.0012)));
+      if (g && c.dist < was) { const f = 1 - c.dist / was; c.tx = Math.max(0, Math.min(WORLD, c.tx + (g[0] - c.tx) * f)); c.tz = Math.max(0, Math.min(WORLD, c.tz + (g[1] - c.tz) * f)); } };
+    this.onDbl = (e) => { const g = this.groundUnder(e), c = this.cam; if (!g) return; if (c.mode !== "walk") { this.flyTo(g[0], g[1], Math.max(120, c.dist * 0.4)); return; }
+      const dx = g[0] - c.tx, dz = g[1] - c.tz, k = Math.min(1, 300 / Math.max(1, Math.hypot(dx, dz))); this.flyTo(c.tx + dx * k, c.tz + dz * k); };
     this.onCtx = (e) => e.preventDefault();
-    cv.addEventListener("pointerdown", this.onDown); cv.addEventListener("pointermove", this.onMove); cv.addEventListener("pointerup", this.onUp); cv.addEventListener("wheel", this.onWheel, { passive: false }); cv.addEventListener("contextmenu", this.onCtx);
+    const TRAVEL = new Set(["KeyW", "KeyA", "KeyS", "KeyD", "KeyQ", "KeyE", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "ShiftLeft", "ShiftRight"]);
+    this.onKey = (e) => { if (!TRAVEL.has(e.code)) return; if (e.type === "keyup") { this.keys.delete(e.code); return; } if (e.ctrlKey || e.metaKey || e.altKey) return; this.keys.add(e.code); this.fly = null; e.preventDefault(); };       // (the browser's own shortcuts are left alone)
+    this.onBlur = () => this.keys.clear();
+    cv.addEventListener("pointerdown", this.onDown); cv.addEventListener("pointermove", this.onMove); cv.addEventListener("pointerup", this.onUp); cv.addEventListener("pointercancel", this.onUp); cv.addEventListener("wheel", this.onWheel, { passive: false }); cv.addEventListener("contextmenu", this.onCtx);
+    cv.addEventListener("dblclick", this.onDbl); cv.addEventListener("keydown", this.onKey); cv.addEventListener("keyup", this.onKey); cv.addEventListener("blur", this.onBlur); globalThis.addEventListener?.("blur", this.onBlur);
   }
-  eye() { const c = this.cam, cp = Math.cos(c.pitch); const ty = this.groundAt ? this.groundAt(c.tx, c.tz) : 0; return [c.tx + Math.sin(c.yaw) * cp * c.dist, ty + Math.sin(c.pitch) * c.dist + 2, c.tz + Math.cos(c.yaw) * cp * c.dist]; }
+  // the camera: looking down at a point on the ground from a distance (orbit), or standing on it at street level (walk)
+  eye() { const c = this.cam, ty = this.groundAt ? this.groundAt(c.tx, c.tz) : 0; if (c.mode === "walk") return [c.tx, Math.max(ty, 0.5) + 2.4, c.tz]; const cp = Math.cos(c.pitch); return [c.tx + Math.sin(c.yaw) * cp * c.dist, ty + Math.sin(c.pitch) * c.dist + 2, c.tz + Math.cos(c.yaw) * cp * c.dist]; }
+  aim() { const c = this.cam, ty = this.groundAt(c.tx, c.tz); if (c.mode !== "walk") return [c.tx, ty, c.tz]; const e = this.eye(), cl = Math.cos(c.look || 0); return [e[0] - Math.sin(c.yaw) * cl * 20, e[1] - Math.sin(c.look || 0) * 20, e[2] - Math.cos(c.yaw) * cl * 20]; }
+  // the point of the ground under the pointer (taken as level with the ground at the camera's aim)
+  groundUnder(e) {
+    if (!this.VP) return null; const r = this.canvas.getBoundingClientRect(), x = ((e.clientX - r.left) / r.width) * 2 - 1, y = 1 - ((e.clientY - r.top) / r.height) * 2;
+    const inv = M4.invert(this.VP), un = (z) => { const o = [0, 0, 0, 0]; for (let k = 0; k < 4; k++) o[k] = inv[k] * x + inv[4 + k] * y + inv[8 + k] * z + inv[12 + k]; return [o[0] / o[3], o[1] / o[3], o[2] / o[3]]; };
+    const p0 = un(-1), p1 = un(1), dy = p1[1] - p0[1], y0 = this.groundAt(this.cam.tx, this.cam.tz); if (dy >= -1e-6) return null;
+    const t = (y0 - p0[1]) / dy; return [Math.max(0, Math.min(WORLD, p0[0] + (p1[0] - p0[0]) * t)), Math.max(0, Math.min(WORLD, p0[2] + (p1[2] - p0[2]) * t))];
+  }
+  // the traffic cameras for the page: the list, the one nearest the view, and setting the level of traffic one watches
+  // (-1: as the day runs; 0 wide open, 1 moderate, 2 heavy, 3 stop and go)
+  cameras() { return this.cams || []; }
+  cameraNear(x = this.cam.tx, z = this.cam.tz) { let best = -1, bd = 1e9; for (const k of this.cams || []) { const d = Math.hypot(k.sx - x, k.sz - z); if (d < bd) { bd = d; best = k.i; } } return best; }
+  setLevel(i, level) { const k = (this.cams || [])[i], v = Number(level); if (k) k.level = Number.isFinite(v) ? Math.max(-1, Math.min(3, v)) : -1; }
+  // what the flow sensors beside a camera report, by direction of travel: [northbound, eastbound, southbound, westbound],
+  // each -1 (nothing known) or 0 to 3; null when there is nothing
+  setFlow(i, four) { const k = (this.cams || [])[i]; if (!k) return; const f = Array.isArray(four) && four.length === 4 ? four.map((v) => (Number.isFinite(v) ? Math.max(-1, Math.min(3, v)) : -1)) : null; k.flow = f && f.some((v) => v >= 0) ? f : null; }
+  sceneOf(lat, lon) { const p = this.city && this.city.world.cover && Number.isFinite(lat) && Number.isFinite(lon) ? placeCell(lat, lon) : null; return p ? [p[0] * CELL_M, p[1] * CELL_M] : null; }
+  // travel to a place on the real ground
+  goTo(lat, lon, dist) { const p = this.sceneOf(lat, lon); if (p) this.flyTo(p[0], p[1], dist); return !!p; }
+  // travel to a place: the camera glides there (and to that distance, when one is given)
+  flyTo(x, z, dist) { if (!Number.isFinite(x) || !Number.isFinite(z)) return; const c = this.cam; this.fly = { x: Math.max(0, Math.min(WORLD, x)), z: Math.max(0, Math.min(WORLD, z)), dist: c.mode !== "walk" && Number.isFinite(dist) && dist > 0 ? Math.max(25, Math.min(this.reach, dist)) : c.dist }; }
+  // down to street level where the camera is aimed, or back up
+  walk(on) { const c = this.cam; this.fly = null; if (on && c.mode !== "walk") { c.mode = "walk"; c.look = 0.05; c.back = c.dist; c.dist = 80; } else if (!on && c.mode === "walk") { c.mode = "orbit"; c.dist = Math.min(this.reach, Math.max(260, c.back || 600)); c.pitch = 0.6; } }
+  // the keys and a flight under way move the camera, by the time since the last frame
+  travel(dt) {
+    const c = this.cam, K = this.keys, has = (a, b) => (K.has(a) || K.has(b) ? 1 : 0), fwd = has("KeyW", "ArrowUp") - has("KeyS", "ArrowDown"), side = has("KeyD", "ArrowRight") - has("KeyA", "ArrowLeft"), turn = (K.has("KeyE") ? 1 : 0) - (K.has("KeyQ") ? 1 : 0);
+    if (fwd || side || turn) {
+      const fast = K.has("ShiftLeft") || K.has("ShiftRight"), v = (c.mode === "walk" ? (fast ? 45 : 7) : c.dist * (fast ? 2.4 : 1.1)) * dt, sn = Math.sin(c.yaw), cs = Math.cos(c.yaw);
+      c.tx = Math.max(0, Math.min(WORLD, c.tx + (-sn * fwd + cs * side) * v)); c.tz = Math.max(0, Math.min(WORLD, c.tz + (-cs * fwd - sn * side) * v)); c.yaw += (c.mode === "walk" ? -1 : 1) * turn * 1.4 * dt;
+    }
+    if (this.fly) { const f = this.fly, k = 1 - Math.exp(-dt * 5); c.tx += (f.x - c.tx) * k; c.tz += (f.z - c.tz) * k; c.dist += (f.dist - c.dist) * k; if (Math.abs(f.x - c.tx) + Math.abs(f.z - c.tz) < 0.5 && Math.abs(f.dist - c.dist) < 1) this.fly = null; }
+  }
   focusBuilding(b) { const T = this.city.world.buildings; this.cam.tx = (T.x[b] + T.w[b] / 2) * CELL_M; this.cam.tz = (T.y[b] + T.h[b] / 2) * CELL_M; this.cam.dist = Math.max(90, T.floors[b] * 14); this.cam.pitch = 0.45; }
   // a click: the nearest building box along the ray
   pick(e) {
@@ -499,12 +675,13 @@ export class City3D {
   frame(now) {
     const gl = this.gl; if (!this.ready || !this.city || this.lost) return;
     this.resize(); this.perf.frameStart();
-    const env = this.environment(), t = (now - this.t0) / 1000;
+    const env = this.environment(), t = (now - this.t0) / 1000; this.wall = t;
     if (this.builtRev !== this.city.world.rev || (this.hasWorks && this.builtEpoch !== this.city.epoch)) { this.buildBuildings(); this.builtRev = this.city.world.rev; this.builtEpoch = this.city.epoch; }   // a building came down, went up, or its works moved on
     if (this.lightsMinute === undefined || Math.abs(this.minutes - this.lightsMinute) >= 10 || this.lightsEpoch !== this.city.epoch) { this.updateLights(); this.lightsMinute = this.minutes; this.lightsEpoch = this.city.epoch; }
     this.atmos.update(env, 40, 1.4);
     // the camera
-    const eye = this.eye(), target0 = [this.cam.tx, this.groundAt(this.cam.tx, this.cam.tz), this.cam.tz];
+    this.travel(Math.min(0.1, Math.max(0, (now - (this.lastFrame || now)) / 1000))); this.lastFrame = now;
+    const eye = this.eye(), target0 = this.aim();
     const proj = M4.persp(0.95, this.W / this.H, Math.max(0.5, this.cam.dist / 400), Math.max(6000, this.cam.dist * 8, this.around ? WORLD * 4.5 : 0)), view = M4.lookAt(eye, target0, [0, 1, 0]);
     const VP = M4.mul(proj, view); this.VP = VP;
     // the sun's shadow: an orthographic box around the camera's target, as large as the view needs
@@ -595,6 +772,6 @@ export class City3D {
   hud() { return `${this.W}x${this.H} · ${this.carCount || 0} vehicles · ${this.personCount || 0} people${this.safe ? " · safe graphics" : ""} · ${this.gpu.split(" (")[0]}`; }
   dispose() {
     this.stop(); const cv = this.canvas;
-    cv.removeEventListener("webglcontextlost", this.lostHandler); cv.removeEventListener("pointerdown", this.onDown); cv.removeEventListener("pointermove", this.onMove); cv.removeEventListener("pointerup", this.onUp); cv.removeEventListener("wheel", this.onWheel); cv.removeEventListener("contextmenu", this.onCtx);
+    cv.removeEventListener("webglcontextlost", this.lostHandler); cv.removeEventListener("dblclick", this.onDbl); cv.removeEventListener("keydown", this.onKey); cv.removeEventListener("keyup", this.onKey); cv.removeEventListener("blur", this.onBlur); globalThis.removeEventListener?.("blur", this.onBlur); cv.removeEventListener("pointerdown", this.onDown); cv.removeEventListener("pointermove", this.onMove); cv.removeEventListener("pointerup", this.onUp); cv.removeEventListener("pointercancel", this.onUp); cv.removeEventListener("wheel", this.onWheel); cv.removeEventListener("contextmenu", this.onCtx);
   }
 }

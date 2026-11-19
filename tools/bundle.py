@@ -9,7 +9,7 @@ SPDX-License-Identifier: GPL-3.0-only
 import base64, json, pathlib, re, sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-VERSION = "1.4.0"
+VERSION = "1.5.0"
 
 
 def _declarators(src: str, i: int) -> list:

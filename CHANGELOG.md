@@ -1,5 +1,57 @@
 # Changelog
 
+## 1.5.0 — 2026-11-18 (travelling, traffic and the cameras)
+
+This release is the view and the page. The simulation's rules are unchanged, and the one-in-ten city is the same
+digest for digest. The city on the real map is founded a little differently, because its divided roads are now two
+lines where they were one (see *Changed*).
+
+### Added
+- **Travelling.** Until now the view could only turn about one spot unless you knew to right-drag. Now a drag moves
+  across the ground, right-drag turns and tilts, the wheel zooms toward the pointer, W A S D and the arrows travel,
+  a double-click flies to the place under the pointer, a *go to* menu jumps to thirteen named places, and *street
+  level* puts the camera on the ground to walk (Shift: at a car's speed; a double-click walks to the place). On a
+  touch screen two fingers zoom and turn. *Overview* now returns over the whole map.
+- **Passing traffic and people on the pavements.** Every lane of every real road near the camera carries vehicles
+  and every street its walkers, as thickly as the day's rhythm (taken from the citizens' own shifts) says. A lane
+  keeps its own vehicles and comes to a new speed gently; stop-and-go traffic is a real queue (a vehicle every nine
+  metres) that closes up and opens out in waves.
+- **Traffic cameras.** The 94 public WSDOT cameras on the map, with their live pictures; each stretch of freeway and
+  main road follows the level of the nearest camera on its own kind of road, set by hand from the picture or read
+  from WSDOT's flow sensors with the user's own free access code. Sensors are matched to cameras by road and
+  milepost, and each carriageway follows the reading for its own direction of travel.
+  `tools/traffic_fetch.py`, `data/world/traffic_cameras.json`.
+- **Divided roads as two carriageways.** One-way roads keep their direction in the map data (2,588 of 3,783 lines);
+  each carriageway is drawn with its own lanes, and traffic runs the right way on it.
+
+### Changed
+- **The real map's roads, and so its city.** A divided road is now kept as its two carriageways (3,783 lines where
+  there were 2,973), which moves a few road cells and so a few homes: `everett` founds 98,100 citizens (98,165 in
+  1.4.0) and 1,692 firms (1,695); `quick` 39,162 citizens (39,093). A save made on the real map in 1.4.0 does not
+  replay in 1.5.0 (its founding digest differs); saves of the one-in-ten city do.
+
+### Fixed
+- Vehicles drove on the left of their street. They keep to the right.
+- Walkers beside a real road walked on its surface. A walker heading along a road keeps beyond its edge (beyond both
+  carriageways of a divided road), and people standing keep off it; someone crossing still crosses.
+- *Overview* aimed at the invented town's centre on every map.
+
+### Hardened
+- The page shows a camera's picture only from WSDOT's own picture host (`images.wsdot.wa.gov`), checked when the map
+  is built and again in the page; titles are plain text. The picture is asked for without a referrer.
+- The access code is never taken from what a browser may have filled into the field: only a code the page stored
+  itself is used without being asked, a code must look like one before anything is sent, and *forget* removes it.
+  Readings are read field by field as plain data; ones older than five minutes are let go.
+- The view's keys leave the browser's own shortcuts alone (Ctrl, Alt, Meta), a cancelled pointer ends a drag, keys
+  are released when the window loses focus, and a flight or a level that is not a number is ignored.
+- `tools/traffic_fetch.py` reads https only, refuses a reply over 32 MB, and probes a picture only on WSDOT's host.
+
+### Known
+- Counting vehicles in the camera pictures themselves is not done: the picture server does not allow a page to read
+  pixels. It would need the pictures fetched by the launcher and a vision model run on them.
+- The passing vehicles are not the simulation's citizens; a citizen's own trip is still drawn only for one citizen in
+  thirteen on the large map.
+
 ## 1.4.0 — 2026-11-18 (the real place)
 
 The one-in-ten invented city is unchanged, digest for digest (60 days: `6146b22c56149fb0…`). It is still the
@@ -10,8 +62,9 @@ engine's default; the page now opens on the real map.
   cell houses the citizens the cut counts there. Its ground comes from OpenStreetMap (as vector map tiles) and its
   heights from the Terrain Tiles: the Sound and its islands, the Snohomish River, its sloughs and delta, Lake
   Stevens and the smaller lakes at their own levels, wetland, forest, farmland, works, shops, the port's piers and
-  Paine Field with its runways. Two sizes: `everett` (512 cells of 41 m, 98,064 citizens, one for every four
-  people; true to scale) and `quick` (256 cells of 82 m, 39,235 citizens, one in ten).
+  Paine Field with its runways. Two sizes: `everett` (512 cells of 41 m, 98,165 citizens, one for every four
+  people; true to scale) and `quick` (256 cells of 82 m, 39,093 citizens, one in ten; these two figures were given as 98,064 and
+  39,235 when 1.4.0 was released, from a run before its last map data: corrected in 1.5.0).
 - **Real roads.** Interstate 5, US 2 and its trestle, routes 9, 92, 99, 204, 525, 526, 527 and 529 and the roads
   between neighbourhoods run where they really run (2,973 lines, 394 of them bridges, 338 ramps). The simulation's
   street cells follow them; the 3D view draws them from their centre lines as ribbons: freeways with two

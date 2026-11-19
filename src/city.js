@@ -40,7 +40,7 @@ import { civicDay, civicMonth, civicYear, civicGenesis, election } from "./civic
 import { housingDay, housingMonth, attachHousing } from "./housing.js";
 import { attachDevelop, developDay, developMonth } from "./develop.js";
 
-export const CITY_VERSION = "1.4.0";
+export const CITY_VERSION = "1.5.0";
 export const SAVE_FORMAT = "PLUME-CITY/1";
 export const PCAP = SCALE.people, LCAP = SCALE.loans;
 // the XPU frames a map takes (one of 128 x 128 cells each), and where a cell's lanes are in them

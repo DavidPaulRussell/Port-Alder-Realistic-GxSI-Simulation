@@ -1,0 +1,5154 @@
+{
+ "service": "https://data.wsdot.wa.gov/arcgis/rest/services/TravelInformation/TravelInfoCamerasWeather/FeatureServer",
+ "box": [
+  47.654167,
+  -122.6075,
+  48.224167,
+  -121.76
+ ],
+ "fetched": "2026-11-18 17:19:48",
+ "layers": [
+  {
+   "id": 0,
+   "name": "Cameras",
+   "fields": [
+    "OBJECTID",
+    "CameraTitle",
+    "ImageURL",
+    "CompassDirection"
+   ],
+   "features": [
+    {
+     "attributes": {
+      "OBJECTID": 1019,
+      "CameraTitle": "SR 531 at MP 6.1: 27th Ave NE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/531vc00614.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.19351599999999,
+      "y": 48.15216200000003
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1032,
+      "CameraTitle": "I-5 at MP 169.3: NE 45th St",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc16939.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.32190499999996,
+      "y": 47.66177300000004
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1033,
+      "CameraTitle": "I-5 at MP 170.7: Lake City Way",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc17078.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.32059999999996,
+      "y": 47.68184800000006
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1034,
+      "CameraTitle": "I-5 at MP 171.5: NE 85th St",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc17153.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.32907999999998,
+      "y": 47.69111200000003
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1035,
+      "CameraTitle": "I-5 at MP 172.7: N Northgate Way",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc17287.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.32956299999995,
+      "y": 47.70998100000003
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1036,
+      "CameraTitle": "I-5 at MP 174.6: NE 145th St",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc17461.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.32504599999999,
+      "y": 47.734773000000075
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1037,
+      "CameraTitle": "I-5 at MP 176: NE 175th St",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc17603.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.33047499999998,
+      "y": 47.75448800000004
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1038,
+      "CameraTitle": "I-5 at MP 177.2: NE 195th St",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc17722.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.32119499999999,
+      "y": 47.77063700000008
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1039,
+      "CameraTitle": "I-5 at MP 178.2: 236th St SW",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc17828.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.31610099999995,
+      "y": 47.78533100000004
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1040,
+      "CameraTitle": "I-5 at MP 179.2: 220th St SW",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc17928.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.31427999999994,
+      "y": 47.799634000000026
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1042,
+      "CameraTitle": "I-5 at MP 183: I-405 Interchange (Alderwood)",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/405vc03022.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.26045099999999,
+      "y": 47.83730100000008
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1043,
+      "CameraTitle": "I-5 at MP 183.9: 164th St SW",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc18391.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.25712099999998,
+      "y": 47.85025200000007
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1044,
+      "CameraTitle": "I-5 at MP 185: 148th St SW",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc18507.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.24567899999994,
+      "y": 47.86497600000007
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1045,
+      "CameraTitle": "I-5 at MP 186.4: 128th St SW",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc18648.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.23230299999994,
+      "y": 47.882686000000035
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1046,
+      "CameraTitle": "I-5 at MP 187.4: 112th St SW, SB",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc18748.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.21938499999999,
+      "y": 47.89347300000003
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1047,
+      "CameraTitle": "I-5 at MP 187.9: 112th St SW, NB",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc18797.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.21299499999998,
+      "y": 47.89985000000007
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1048,
+      "CameraTitle": "I-5 at MP 189.3: SR 526 Interchange",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc18934.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.20626499999997,
+      "y": 47.91915000000006
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1075,
+      "CameraTitle": "I-405 at MP 16.7: NE 59th St",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/405vc01675.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.18686999999994,
+      "y": 47.65968600000008
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1077,
+      "CameraTitle": "I-405 at MP 19.8: NE 116th St",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/405vc01987.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.17938299999997,
+      "y": 47.704342000000054
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1078,
+      "CameraTitle": "I-405 at MP 20.3: NE 124th St",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/405vc02030.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.18226799999997,
+      "y": 47.70998800000007
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1079,
+      "CameraTitle": "I-405 at MP 21: NE 132nd St, West",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/405vc02103.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.18825299999997,
+      "y": 47.71912100000003
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1080,
+      "CameraTitle": "I-405 at MP 22.5: NE 160th St",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/405vc02256.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.18691299999995,
+      "y": 47.741990000000044
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1082,
+      "CameraTitle": "I-405 at MP 24.5: NE 195th St",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/405vc02452.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.18946199999999,
+      "y": 47.76927100000006
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1084,
+      "CameraTitle": "I-405 at MP 28.3: 202nd St SE, NB",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/405vc02838.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.23187699999994,
+      "y": 47.81434100000007
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1085,
+      "CameraTitle": "I-405 at MP 28.2: 204th St SE, SB",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/405vc02826.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.23128699999995,
+      "y": 47.812238000000036
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1086,
+      "CameraTitle": "I-405 at MP 29.5: Filbert Rd",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/405vc02951.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.25148699999994,
+      "y": 47.82385900000003
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1131,
+      "CameraTitle": "US 2 at MP 2.4:  SR 204 Interchange",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/002vc00240.jpg",
+      "CompassDirection": "W"
+     },
+     "geometry": {
+      "x": -122.13513599999999,
+      "y": 47.97843400000005
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1173,
+      "CameraTitle": "SR 525 at MP 2.8: SR 99 Interchange",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/525vc00285.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.27728699999994,
+      "y": 47.87075500000003
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1199,
+      "CameraTitle": "SR 520 at MP 10.7: NE 51st St",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/520vc01075.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.13818599999996,
+      "y": 47.65457200000003
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1200,
+      "CameraTitle": "SR 520 at MP 11.6: W Lk Sammamish Pkwy",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/520vc01169.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.12949799999996,
+      "y": 47.666503000000034
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1201,
+      "CameraTitle": "SR 520 at MP 12.8: Redmond Way",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/520vc01283.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.10708399999999,
+      "y": 47.66994800000003
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1202,
+      "CameraTitle": "SR 522 at MP 5.8: Ballinger Way (SR 104)",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/522vc00585.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.27639299999998,
+      "y": 47.75357100000008
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1203,
+      "CameraTitle": "SR 522 at MP 7.2: 68th Ave",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/522vc00721.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.24975599999999,
+      "y": 47.75838700000003
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1237,
+      "CameraTitle": "Harvey Airfield(Snohomish)",
+      "ImageURL": "https://images.wsdot.wa.gov/traffic/HarveyAirfield.jpg",
+      "CompassDirection": "S"
+     },
+     "geometry": {
+      "x": -122.10014999999999,
+      "y": 47.90717700000005
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1304,
+      "CameraTitle": "SR 522 at MP 16.5: Paradise Lake Rd",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/522vc01657.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.11155099999996,
+      "y": 47.801683000000025
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1308,
+      "CameraTitle": "SR 527 at MP 6.6: 164th St SE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/527vc00662.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.21749099999994,
+      "y": 47.84955000000008
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1331,
+      "CameraTitle": "SR 525 at MP 5.5: Paine Field Blvd",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/525vc00559.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.29317299999997,
+      "y": 47.910221000000035
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1332,
+      "CameraTitle": "SR 525 at MP 3.5: Beverly Park Rd",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/525vc00353.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.27968799999996,
+      "y": 47.882299000000046
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1338,
+      "CameraTitle": "I-5 at MP 180.6: 44th Ave W",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc18065.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.29329299999995,
+      "y": 47.81316400000003
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1380,
+      "CameraTitle": "I-405 at MP 17.4: NE 70th Pl",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/405vc01742.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.18743799999999,
+      "y": 47.66937600000006
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1381,
+      "CameraTitle": "I-405 at MP 18.8: NE 100th St",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/405vc01887.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.18135499999994,
+      "y": 47.69001300000008
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1382,
+      "CameraTitle": "I-405 at MP 21.8: NE 144th St",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/405vc02182.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.18832099999997,
+      "y": 47.73134200000004
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1383,
+      "CameraTitle": "I-405 at MP 23.6: SR 522 Interchange",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/405vc02371.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.18424199999998,
+      "y": 47.757772000000045
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1384,
+      "CameraTitle": "I-405 at MP 25.5: 236th St SE, SB",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/405vc02553.jpg",
+      "CompassDirection": "S"
+     },
+     "geometry": {
+      "x": -122.19561799999997,
+      "y": 47.78306200000003
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1385,
+      "CameraTitle": "I-405 at MP 25.6: 236th St SE, NB",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/405vc02563.jpg",
+      "CompassDirection": "N"
+     },
+     "geometry": {
+      "x": -122.19542499999994,
+      "y": 47.784748000000036
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1387,
+      "CameraTitle": "I-405 at MP 26.6: SR 527, Westside",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/405vc02665.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.21216199999998,
+      "y": 47.793975000000046
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1388,
+      "CameraTitle": "I-405 at MP 26.7: SR 527, Median",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/405vc02674.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.21397499999995,
+      "y": 47.79489200000006
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1389,
+      "CameraTitle": "I-405 at MP 27.4: 216th St SE, SB",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/405vc02745.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.225619,
+      "y": 47.80137600000006
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1390,
+      "CameraTitle": "I-405 at MP 28.9: Damson Rd",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/405vc02895.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.24132799999995,
+      "y": 47.81954100000007
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1406,
+      "CameraTitle": "I-5 at MP 169.1: NE 42nd St Ramp",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc16913.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.32090899999997,
+      "y": 47.65758600000004
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1409,
+      "CameraTitle": "I-5 at MP 172.6: NE 107th St",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc17263.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.32966499999998,
+      "y": 47.70674500000007
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1411,
+      "CameraTitle": "I-5 at MP 173.8: NE 130th St",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc17386.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.32420699999994,
+      "y": 47.723869000000036
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1412,
+      "CameraTitle": "I-5 at MP 183.8: 164th St, Ramp",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc18389.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.25719499999997,
+      "y": 47.849969000000044
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1413,
+      "CameraTitle": "I-5 at MP 187.2: 118th St SW",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc18726.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.220981,
+      "y": 47.891200000000026
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1416,
+      "CameraTitle": "I-5 at MP 189.1: Everett Mall Way",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc18918.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.20733599999994,
+      "y": 47.91671900000006
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1417,
+      "CameraTitle": "I-5 at MP 189.4: Broadway SB Ramp",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc18943.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.20756399999999,
+      "y": 47.92093100000005
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1418,
+      "CameraTitle": "I-5 at MP 189.9: 77th St SE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc18997.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.20167299999997,
+      "y": 47.927355000000034
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1419,
+      "CameraTitle": "I-5 at MP 190.3: 73rd St SE, SB",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc19039.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.19596499999994,
+      "y": 47.93210600000003
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1420,
+      "CameraTitle": "I-5 at MP 190.4: 73rd St SE, NB",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc19041.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.19589899999994,
+      "y": 47.93239200000005
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1421,
+      "CameraTitle": "I-5 at MP 191.1: 61st St SE, NB",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc19115.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.19667399999997,
+      "y": 47.94307500000008
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1422,
+      "CameraTitle": "I-5 at MP 191.2: 60th St SE, SB",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc19120.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.19690699999995,
+      "y": 47.94378300000005
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1423,
+      "CameraTitle": "I-5 at MP 191.6: 52nd St SE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc19169.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.19904699999995,
+      "y": 47.95102300000008
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1424,
+      "CameraTitle": "I-5 at MP 191.9: 47th St SE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc19195.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.19933299999997,
+      "y": 47.95486800000003
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1425,
+      "CameraTitle": "I-5 at MP 192.3: 43rd St SE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc19234.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.19929499999995,
+      "y": 47.960150000000056
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1426,
+      "CameraTitle": "I-5 at MP 192.6: 41st St",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc19267.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.19920599999995,
+      "y": 47.96424200000007
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1427,
+      "CameraTitle": "I-5 at MP 192.7: 40th St",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc19273.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.19894799999997,
+      "y": 47.96560500000004
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1428,
+      "CameraTitle": "I-5 at MP 193: 36th St",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc19303.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.19617099999999,
+      "y": 47.969367000000034
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1429,
+      "CameraTitle": "I-5 at MP 193.5: Pacific Ave",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc19357.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.19057799999996,
+      "y": 47.97588600000006
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1430,
+      "CameraTitle": "I-5 at MP 194: Everett Ave",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc19406.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.18593499999997,
+      "y": 47.98224800000003
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1431,
+      "CameraTitle": "I-5 at MP 194.6: Marine View Dr",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc19469.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.18306999999999,
+      "y": 47.99066000000005
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1433,
+      "CameraTitle": "I-5 at MP 206: SR 531 Interchange",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc20609.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.18877299999997,
+      "y": 48.152900000000045
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1476,
+      "CameraTitle": "SR 202 at MP 7.7: SR 520 Interchange",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/202vc00770.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.10736299999996,
+      "y": 47.66967600000004
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1477,
+      "CameraTitle": "SR 202 at MP 8.1: E Lake Sammamish Pkwy",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/202vc00817.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.09975599999996,
+      "y": 47.66569300000003
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1478,
+      "CameraTitle": "SR 202 at MP 8.6: 185th Ave NE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/202vc00862.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.09421399999997,
+      "y": 47.66023900000005
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1479,
+      "CameraTitle": "SR 202 at MP 9: 188th Ave NE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/202vc00904.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.08668499999999,
+      "y": 47.65721200000007
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1481,
+      "CameraTitle": "SR 202 at MP 10.2: Sahalee Way",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/202vc01027.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.06116699999995,
+      "y": 47.65615100000008
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1497,
+      "CameraTitle": "SR 522 at MP 5.3: NE 165th St",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/522vc00536.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.28425499999997,
+      "y": 47.74912900000004
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1498,
+      "CameraTitle": "SR 522 at MP 6.6: 61st Ave NE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/522vc00661.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.26237199999997,
+      "y": 47.75835500000005
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1499,
+      "CameraTitle": "SR 522 at MP 7.9: 80th Ave NE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/522vc00796.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.23414099999997,
+      "y": 47.755847000000074
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1502,
+      "CameraTitle": "SR 522 at MP 18.4: Echo Lake Rd",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/522vc01849.jpg",
+      "CompassDirection": "W"
+     },
+     "geometry": {
+      "x": -122.07943899999998,
+      "y": 47.81298700000008
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1503,
+      "CameraTitle": "SR 522 at MP 18.9: Fales Rd",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/522vc01890.jpg",
+      "CompassDirection": "E"
+     },
+     "geometry": {
+      "x": -122.07165599999996,
+      "y": 47.81560600000006
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1504,
+      "CameraTitle": "SR 525 at MP 0.9: Alderwood Mall Pkwy",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/525vc00091.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.27388899999994,
+      "y": 47.842981000000066
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1505,
+      "CameraTitle": "SR 525 at MP 1.4: 164th St SW",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/525vc00141.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.27423499999998,
+      "y": 47.850134000000025
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1506,
+      "CameraTitle": "SR 525 at MP 2.3: 148th St SW",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/525vc00237.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.274566,
+      "y": 47.86402500000003
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1507,
+      "CameraTitle": "SR 525 at MP 4: Harbour Pt Bvd S",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/525vc00409.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.28476399999994,
+      "y": 47.88968200000005
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1508,
+      "CameraTitle": "SR 525 at MP 4.8: Chennault Bch Rd",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/525vc00480.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.29107499999998,
+      "y": 47.89885900000007
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1509,
+      "CameraTitle": "SR 525 at MP 5.2: Harbour Pt Bvd N",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/525vc00524.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.29293399999995,
+      "y": 47.90493100000003
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1514,
+      "CameraTitle": "SR 527 at MP 7.2: 153rd St SE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/527vc00729.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.21895199999994,
+      "y": 47.859214000000065
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1515,
+      "CameraTitle": "SR 527 at MP 8.1: Trillium Blvd",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/527vc00813.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.21758999999997,
+      "y": 47.87117500000005
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1516,
+      "CameraTitle": "SR 527 at MP 8.8: 132nd St SE / SR 96",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/527vc00886.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.20696299999997,
+      "y": 47.87830400000007
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1525,
+      "CameraTitle": "US 2 at MP 0.6: Homeacres Rd",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/002vc00068.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.17888599999998,
+      "y": 47.97834500000005
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 4023,
+      "CameraTitle": "SR 9 at MP 1.5: SR 524 Interchange",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/009vc00159.jpg",
+      "CompassDirection": "N"
+     },
+     "geometry": {
+      "x": -122.14331999999996,
+      "y": 47.80510300000003
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 4024,
+      "CameraTitle": "SR 9 at MP 0.5: 228th St SE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/009vc00057.jpg",
+      "CompassDirection": "N"
+     },
+     "geometry": {
+      "x": -122.14344099999994,
+      "y": 47.79033800000008
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 5000,
+      "CameraTitle": "US 2 at MP 14.3: SR 522 Interchange",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/002vc01429.jpg",
+      "CompassDirection": "S"
+     },
+     "geometry": {
+      "x": -121.98448499999995,
+      "y": 47.863226000000054
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 5001,
+      "CameraTitle": "US 2 at MP 14.6: Kelsey St",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/002vc01460.jpg",
+      "CompassDirection": "S"
+     },
+     "geometry": {
+      "x": -121.97828099999998,
+      "y": 47.86109800000003
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 5002,
+      "CameraTitle": "US 2 at MP 14.9: Lewis St (SR 203)",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/002vc01494.jpg",
+      "CompassDirection": "S"
+     },
+     "geometry": {
+      "x": -121.97151399999996,
+      "y": 47.85955000000007
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 5003,
+      "CameraTitle": "US 2 at MP 15.2: Main St",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/002vc01525.jpg",
+      "CompassDirection": "S"
+     },
+     "geometry": {
+      "x": -121.96518999999995,
+      "y": 47.85812800000008
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 5021,
+      "CameraTitle": "I-5 at MP 209.8: 228th St NE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc20983.jpg",
+      "CompassDirection": "S"
+     },
+     "geometry": {
+      "x": -122.21348799999998,
+      "y": 48.20358500000003
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 8216,
+      "CameraTitle": "Arlington Municipal Airport Northwest",
+      "ImageURL": "https://images.wsdot.wa.gov/airports/arlwest.jpg",
+      "CompassDirection": "E"
+     },
+     "geometry": {
+      "x": -122.15829999999994,
+      "y": 48.167500000000075
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 8217,
+      "CameraTitle": "Arlington Municipal Airport West",
+      "ImageURL": "https://images.wsdot.wa.gov/airports/arlrw11.jpg",
+      "CompassDirection": "W"
+     },
+     "geometry": {
+      "x": -122.15829999999994,
+      "y": 48.167500000000075
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 8218,
+      "CameraTitle": "Arlington Municipal Airport North",
+      "ImageURL": "https://images.wsdot.wa.gov/airports/arlrw16.jpg",
+      "CompassDirection": "N"
+     },
+     "geometry": {
+      "x": -122.15829999999994,
+      "y": 48.167500000000075
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 8219,
+      "CameraTitle": "Arlington Municipal Airport Southwest",
+      "ImageURL": "https://images.wsdot.wa.gov/airports/arlsw.jpg",
+      "CompassDirection": "S"
+     },
+     "geometry": {
+      "x": -122.15829999999994,
+      "y": 48.167500000000075
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9050,
+      "CameraTitle": "US 2 at MP 21.5: Old Owen Rd",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/002vc02158.jpg",
+      "CompassDirection": "E"
+     },
+     "geometry": {
+      "x": -121.83235199999996,
+      "y": 47.85761300000007
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9051,
+      "CameraTitle": "US 2 at MP 22.3: 5th St",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/002vc02235.jpg",
+      "CompassDirection": "E"
+     },
+     "geometry": {
+      "x": -121.81714699999998,
+      "y": 47.86167800000004
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9052,
+      "CameraTitle": "US 2 at MP 23.2: Sultan Basin Rd",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/002vc02322.jpg",
+      "CompassDirection": "E"
+     },
+     "geometry": {
+      "x": -121.79919299999995,
+      "y": 47.86447700000008
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9060,
+      "CameraTitle": "I-5 at MP 169.6: NE 50th St",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc16965.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.32174499999996,
+      "y": 47.665527000000054
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9068,
+      "CameraTitle": "I-5 at MP 184.1: Ash Way",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc18414.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.25530899999995,
+      "y": 47.85329100000007
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9069,
+      "CameraTitle": "I-5 at MP 185.7: 134th St SW",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc18577.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.24070999999998,
+      "y": 47.87665000000004
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9070,
+      "CameraTitle": "I-5 at MP 188.4: 106th St SW",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc18848.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.21194999999994,
+      "y": 47.90685400000007
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9071,
+      "CameraTitle": "I-5 at MP 193.9: US 2 Interchange",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc19389.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.18834699999996,
+      "y": 47.980354000000034
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9074,
+      "CameraTitle": "SR 96 at MP 2.3: 35th Ave SE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/096vc00239.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.18511399999994,
+      "y": 47.877954000000045
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9075,
+      "CameraTitle": "SR 96 at MP 1.7: 25th Ave SE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/096vc00177.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.19846599999994,
+      "y": 47.87806800000004
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9076,
+      "CameraTitle": "SR 104 at MP 28.7: N 205th St",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/104vc02870.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.32668799999999,
+      "y": 47.777694000000054
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9077,
+      "CameraTitle": "SR 522 at MP 10.5: S Campus Way",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/522vc01056.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.19445599999995,
+      "y": 47.755382000000054
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9079,
+      "CameraTitle": "SR 522 at MP 14: SR 9 Interchange",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/522vc01409.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.14471899999995,
+      "y": 47.78257600000006
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9085,
+      "CameraTitle": "I-405 at MP 27.6: 213th St SE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/405vc02760.jpg",
+      "CompassDirection": "N"
+     },
+     "geometry": {
+      "x": -122.22576399999997,
+      "y": 47.803847000000076
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9091,
+      "CameraTitle": "SR 526 at MP 3.5: Evergreen Way",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/526vc00358.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.22615499999995,
+      "y": 47.922903000000076
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9151,
+      "CameraTitle": "WSF Kingston Terminal",
+      "ImageURL": "https://images.wsdot.wa.gov/orflow/104vc02465.jpg",
+      "CompassDirection": "E"
+     },
+     "geometry": {
+      "x": -122.49551899999994,
+      "y": 47.79712400000005
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9152,
+      "CameraTitle": "WSF Kingston Ferry Sign East",
+      "ImageURL": "https://images.wsdot.wa.gov/wsf/kingston/fse/fse.jpg",
+      "CompassDirection": "E"
+     },
+     "geometry": {
+      "x": -122.52563999999995,
+      "y": 47.80941000000007
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9153,
+      "CameraTitle": "WSF Kingston Ferry Sign West",
+      "ImageURL": "https://images.wsdot.wa.gov/wsf/kingston/fsw/fsw.jpg",
+      "CompassDirection": "W"
+     },
+     "geometry": {
+      "x": -122.52563999999995,
+      "y": 47.80941000000007
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9154,
+      "CameraTitle": "WSF Kingston Barber",
+      "ImageURL": "https://images.wsdot.wa.gov/orflow/104vc02314.jpg",
+      "CompassDirection": "E"
+     },
+     "geometry": {
+      "x": -122.51750299999998,
+      "y": 47.80828500000007
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9155,
+      "CameraTitle": "WSF Edmonds W Dayton St",
+      "ImageURL": "https://images.wsdot.wa.gov/wsf/edmonds/104dayton.jpg",
+      "CompassDirection": "W"
+     },
+     "geometry": {
+      "x": -122.38321299999996,
+      "y": 47.80918200000008
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9156,
+      "CameraTitle": "WSF Edmonds VMS Sign",
+      "ImageURL": "https://images.wsdot.wa.gov/wsf/edmonds/104vms_wts.jpg",
+      "CompassDirection": "W"
+     },
+     "geometry": {
+      "x": -122.36698599999994,
+      "y": 47.79057300000005
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9157,
+      "CameraTitle": "WSF Edmonds Holding",
+      "ImageURL": "https://images.wsdot.wa.gov/wsf/edmonds/holding.jpg",
+      "CompassDirection": "W"
+     },
+     "geometry": {
+      "x": -122.38320899999997,
+      "y": 47.809746000000075
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9159,
+      "CameraTitle": "WSF Edmonds Underpass",
+      "ImageURL": "https://images.wsdot.wa.gov/wsf/edmonds/104underpass.jpg",
+      "CompassDirection": "W"
+     },
+     "geometry": {
+      "x": -122.38230699999997,
+      "y": 47.802073000000064
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9160,
+      "CameraTitle": "WSF Edmonds Pine",
+      "ImageURL": "https://images.wsdot.wa.gov/wsf/edmonds/104pine.jpg",
+      "CompassDirection": "W"
+     },
+     "geometry": {
+      "x": -122.38246299999997,
+      "y": 47.802181000000076
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9161,
+      "CameraTitle": "SR 525 at MP 7.4: Clover Ln - WSF Mukilteo",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/525vc00740.jpg",
+      "CompassDirection": "W"
+     },
+     "geometry": {
+      "x": -122.30634799999996,
+      "y": 47.93346900000006
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9162,
+      "CameraTitle": "SR 525 at MP 6.9: 76th St SW North - WSF Mukilteo",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/525vc00695.jpg",
+      "CompassDirection": "W"
+     },
+     "geometry": {
+      "x": -122.30064399999998,
+      "y": 47.92838500000005
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9163,
+      "CameraTitle": "SR 525 at MP 6.9: 76th St SW South - WSF Mukilteo",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/525vc00694.jpg",
+      "CompassDirection": "W"
+     },
+     "geometry": {
+      "x": -122.30056199999996,
+      "y": 47.92825000000005
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9164,
+      "CameraTitle": "WSF Mukilteo Holding",
+      "ImageURL": "https://images.wsdot.wa.gov/wsf/Mukilteo/Terminal/mukterm.jpg",
+      "CompassDirection": "W"
+     },
+     "geometry": {
+      "x": -122.30200699999995,
+      "y": 47.94875600000006
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9166,
+      "CameraTitle": "WSF Clinton Terminal",
+      "ImageURL": "https://images.wsdot.wa.gov/wsf/clinton/terminal/clinton.jpg",
+      "CompassDirection": "E"
+     },
+     "geometry": {
+      "x": -122.35207899999995,
+      "y": 47.97471800000005
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9172,
+      "CameraTitle": "WSF Clinton Uphill",
+      "ImageURL": "https://images.wsdot.wa.gov/wsf/clinton/boothhill.jpg",
+      "CompassDirection": "E"
+     },
+     "geometry": {
+      "x": -122.35207899999995,
+      "y": 47.97471800000005
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9173,
+      "CameraTitle": "WSF Clinton Dock",
+      "ImageURL": "https://images.wsdot.wa.gov/wsf/clinton/boothdock.jpg",
+      "CompassDirection": "E"
+     },
+     "geometry": {
+      "x": -122.35151599999995,
+      "y": 47.97481300000004
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9174,
+      "CameraTitle": "WSF Clinton E SR 525",
+      "ImageURL": "https://images.wsdot.wa.gov/wsf/clinton/clinteast.jpg",
+      "CompassDirection": "E"
+     },
+     "geometry": {
+      "x": -122.35676199999995,
+      "y": 47.979190000000074
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9175,
+      "CameraTitle": "WSF Clinton W SR 525",
+      "ImageURL": "https://images.wsdot.wa.gov/wsf/clinton/clintwest.jpg",
+      "CompassDirection": "W"
+     },
+     "geometry": {
+      "x": -122.35907599999996,
+      "y": 47.97963800000008
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9208,
+      "CameraTitle": "SR 104 at MP 15.9: Wheeler St Looking West",
+      "ImageURL": "https://images.wsdot.wa.gov/orflow/104vc01594.jpg",
+      "CompassDirection": "W"
+     },
+     "geometry": {
+      "x": -122.60250599999995,
+      "y": 47.85483100000005
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9213,
+      "CameraTitle": "US 2 at MP 12.9: Fryelands Blvd / Roosevelt Rd SE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/002vc01294.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.00952299999994,
+      "y": 47.87312700000007
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9235,
+      "CameraTitle": "I-5 at MP 200.7: 88th St NE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc20077.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.18463099999997,
+      "y": 48.07583500000004
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9236,
+      "CameraTitle": "I-5 at MP 202.4: 116th St NE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc20249.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.18474699999996,
+      "y": 48.10040900000007
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9237,
+      "CameraTitle": "I-5 at MP 203.3: 128th St NE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc20332.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.18478299999998,
+      "y": 48.11285600000008
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9238,
+      "CameraTitle": "I-5 at MP 204.2: 144th St NE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc20424.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.185363,
+      "y": 48.126333000000045
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9239,
+      "CameraTitle": "I-5 at MP 208.6: SR 530 Interchange",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc20868.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.20310399999994,
+      "y": 48.18833500000005
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9240,
+      "CameraTitle": "I-5 at MP 209.3: Stillaguamish River",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc20934.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.20964199999997,
+      "y": 48.19670800000006
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9255,
+      "CameraTitle": "SR 202 at MP 9.9: 204th Ave NE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/202vc00987.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.07066899999995,
+      "y": 47.656078000000036
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9256,
+      "CameraTitle": "SR 9 at MP 7.4: 124th St SE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/009vc00749.jpg",
+      "CompassDirection": "N"
+     },
+     "geometry": {
+      "x": -122.10955999999999,
+      "y": 47.88553600000006
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9257,
+      "CameraTitle": "SR 9 at MP 5.6: 152nd SE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/009vc00569.jpg",
+      "CompassDirection": "N"
+     },
+     "geometry": {
+      "x": -122.11088099999995,
+      "y": 47.85947100000004
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9258,
+      "CameraTitle": "SR 9 at MP 4.8: 164th SE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/009vc00487.jpg",
+      "CompassDirection": "W"
+     },
+     "geometry": {
+      "x": -122.11735199999998,
+      "y": 47.84847700000006
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9259,
+      "CameraTitle": "SR 9 at MP 6: Cathcart Way",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/009vc00605.jpg",
+      "CompassDirection": "N"
+     },
+     "geometry": {
+      "x": -122.10986999999994,
+      "y": 47.86445200000003
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9260,
+      "CameraTitle": "SR 9 at MP 8.8: Harvey Field",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/009vc00884.jpg",
+      "CompassDirection": "N"
+     },
+     "geometry": {
+      "x": -122.10904099999999,
+      "y": 47.90493200000003
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9261,
+      "CameraTitle": "SR 9 at MP 8.4: Marsh Rd",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/009vc00841.jpg",
+      "CompassDirection": "S"
+     },
+     "geometry": {
+      "x": -122.10931299999999,
+      "y": 47.89875200000006
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9262,
+      "CameraTitle": "SR 9 at MP 6.9: Lowell-Larimer Rd",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/009vc00697.jpg",
+      "CompassDirection": "S"
+     },
+     "geometry": {
+      "x": -122.10975699999995,
+      "y": 47.87811300000004
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9265,
+      "CameraTitle": "US 2 at MP 5: SR 9 Interchange",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/002VC00504.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.10412799999995,
+      "y": 47.951891000000046
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9270,
+      "CameraTitle": "I-5 at MP 199.1: SR 528 Interchange",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc19910.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.18442199999998,
+      "y": 48.05181700000003
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9271,
+      "CameraTitle": "I-5 at MP 206.9: 184th St NE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc20691.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.19086499999997,
+      "y": 48.164701000000036
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9275,
+      "CameraTitle": "I-5 at MP 196: 12th St NE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc19601.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.17426099999994,
+      "y": 48.00795100000005
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9276,
+      "CameraTitle": "I-5 at MP 196.9: 26th St NE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc19688.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.17495899999994,
+      "y": 48.02016700000007
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9291,
+      "CameraTitle": "SR 522 at MP 12: SR 202 Interchange",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/522vc01207.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.16386399999999,
+      "y": 47.75813300000004
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9298,
+      "CameraTitle": "US 2 at MP 24.2: Rice Rd",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/002vc02427.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -121.77725099999998,
+      "y": 47.867991000000075
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9309,
+      "CameraTitle": "SR 9 at MP 15.7: SR 204 Interchange",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/009vc01577.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.10630199999997,
+      "y": 48.00287200000008
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9310,
+      "CameraTitle": "SR 9 at MP 16.4: Lundeen Pkwy",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/009vc01647.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.10805399999998,
+      "y": 48.01310700000005
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9311,
+      "CameraTitle": "SR 9 at MP 17: Soper Hill Rd",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/009vc01706.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.10934099999997,
+      "y": 48.02159000000006
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9312,
+      "CameraTitle": "SR 9 at MP 17.5: SR 92 Interchange",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/009vc01751.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.11024799999996,
+      "y": 48.02818600000006
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9316,
+      "CameraTitle": "SR 529 at MP 4.1: Snohomish River South",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/529vc00416.jpg",
+      "CompassDirection": "S"
+     },
+     "geometry": {
+      "x": -122.18774399999995,
+      "y": 48.01690400000007
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9317,
+      "CameraTitle": "SR 529 at MP 4.1: Snohomish River North",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/529vc00419.jpg",
+      "CompassDirection": "N"
+     },
+     "geometry": {
+      "x": -122.18739399999998,
+      "y": 48.01725300000004
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9344,
+      "CameraTitle": "I-5 at MP 205: 156th St NE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc20503.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.18611099999998,
+      "y": 48.13744500000007
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9345,
+      "CameraTitle": "I-5 at MP 203.7: 136th St NE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc20379.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.18503599999997,
+      "y": 48.11969700000003
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9357,
+      "CameraTitle": "US 2 at MP 2: Ebey Slough",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/002vc00207.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.14574899999997,
+      "y": 47.97798100000006
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9394,
+      "CameraTitle": "SR 525 at MP 8.2: 5th St North - WSF Mukilteo",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/525vc00820.jpg",
+      "CompassDirection": "W"
+     },
+     "geometry": {
+      "x": -122.30428699999999,
+      "y": 47.94489900000008
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9400,
+      "CameraTitle": "I-5 at MP 171: NE 77th St",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc17101.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.32320599999997,
+      "y": 47.68458500000003
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9401,
+      "CameraTitle": "I-5 at MP 170.8: Lake City Way Express Lanes",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc17082.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.32191999999998,
+      "y": 47.68344700000006
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9447,
+      "CameraTitle": "I-5 at MP 181.5: 196th St SW",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc18155.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.27804799999996,
+      "y": 47.82130200000006
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9455,
+      "CameraTitle": "US 2 at MP 3.9: Bickford Ave",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/002vc00395.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.12243899999999,
+      "y": 47.960660000000075
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9458,
+      "CameraTitle": "SR 9 at MP 2.2: 201st St SE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/009vc00226.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.14006499999999,
+      "y": 47.814505000000054
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9459,
+      "CameraTitle": "SR 9 at MP 2.7: 194th St SE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/009vc00277.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.13666599999999,
+      "y": 47.82153900000003
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9460,
+      "CameraTitle": "SR 9 at MP 3.1: 188th St SE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/009vc00318.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.13235399999996,
+      "y": 47.82662400000004
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9461,
+      "CameraTitle": "SR 9 at MP 3.7: 180th St SE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/009vc00376.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.12604099999999,
+      "y": 47.83381300000008
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9462,
+      "CameraTitle": "SR 9 at MP 4: 176th St SE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/009vc00402.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.12401999999997,
+      "y": 47.837368000000026
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9468,
+      "CameraTitle": "SR 531 at MP 6.6: Smokey Point Blvd",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/531vc00663.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.18295699999999,
+      "y": 48.15241000000003
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9469,
+      "CameraTitle": "SR 531 at MP 7.1: 43rd Ave NE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/531vc00721.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.17228099999994,
+      "y": 48.152284000000066
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9470,
+      "CameraTitle": "SR 531 at MP 7.6: 51st Ave. NE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/531vc00762.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.16160099999996,
+      "y": 48.15211700000003
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9471,
+      "CameraTitle": "SR 531 at MP 8.1: 59th Ave. NE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/531vc00811.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.15098799999998,
+      "y": 48.152048000000036
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9472,
+      "CameraTitle": "SR 531 at MP 8.5: 67th Ave. NE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/531vc00859.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.14059299999997,
+      "y": 48.15190700000005
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9544,
+      "CameraTitle": "I-5 at MP 169: NE 40th St Express Lanes",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc16902.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.32231199999995,
+      "y": 47.65643200000005
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9545,
+      "CameraTitle": "I-5 at MP 169: 7th Ave & 42nd",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc16908.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.32093599999996,
+      "y": 47.65745800000008
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9546,
+      "CameraTitle": "I-5 at MP 170.1: NE Ravenna Blvd",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc17018.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.32112099999995,
+      "y": 47.67305600000003
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9547,
+      "CameraTitle": "I-5 at MP 171.2: NE 80th St Express Lanes",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc17124.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.32658499999997,
+      "y": 47.68722800000006
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9548,
+      "CameraTitle": "I-5 at MP 171.9: N 92nd St",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc17191.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.32959799999998,
+      "y": 47.69606100000004
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9549,
+      "CameraTitle": "I-5 at MP 172.4: NE 103rd Express Lanes Ramp",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc17240.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.32868399999995,
+      "y": 47.703501000000074
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9550,
+      "CameraTitle": "I-5 at MP 172.4: 1st Ave & 103rd",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc17245.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.328735,
+      "y": 47.704038000000025
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9551,
+      "CameraTitle": "I-5 at MP 173.1: NE 117th St",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc17315.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.32693799999998,
+      "y": 47.71388100000007
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9552,
+      "CameraTitle": "I-5 at MP 173.3: NE 120th St",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc17338.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.32564299999996,
+      "y": 47.71591200000006
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9553,
+      "CameraTitle": "I-5 at MP 175.5: N Metro Base",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc17552.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.32900099999995,
+      "y": 47.74722600000007
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9554,
+      "CameraTitle": "I-5 at MP 176.2: NE 175th St, NB",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc17627.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.32789899999995,
+      "y": 47.75782600000008
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9555,
+      "CameraTitle": "I-5 at MP 177.7: NE 205th St",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc17776.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.31759699999998,
+      "y": 47.777904000000035
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9556,
+      "CameraTitle": "I-5 at MP 178.7: 228th St SW",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc17875.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.31608499999999,
+      "y": 47.791968000000054
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9557,
+      "CameraTitle": "I-5 at MP 179.6: 212th St SW",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc17966.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.30985999999996,
+      "y": 47.80432100000007
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9558,
+      "CameraTitle": "I-5 at MP 182.5: 186th St SW",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc18250.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.26285099999996,
+      "y": 47.83024700000004
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9559,
+      "CameraTitle": "I-5 at MP 182.6: Alderwood",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc18262.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.26192999999995,
+      "y": 47.831777000000045
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9560,
+      "CameraTitle": "I-5 at MP 195.4: 2nd St NE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc19537.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.17399699999999,
+      "y": 47.99837100000008
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9561,
+      "CameraTitle": "I-5 at MP 197.5: 37th St NE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc19754.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.17686599999996,
+      "y": 48.029967000000056
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9562,
+      "CameraTitle": "I-5 at MP 199.8: 72nd St NE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc19988.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.18469099999999,
+      "y": 48.063064000000054
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9563,
+      "CameraTitle": "I-5 at MP 201.5: 101st Pl NE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc20159.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.18468899999999,
+      "y": 48.087706000000026
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9564,
+      "CameraTitle": "I-5 at MP 207.7: 200th St NE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc20776.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.19328599999994,
+      "y": 48.176788000000045
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9568,
+      "CameraTitle": "I-5 at MP 210.3: 236th St NE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc21032.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.21630499999998,
+      "y": 48.20920800000005
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9570,
+      "CameraTitle": "SR 9 at MP 13.3: 32nd St SE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/009vc01331.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.10219099999995,
+      "y": 47.96759600000007
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9571,
+      "CameraTitle": "SR 9 at MP 20.5: 84th St NE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/009vc02059.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.11107099999998,
+      "y": 48.07222400000006
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9595,
+      "CameraTitle": "SR 96 at MP 0.3: 3rd Ave SE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/096vc00030.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.22798799999998,
+      "y": 47.88199600000007
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9596,
+      "CameraTitle": "SR 96 at MP 0.7: Dumas Rd",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/096vc00073.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.21950499999997,
+      "y": 47.88018600000004
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9597,
+      "CameraTitle": "SR 96 at MP 3.2: Seattle Hill Rd",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/096vc00327.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.16615299999995,
+      "y": 47.87779500000005
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9605,
+      "CameraTitle": "SR 99 at MP 50.9: Lincoln Wy",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/099vc05095.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.27370399999995,
+      "y": 47.873015000000066
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9606,
+      "CameraTitle": "SR 99 at MP 51.7: Gibson Rd",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/099vc05177.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.26430099999999,
+      "y": 47.88308900000004
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9607,
+      "CameraTitle": "SR 104 at MP 28.8: Meridian Ave",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/104vc02886.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.32336799999996,
+      "y": 47.77762000000007
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9608,
+      "CameraTitle": "SR 104 at MP 29.8: 15th Ave NE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/104vc02989.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.31550299999998,
+      "y": 47.77783900000003
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9609,
+      "CameraTitle": "SR 104 at MP 30.1: 19th Ave NE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/104vc03014.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.30107399999997,
+      "y": 47.768950000000075
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9610,
+      "CameraTitle": "SR 104 at MP 31.3: 35th Ave NE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/104vc03130.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.28242099999994,
+      "y": 47.75854000000004
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9621,
+      "CameraTitle": "SR 202 at MP 0.2: NE 177th Pl",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/202vc00022.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.16544599999997,
+      "y": 47.75573600000007
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9622,
+      "CameraTitle": "SR 202 at MP 0.3: NE 175th St",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/202vc00031.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.16533099999998,
+      "y": 47.754511000000036
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9623,
+      "CameraTitle": "SR 204 at MP 2: Lundeen Pkwy",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/204vc00200.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.11304099999995,
+      "y": 48.000038000000075
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9634,
+      "CameraTitle": "I-405 at MP 19.8: NE 116th St, SPUI",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/405vc01983.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.17925599999995,
+      "y": 47.70367600000003
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9635,
+      "CameraTitle": "I-405 at MP 20.6: NE 128th St",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/405vc02066.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.18512899999996,
+      "y": 47.71498200000008
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9636,
+      "CameraTitle": "I-405 at MP 25.9: 232nd St SE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/405vc02594.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.20012699999995,
+      "y": 47.78785600000003
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9669,
+      "CameraTitle": "SR 520 at MP 11.8: W Lake Sammamish, EB Ramps",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/520vc01183.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.12664799999999,
+      "y": 47.66714300000007
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9670,
+      "CameraTitle": "SR 520 at MP 11.8: W Lake Sammamish, WB Ramps",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/520vc01184.jpg",
+      "CompassDirection": "W"
+     },
+     "geometry": {
+      "x": -122.12644799999998,
+      "y": 47.66728800000004
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9671,
+      "CameraTitle": "SR 520 at MP 12.2: Marymoor Park",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/520vc01225.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.11800099999999,
+      "y": 47.66713000000004
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9672,
+      "CameraTitle": "SR 522 at MP 0.3: I-5 Ramps",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/522vc00034.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.31764999999996,
+      "y": 47.68263900000005
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9673,
+      "CameraTitle": "SR 522 at MP 0.4: Roosevelt Tunnel",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/522vc00048.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.31564999999995,
+      "y": 47.68415200000004
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9674,
+      "CameraTitle": "SR 522 at MP 4.6: NE 153rd St",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/522vc00467.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.28938199999999,
+      "y": 47.739843000000064
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9675,
+      "CameraTitle": "SR 522 at MP 7.5: 73rd Ave NE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/522vc00750.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.24346099999997,
+      "y": 47.757397000000026
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9676,
+      "CameraTitle": "SR 522 at MP 7.8: 77th Ct NE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/522vc00781.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.237192,
+      "y": 47.75636200000008
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9677,
+      "CameraTitle": "SR 522 at MP 8.1: 83rd Pl NE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/522vc00816.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.23005199999994,
+      "y": 47.75444700000003
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9678,
+      "CameraTitle": "SR 525 at MP 0.8: Alderwood Pkwy, NB Ramps",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/525vc00087.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.27094599999998,
+      "y": 47.84163200000006
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9679,
+      "CameraTitle": "SR 527 at MP 9.5: 121st St SE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/527vc00950.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.20667499999996,
+      "y": 47.88757300000003
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9680,
+      "CameraTitle": "SR 527 at MP 9.9: 116th St SE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/527vc00990.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.20368799999994,
+      "y": 47.892720000000054
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9681,
+      "CameraTitle": "SR 527 at MP 10.3: 112th St SE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/527vc01039.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.206775,
+      "y": 47.89719500000007
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9691,
+      "CameraTitle": "I-405 at MP 17.6: NE 75th St",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/405vc01762.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.18619899999999,
+      "y": 47.67226400000004
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9728,
+      "CameraTitle": "SR 525 at MP 8.1: 5th St South - WSF Mukilteo",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/525vc00819.jpg",
+      "CompassDirection": "S"
+     },
+     "geometry": {
+      "x": -122.30435899999998,
+      "y": 47.94475500000004
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9744,
+      "CameraTitle": "SR 522 at MP 20.2: Elliott Rd",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/522vc02029.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.05416199999996,
+      "y": 47.830639000000076
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9745,
+      "CameraTitle": "SR 522 at MP 21.3: 149th Ave SE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/522vc02137.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.03191899999996,
+      "y": 47.829372000000035
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9746,
+      "CameraTitle": "SR 522 at MP 22.1: 159th Ave SE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/522vc02219.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.01822599999997,
+      "y": 47.83665700000006
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9747,
+      "CameraTitle": "SR 522 at MP 23: W Main St",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/522vc02302.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.00991199999999,
+      "y": 47.84730100000007
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9748,
+      "CameraTitle": "SR 522 at MP 23.8: 175th Ave SE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/522vc02387.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -121.99528499999997,
+      "y": 47.85462400000006
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9749,
+      "CameraTitle": "SR 522 at MP 24.7: US 2 Interchange",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/522vc02474.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -121.98302299999995,
+      "y": 47.86304300000006
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9752,
+      "CameraTitle": "I-5 at MP 202.5: 117th St NE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc20251.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.18474799999996,
+      "y": 48.10113300000006
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9813,
+      "CameraTitle": "WSF Kingston SR 104 at Toll Booths",
+      "ImageURL": "https://images.wsdot.wa.gov/orflow/104vc02466.jpg",
+      "CompassDirection": "N"
+     },
+     "geometry": {
+      "x": -122.49686099999997,
+      "y": 47.79703500000005
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9944,
+      "CameraTitle": "SR 525 at MP 8.4: 1st Street",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/525vc00858.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.30110299999996,
+      "y": 47.94883800000008
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9950,
+      "CameraTitle": "SR 202 at MP 9.18: 192nd Dr NE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/202vc00918.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.08356099999997,
+      "y": 47.65664200000003
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9972,
+      "CameraTitle": "I-5 at MP 171.2: NE 80th St",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc17125.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.32667499999997,
+      "y": 47.68684900000005
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9973,
+      "CameraTitle": "I-5 at MP 175.1: NE 155th St",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc17510.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.32937599999997,
+      "y": 47.74150300000008
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9974,
+      "CameraTitle": "US 2 at MP 0: Under I-5 Interchange",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/002vc00001.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.18960499999997,
+      "y": 47.97910900000005
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9975,
+      "CameraTitle": "US 2 at MP 13.9: 179th Ave SE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/002vc01390.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -121.99059699999998,
+      "y": 47.86568300000005
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9983,
+      "CameraTitle": "SR 525 at MP 8.4: Lighthouse Way",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/525vc00843.jpg",
+      "CompassDirection": "S"
+     },
+     "geometry": {
+      "x": -122.30412299999995,
+      "y": 47.947992000000056
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9985,
+      "CameraTitle": "I-5 at MP 172.8: N 110th St, E",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc17281.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.32887299999999,
+      "y": 47.708679000000075
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9986,
+      "CameraTitle": "I-5 at MP 178.6: 230th St SW",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc17863.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.31662799999998,
+      "y": 47.790162000000066
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 9987,
+      "CameraTitle": "SR 9 at MP 15.4: Market Pl",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/009vc01544.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.10556899999995,
+      "y": 47.99817500000006
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 10016,
+      "CameraTitle": "I-405 at MP 17.3: NE 70th,SB Ramps",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/405vc01736.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.18804199999994,
+      "y": 47.66843000000006
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 10017,
+      "CameraTitle": "I-405 at MP 17.4: NE 70th,NB Ramps",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/405vc01745.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.18679699999996,
+      "y": 47.66980200000006
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 10019,
+      "CameraTitle": "I-405 at MP 18.21: NE 85th St, SB",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/405vc01821.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.18506399999995,
+      "y": 47.67733400000003
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 10021,
+      "CameraTitle": "I-405 at MP 18.17: NE 85th St, NB",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/405vc01817.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.18390199999999,
+      "y": 47.68038400000006
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 10022,
+      "CameraTitle": "I-405 at MP 18.7: NE 98th St",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/405vc01876.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.18178699999999,
+      "y": 47.688432000000034
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 10023,
+      "CameraTitle": "I-405 at MP 19.3: NE 108th St",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/405vc01932.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.18086799999998,
+      "y": 47.69650000000007
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 10024,
+      "CameraTitle": "I-405 at MP 20.1: NE 120th St",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/405vc02010.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.18064599999997,
+      "y": 47.707268000000056
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 10025,
+      "CameraTitle": "I-405 at MP 21.3: NE 139th St",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/405vc02132.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.18959299999995,
+      "y": 47.72431300000005
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 10026,
+      "CameraTitle": "I-405 at MP 22.8: NE 163rd St",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/405vc02283.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.18676699999997,
+      "y": 47.74589300000008
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 10027,
+      "CameraTitle": "I-405 at MP 22.8: NE 164th St",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/405vc02288.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.18656599999997,
+      "y": 47.746699000000035
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 10028,
+      "CameraTitle": "I-405 at MP 23.3: NE 175th St",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/405vc02337.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.18619199999995,
+      "y": 47.753527000000076
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 10029,
+      "CameraTitle": "I-405 at MP 23.9: NE 183rd St",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/405vc02393.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.18417799999997,
+      "y": 47.76135400000004
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 10030,
+      "CameraTitle": "I-405 at MP 25.1: 243rd St SE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/405vc02510.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.19171499999999,
+      "y": 47.77751900000004
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 10031,
+      "CameraTitle": "I-405 at MP 26.1: 230th St SE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/405vc02618.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.20423299999999,
+      "y": 47.78994700000004
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 10032,
+      "CameraTitle": "I-405 at MP 27: 220th St SE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/405vc02708.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.21985499999994,
+      "y": 47.79771900000003
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 10033,
+      "CameraTitle": "I-405 at MP 27.4: 216th St SE, NB",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/405vc02746.jpg",
+      "CompassDirection": "N"
+     },
+     "geometry": {
+      "x": -122.22474799999998,
+      "y": 47.80193500000007
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 10034,
+      "CameraTitle": "I-405 at MP 27.8: 210th St SE, SB ",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/405vc02786.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.22762799999998,
+      "y": 47.807405000000074
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 10035,
+      "CameraTitle": "I-405 at MP 28: Richmond Rd",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/405vc02806.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.22905899999995,
+      "y": 47.81014200000004
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 10036,
+      "CameraTitle": "I-405 at MP 29.2: Bing Rd",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/405vc02924.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.24633399999999,
+      "y": 47.82201900000007
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 10041,
+      "CameraTitle": "SR 522 at MP 12.9: NE 195th St",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/522vc01293.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.15586399999995,
+      "y": 47.76875000000007
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 10042,
+      "CameraTitle": "SR 525 at MP .5: Alderwood Mall Parkway, SB",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/525vc00058.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.273057,
+      "y": 47.838280000000054
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 10043,
+      "CameraTitle": "SR 525 at MP 8.4: Lighthouse Way, E",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/525vc00842.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.30412299999995,
+      "y": 47.947992000000056
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 10044,
+      "CameraTitle": "SR 525 at MP 8.4: Lighthouse Way S",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/525vc00843.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.30412299999995,
+      "y": 47.947992000000056
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 10045,
+      "CameraTitle": "SR 526 at MP 1.4: Airport Rd, WB",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/526vc00145.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.27182599999998,
+      "y": 47.922064000000034
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 10046,
+      "CameraTitle": "SR 526 at MP 1.4: Airport Rd, EB",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/526vc00146.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.27160799999996,
+      "y": 47.92206700000003
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 10047,
+      "CameraTitle": "SR 526 at MP 2.9: 9th Ave W",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/526vc00264.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.24060299999996,
+      "y": 47.92334200000005
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 10048,
+      "CameraTitle": "SR 530 at MP 17.3: Smokey Pt Blvd",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/530vc01730.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.19571299999996,
+      "y": 48.188101000000074
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 10067,
+      "CameraTitle": "I-5 at MP 173.7: NE 130th St W",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc17374.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.32476999999994,
+      "y": 47.72166600000003
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 10075,
+      "CameraTitle": "SR 9 at MP 13.8: S Lake Stevens Rd",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/009vc01383.jpg",
+      "CompassDirection": "S"
+     },
+     "geometry": {
+      "x": -122.10257899999999,
+      "y": 47.97518800000006
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 10076,
+      "CameraTitle": "SR 531 at MP 6.9: 40th Ave NE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/531vc00692.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.17663399999998,
+      "y": 48.15231800000004
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 10174,
+      "CameraTitle": "I-5 @ MP 194.33: 23rd St",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc19433.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.18318399999998,
+      "y": 47.98533900000007
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 10176,
+      "CameraTitle": "SR 99 @ MP 50.22: 148th St SW",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/099vc05022.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.28195,
+      "y": 47.864167000000066
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 10177,
+      "CameraTitle": "SR 202 @ MP 0.56: 127th Pl NE",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/202vc00056.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.16996799999998,
+      "y": 47.75304600000004
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 10180,
+      "CameraTitle": "I-405 @ MP 18.1: NE 85th St, NB Ramps",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/405vc01812.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.18282499999998,
+      "y": 47.67914600000006
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 10236,
+      "CameraTitle": "SR 529 at MP 6: I-5 SB Ramps",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/529vc00604.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.18156299999998,
+      "y": 48.04250500000006
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 10237,
+      "CameraTitle": "SR 529 at MP 6.2: I-5/SR 529 RAB",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/529vc00619.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.17953599999998,
+      "y": 48.04520000000008
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 10238,
+      "CameraTitle": "I-5 at MP 198.3: SR 529 NB Ramps",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc19829.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.17880899999994,
+      "y": 48.04043400000006
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 10239,
+      "CameraTitle": "I-5 at MP 198.5: SR 529 SB Ramps",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc19849.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.18048899999997,
+      "y": 48.04208300000005
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 10240,
+      "CameraTitle": "SR 305 @ MP 7.1: Suquamish Way",
+      "ImageURL": "https://images.wsdot.wa.gov/orflow/305vc00719.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.57076999999998,
+      "y": 47.71396200000004
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 10241,
+      "CameraTitle": "SR 307 @ MP 2.4: Gunderson Way",
+      "ImageURL": "https://images.wsdot.wa.gov/orflow/307vc00243.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.60714299999995,
+      "y": 47.77246100000008
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 10263,
+      "CameraTitle": "I-405 at MP 20.2: NE 124th St, NB Ramps",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/405vc02021.jpg",
+      "CompassDirection": "O"
+     },
+     "geometry": {
+      "x": -122.18059099999999,
+      "y": 47.70962700000007
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 10264,
+      "CameraTitle": "I-405 at MP 20.4: NE 124th St, SB Ramps",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/405vc02041.jpg",
+      "CompassDirection": "O"
+     },
+     "geometry": {
+      "x": -122.18632199999996,
+      "y": 47.71129300000007
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 10266,
+      "CameraTitle": "WSF Kingston Lindvog Rd",
+      "ImageURL": "https://images.wsdot.wa.gov/orflow/104vc02390.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.50347199999999,
+      "y": 47.80266700000004
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 10267,
+      "CameraTitle": "I-405 at MP 20.9: NE 132nd St, East",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/405vc02093.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.18761699999999,
+      "y": 47.71959500000003
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 10273,
+      "CameraTitle": "SR 520 at MP 10.7: NE 51st St, EB Ramps",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/520vc01074.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.13737799999996,
+      "y": 47.654277000000036
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 10282,
+      "CameraTitle": "I-5 at MP 174.7: NE 148th St",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc17470.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.32467999999994,
+      "y": 47.734750000000076
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 10318,
+      "CameraTitle": "I-405 at MP 18.13: NE 85th St, SB Ramps",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/405vc01813.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.18520899999999,
+      "y": 47.67918000000003
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 10321,
+      "CameraTitle": "I-5 at NE 144th St, NB",
+      "ImageURL": "https://images.wsdot.wa.gov/nw/005vc17459.jpg",
+      "CompassDirection": "B"
+     },
+     "geometry": {
+      "x": -122.32357099999996,
+      "y": 47.73404300000004
+     }
+    }
+   ]
+  },
+  {
+   "id": 1,
+   "name": "Weather Stations",
+   "fields": [
+    "OBJECTID",
+    "WeatherStationDescription",
+    "WeatherReportDateTime",
+    "TemperatureFarhenheit",
+    "TemperatureCelcius",
+    "SurfaceTemperature",
+    "WindSpeed",
+    "CardinalCompassDirection",
+    "Visibility"
+   ],
+   "features": [
+    {
+     "attributes": {
+      "OBJECTID": 1850,
+      "WeatherStationDescription": "Arlington Municipal Airport",
+      "WeatherReportDateTime": 1795047000000,
+      "TemperatureFarhenheit": "48",
+      "TemperatureCelcius": "9",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "9",
+      "CardinalCompassDirection": "N/A",
+      "Visibility": "0.00"
+     },
+     "geometry": {
+      "x": -122.15908999999999,
+      "y": 48.15850000000006
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1873,
+      "WeatherStationDescription": "Everett Snohomish County",
+      "WeatherReportDateTime": 1795047000000,
+      "TemperatureFarhenheit": "46",
+      "TemperatureCelcius": "8",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "9",
+      "CardinalCompassDirection": "N/A",
+      "Visibility": "0.00"
+     },
+     "geometry": {
+      "x": -122.28304999999995,
+      "y": 47.92331000000007
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1910,
+      "WeatherStationDescription": "NE 195th on SB I-405 at mp 24.58",
+      "WeatherReportDateTime": 1795050000000,
+      "TemperatureFarhenheit": "46",
+      "TemperatureCelcius": "8",
+      "SurfaceTemperature": "9",
+      "WindSpeed": "1",
+      "CardinalCompassDirection": "S  ",
+      "Visibility": "1.24"
+     },
+     "geometry": {
+      "x": -122.18404782999994,
+      "y": 47.76063254700006
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 1966,
+      "WeatherStationDescription": "NE 130th Street on I-5 at mp 173.75",
+      "WeatherReportDateTime": 1795049940000,
+      "TemperatureFarhenheit": "44",
+      "TemperatureCelcius": "7",
+      "SurfaceTemperature": "8",
+      "WindSpeed": "5",
+      "CardinalCompassDirection": "W  ",
+      "Visibility": "1.24"
+     },
+     "geometry": {
+      "x": -122.32399999999996,
+      "y": 47.726000000000056
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 3052,
+      "WeatherStationDescription": "CW5022 Kirkland",
+      "WeatherReportDateTime": 1795048620000,
+      "TemperatureFarhenheit": "47",
+      "TemperatureCelcius": "8",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "0",
+      "CardinalCompassDirection": "W  ",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.18082999999996,
+      "y": 47.690000000000055
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 3063,
+      "WeatherStationDescription": "CW5456 Hansville",
+      "WeatherReportDateTime": 1795048500000,
+      "TemperatureFarhenheit": "44",
+      "TemperatureCelcius": "7",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "0",
+      "CardinalCompassDirection": "NW ",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.58549999999997,
+      "y": 47.920330000000035
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 3268,
+      "WeatherStationDescription": "I-5 / SR526 Interchange at mp 189.19",
+      "WeatherReportDateTime": 1795049940000,
+      "TemperatureFarhenheit": "49",
+      "TemperatureCelcius": "10",
+      "SurfaceTemperature": "9",
+      "WindSpeed": "N/A",
+      "CardinalCompassDirection": "N/A",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.20719999999994,
+      "y": 47.916300000000035
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 3269,
+      "WeatherStationDescription": "I-5 / SR2 Interchange (Everett) at mp 193.91",
+      "WeatherReportDateTime": 1795049940000,
+      "TemperatureFarhenheit": "52",
+      "TemperatureCelcius": "11",
+      "SurfaceTemperature": "10",
+      "WindSpeed": "0",
+      "CardinalCompassDirection": "N  ",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.18799999999999,
+      "y": 47.98030000000006
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 3270,
+      "WeatherStationDescription": "Stilliguamish River on I-5 at mp 209.94",
+      "WeatherReportDateTime": 1795050000000,
+      "TemperatureFarhenheit": "49",
+      "TemperatureCelcius": "9",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "1",
+      "CardinalCompassDirection": "S  ",
+      "Visibility": "1.24"
+     },
+     "geometry": {
+      "x": -122.21419999999995,
+      "y": 48.20420000000007
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 3752,
+      "WeatherStationDescription": "I-5 / I-405 Interchange at mp 182.57",
+      "WeatherReportDateTime": 1795049940000,
+      "TemperatureFarhenheit": "46",
+      "TemperatureCelcius": "8",
+      "SurfaceTemperature": "7",
+      "WindSpeed": "3",
+      "CardinalCompassDirection": "NE ",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.26235923099995,
+      "y": 47.830966800000056
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 3841,
+      "WeatherStationDescription": "Main St on SR 522 at mp 23.03",
+      "WeatherReportDateTime": 1795049940000,
+      "TemperatureFarhenheit": "47",
+      "TemperatureCelcius": "8",
+      "SurfaceTemperature": "8",
+      "WindSpeed": "0",
+      "CardinalCompassDirection": "W  ",
+      "Visibility": "1.24"
+     },
+     "geometry": {
+      "x": -122.00975974999994,
+      "y": 47.847408802000075
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 3900,
+      "WeatherStationDescription": "KD7TTL Lake Stevens",
+      "WeatherReportDateTime": 1795048800000,
+      "TemperatureFarhenheit": "45",
+      "TemperatureCelcius": "7",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "0",
+      "CardinalCompassDirection": "NE ",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.05999999999995,
+      "y": 48.087000000000046
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 3915,
+      "WeatherStationDescription": "CW1943 Seattle",
+      "WeatherReportDateTime": 1795048260000,
+      "TemperatureFarhenheit": "46",
+      "TemperatureCelcius": "8",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "0",
+      "CardinalCompassDirection": "N  ",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.28799999999995,
+      "y": 47.67417000000006
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 3920,
+      "WeatherStationDescription": "CW3186 Seattle",
+      "WeatherReportDateTime": 1795048800000,
+      "TemperatureFarhenheit": "45",
+      "TemperatureCelcius": "7",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "0",
+      "CardinalCompassDirection": "W  ",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.28266999999994,
+      "y": 47.69117000000006
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 3921,
+      "WeatherStationDescription": "CW3683 Seattle",
+      "WeatherReportDateTime": 1795048500000,
+      "TemperatureFarhenheit": "45",
+      "TemperatureCelcius": "7",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "0",
+      "CardinalCompassDirection": "N/A",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.31566999999995,
+      "y": 47.69950000000006
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 3933,
+      "WeatherStationDescription": "CW6259 Seattle",
+      "WeatherReportDateTime": 1795048800000,
+      "TemperatureFarhenheit": "45",
+      "TemperatureCelcius": "7",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "0",
+      "CardinalCompassDirection": "N/A",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.31382999999994,
+      "y": 47.69417000000004
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 3947,
+      "WeatherStationDescription": "CW7386 Bothell",
+      "WeatherReportDateTime": 1795048200000,
+      "TemperatureFarhenheit": "45",
+      "TemperatureCelcius": "7",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "0",
+      "CardinalCompassDirection": "NNE",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.20949999999999,
+      "y": 47.776170000000036
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 3952,
+      "WeatherStationDescription": "CW8405 Kingston",
+      "WeatherReportDateTime": 1795048200000,
+      "TemperatureFarhenheit": "44",
+      "TemperatureCelcius": "7",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "0",
+      "CardinalCompassDirection": "ESE",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.57532999999995,
+      "y": 47.88167000000004
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 3959,
+      "WeatherStationDescription": "CW9546 Redmond",
+      "WeatherReportDateTime": 1795048860000,
+      "TemperatureFarhenheit": "45",
+      "TemperatureCelcius": "7",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "0",
+      "CardinalCompassDirection": "SSE",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.01666999999998,
+      "y": 47.69533000000007
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 3971,
+      "WeatherStationDescription": "DW0372 Duvall",
+      "WeatherReportDateTime": 1795048800000,
+      "TemperatureFarhenheit": "46",
+      "TemperatureCelcius": "8",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "0",
+      "CardinalCompassDirection": "E  ",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -121.97082999999998,
+      "y": 47.73467000000005
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 3981,
+      "WeatherStationDescription": "DW1541 Duvall",
+      "WeatherReportDateTime": 1795048800000,
+      "TemperatureFarhenheit": "45",
+      "TemperatureCelcius": "7",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "N/A",
+      "CardinalCompassDirection": "N/A",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -121.92016999999998,
+      "y": 47.72350000000006
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 3990,
+      "WeatherStationDescription": "DW2629 Snohomish",
+      "WeatherReportDateTime": 1795048260000,
+      "TemperatureFarhenheit": "46",
+      "TemperatureCelcius": "8",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "0",
+      "CardinalCompassDirection": "E  ",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.08699999999999,
+      "y": 47.936330000000055
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 3991,
+      "WeatherStationDescription": "DW2690 Snohomish",
+      "WeatherReportDateTime": 1795048680000,
+      "TemperatureFarhenheit": "44",
+      "TemperatureCelcius": "7",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "0",
+      "CardinalCompassDirection": "SW ",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.14083,
+      "y": 47.825330000000065
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 3995,
+      "WeatherStationDescription": "DW3008 Bothell",
+      "WeatherReportDateTime": 1795048800000,
+      "TemperatureFarhenheit": "46",
+      "TemperatureCelcius": "8",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "1",
+      "CardinalCompassDirection": "NNE",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.19532999999996,
+      "y": 47.87617000000006
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 4001,
+      "WeatherStationDescription": "DW3422 Kirkland",
+      "WeatherReportDateTime": 1795048200000,
+      "TemperatureFarhenheit": "46",
+      "TemperatureCelcius": "8",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "0",
+      "CardinalCompassDirection": "ESE",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.19382999999999,
+      "y": 47.70583000000005
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 4025,
+      "WeatherStationDescription": "DW6241 Marysville",
+      "WeatherReportDateTime": 1795048200000,
+      "TemperatureFarhenheit": "47",
+      "TemperatureCelcius": "8",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "2",
+      "CardinalCompassDirection": "ENE",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.15299999999996,
+      "y": 48.12167000000005
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 4061,
+      "WeatherStationDescription": "DW8513 Seattle",
+      "WeatherReportDateTime": 1795048800000,
+      "TemperatureFarhenheit": "47",
+      "TemperatureCelcius": "8",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "0",
+      "CardinalCompassDirection": "NE ",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.38299999999998,
+      "y": 47.70283000000006
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 4067,
+      "WeatherStationDescription": "DW8947 Indianola",
+      "WeatherReportDateTime": 1795048920000,
+      "TemperatureFarhenheit": "44",
+      "TemperatureCelcius": "7",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "0",
+      "CardinalCompassDirection": "NE ",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.51389999999998,
+      "y": 47.75651000000005
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 4091,
+      "WeatherStationDescription": "K7JMM-13 Suquamish",
+      "WeatherReportDateTime": 1795048740000,
+      "TemperatureFarhenheit": "45",
+      "TemperatureCelcius": "7",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "1",
+      "CardinalCompassDirection": "N  ",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.56449999999995,
+      "y": 47.730830000000026
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 4094,
+      "WeatherStationDescription": "EW1269 Kruse Junction Marysville  WA US",
+      "WeatherReportDateTime": 1795048380000,
+      "TemperatureFarhenheit": "49",
+      "TemperatureCelcius": "9",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "0",
+      "CardinalCompassDirection": "E  ",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.17376999999999,
+      "y": 48.111680000000035
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 4097,
+      "WeatherStationDescription": "KK7UNF Duvall",
+      "WeatherReportDateTime": 1795048200000,
+      "TemperatureFarhenheit": "46",
+      "TemperatureCelcius": "8",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "0",
+      "CardinalCompassDirection": "N  ",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -121.96916999999996,
+      "y": 47.73550000000006
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 4103,
+      "WeatherStationDescription": "EW0123 Bainbridge Island          WA US",
+      "WeatherReportDateTime": 1795048200000,
+      "TemperatureFarhenheit": "45",
+      "TemperatureCelcius": "7",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "0",
+      "CardinalCompassDirection": "N  ",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.53132999999997,
+      "y": 47.67417000000006
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 4110,
+      "WeatherStationDescription": "EW1994 Monroe",
+      "WeatherReportDateTime": 1795048200000,
+      "TemperatureFarhenheit": "44",
+      "TemperatureCelcius": "7",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "0",
+      "CardinalCompassDirection": "NNW",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.01099999999997,
+      "y": 47.78817000000004
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 4113,
+      "WeatherStationDescription": "EW2136 Brier",
+      "WeatherReportDateTime": 1795048800000,
+      "TemperatureFarhenheit": "44",
+      "TemperatureCelcius": "7",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "0",
+      "CardinalCompassDirection": "W  ",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.27999999999997,
+      "y": 47.78033000000005
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 4125,
+      "WeatherStationDescription": "EW2796 Camano Island",
+      "WeatherReportDateTime": 1795048800000,
+      "TemperatureFarhenheit": "47",
+      "TemperatureCelcius": "8",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "0",
+      "CardinalCompassDirection": "ESE",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.51532999999995,
+      "y": 48.14167000000003
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 4128,
+      "WeatherStationDescription": "EW2957 Lake Forest Park",
+      "WeatherReportDateTime": 1795048200000,
+      "TemperatureFarhenheit": "45",
+      "TemperatureCelcius": "7",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "0",
+      "CardinalCompassDirection": "W  ",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.28532999999999,
+      "y": 47.74667000000005
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 4129,
+      "WeatherStationDescription": "K7SSW Seattle",
+      "WeatherReportDateTime": 1795048200000,
+      "TemperatureFarhenheit": "45",
+      "TemperatureCelcius": "7",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "1",
+      "CardinalCompassDirection": "NNE",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.37349999999998,
+      "y": 47.72033000000005
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 4139,
+      "WeatherStationDescription": "EW4100 Woodinville",
+      "WeatherReportDateTime": 1795048800000,
+      "TemperatureFarhenheit": "43",
+      "TemperatureCelcius": "6",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "0",
+      "CardinalCompassDirection": "N  ",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.12232999999998,
+      "y": 47.78350000000006
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 4184,
+      "WeatherStationDescription": "EW6795 Seattle",
+      "WeatherReportDateTime": 1795048080000,
+      "TemperatureFarhenheit": "46",
+      "TemperatureCelcius": "8",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "0",
+      "CardinalCompassDirection": "WSW",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.28249999999997,
+      "y": 47.69983000000008
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 4185,
+      "WeatherStationDescription": "EW6774 Machias",
+      "WeatherReportDateTime": 1795048740000,
+      "TemperatureFarhenheit": "48",
+      "TemperatureCelcius": "9",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "0",
+      "CardinalCompassDirection": "NNE",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.05399999999997,
+      "y": 47.99750000000006
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 4198,
+      "WeatherStationDescription": "EW7826 Seattle",
+      "WeatherReportDateTime": 1795048800000,
+      "TemperatureFarhenheit": "47",
+      "TemperatureCelcius": "8",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "0",
+      "CardinalCompassDirection": "NNW",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.40999999999997,
+      "y": 47.66933000000006
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 4218,
+      "WeatherStationDescription": "EW8474 Everett",
+      "WeatherReportDateTime": 1795048200000,
+      "TemperatureFarhenheit": "49",
+      "TemperatureCelcius": "9",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "0",
+      "CardinalCompassDirection": "SE ",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.20316999999994,
+      "y": 47.99350000000004
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 4226,
+      "WeatherStationDescription": "EW9714 Redmond",
+      "WeatherReportDateTime": 1795048800000,
+      "TemperatureFarhenheit": "45",
+      "TemperatureCelcius": "7",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "N/A",
+      "CardinalCompassDirection": "N/A",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.06382999999994,
+      "y": 47.69717000000003
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 4234,
+      "WeatherStationDescription": "FW0821 Seattle",
+      "WeatherReportDateTime": 1795048860000,
+      "TemperatureFarhenheit": "44",
+      "TemperatureCelcius": "7",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "1",
+      "CardinalCompassDirection": "N  ",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.34710999999999,
+      "y": 47.69772000000006
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 4244,
+      "WeatherStationDescription": "FW2061 Camano Island",
+      "WeatherReportDateTime": 1795048800000,
+      "TemperatureFarhenheit": "49",
+      "TemperatureCelcius": "9",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "3",
+      "CardinalCompassDirection": "SSE",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.39782999999994,
+      "y": 48.101330000000075
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 4246,
+      "WeatherStationDescription": "FW2178 Bothell",
+      "WeatherReportDateTime": 1795048740000,
+      "TemperatureFarhenheit": "44",
+      "TemperatureCelcius": "7",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "0",
+      "CardinalCompassDirection": "S  ",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.22349999999994,
+      "y": 47.82367000000005
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 4272,
+      "WeatherStationDescription": "FW3983 Edmonds",
+      "WeatherReportDateTime": 1795048200000,
+      "TemperatureFarhenheit": "43",
+      "TemperatureCelcius": "6",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "0",
+      "CardinalCompassDirection": "WSW",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.35099999999994,
+      "y": 47.79383000000007
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 4280,
+      "WeatherStationDescription": "FW4781 Suquamish",
+      "WeatherReportDateTime": 1795048860000,
+      "TemperatureFarhenheit": "45",
+      "TemperatureCelcius": "7",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "0",
+      "CardinalCompassDirection": "NNW",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.56132999999994,
+      "y": 47.75133000000005
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 4284,
+      "WeatherStationDescription": "FW3783 Clinton",
+      "WeatherReportDateTime": 1795048320000,
+      "TemperatureFarhenheit": "46",
+      "TemperatureCelcius": "8",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "0",
+      "CardinalCompassDirection": "SSW",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.48049999999995,
+      "y": 47.990500000000054
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 4310,
+      "WeatherStationDescription": "FW6109 Kenmore",
+      "WeatherReportDateTime": 1795048800000,
+      "TemperatureFarhenheit": "45",
+      "TemperatureCelcius": "7",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "13",
+      "CardinalCompassDirection": "NE ",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.25182999999998,
+      "y": 47.77200000000005
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 4322,
+      "WeatherStationDescription": "DW9722 Monroe",
+      "WeatherReportDateTime": 1795048200000,
+      "TemperatureFarhenheit": "54",
+      "TemperatureCelcius": "12",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "0",
+      "CardinalCompassDirection": "S  ",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -121.96038999999996,
+      "y": 47.86988000000008
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 4363,
+      "WeatherStationDescription": "CW6871 Woodinville",
+      "WeatherReportDateTime": 1795048860000,
+      "TemperatureFarhenheit": "45",
+      "TemperatureCelcius": "7",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "0",
+      "CardinalCompassDirection": "E  ",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.16666999999995,
+      "y": 47.780500000000075
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 4435,
+      "WeatherStationDescription": "KE7JL Kirkland",
+      "WeatherReportDateTime": 1795048380000,
+      "TemperatureFarhenheit": "47",
+      "TemperatureCelcius": "8",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "0",
+      "CardinalCompassDirection": "N  ",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.21616999999998,
+      "y": 47.69450000000006
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 5523,
+      "WeatherStationDescription": "DW7465 Bothell",
+      "WeatherReportDateTime": 1795048200000,
+      "TemperatureFarhenheit": "44",
+      "TemperatureCelcius": "7",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "0",
+      "CardinalCompassDirection": "N  ",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.19657999999998,
+      "y": 47.830520000000035
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 5587,
+      "WeatherStationDescription": "N9EX Lake Stevens",
+      "WeatherReportDateTime": 1795048800000,
+      "TemperatureFarhenheit": "49",
+      "TemperatureCelcius": "9",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "0",
+      "CardinalCompassDirection": "N  ",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.05832999999996,
+      "y": 48.01783000000006
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 5609,
+      "WeatherStationDescription": "FW7737 Redmond",
+      "WeatherReportDateTime": 1795048740000,
+      "TemperatureFarhenheit": "45",
+      "TemperatureCelcius": "7",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "0",
+      "CardinalCompassDirection": "WNW",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.02666999999997,
+      "y": 47.71067000000005
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 5650,
+      "WeatherStationDescription": "FW8270 Bothell",
+      "WeatherReportDateTime": 1795048260000,
+      "TemperatureFarhenheit": "46",
+      "TemperatureCelcius": "8",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "0",
+      "CardinalCompassDirection": "WNW",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.21982999999994,
+      "y": 47.81617000000006
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 5654,
+      "WeatherStationDescription": "FW8372 Seattle",
+      "WeatherReportDateTime": 1795048620000,
+      "TemperatureFarhenheit": "45",
+      "TemperatureCelcius": "7",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "0",
+      "CardinalCompassDirection": "S  ",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.37516999999997,
+      "y": 47.69717000000003
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 5662,
+      "WeatherStationDescription": "FW8450 Marysville",
+      "WeatherReportDateTime": 1795048260000,
+      "TemperatureFarhenheit": "48",
+      "TemperatureCelcius": "9",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "0",
+      "CardinalCompassDirection": "N  ",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.13866999999999,
+      "y": 48.037000000000035
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 5700,
+      "WeatherStationDescription": "CW0138 Brier",
+      "WeatherReportDateTime": 1795048680000,
+      "TemperatureFarhenheit": "45",
+      "TemperatureCelcius": "7",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "0",
+      "CardinalCompassDirection": "N  ",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.26869999999997,
+      "y": 47.782200000000046
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 5706,
+      "WeatherStationDescription": "FW9546 Snohomish",
+      "WeatherReportDateTime": 1795048680000,
+      "TemperatureFarhenheit": "47",
+      "TemperatureCelcius": "8",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "5",
+      "CardinalCompassDirection": "NNE",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -121.91999999999996,
+      "y": 47.99533000000008
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 5792,
+      "WeatherStationDescription": "GW1230 SEATTLE",
+      "WeatherReportDateTime": 1795048620000,
+      "TemperatureFarhenheit": "47",
+      "TemperatureCelcius": "8",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "0",
+      "CardinalCompassDirection": "N  ",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.34799999999996,
+      "y": 47.65467000000007
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 5822,
+      "WeatherStationDescription": "EW1958 Woodinville",
+      "WeatherReportDateTime": 1795048500000,
+      "TemperatureFarhenheit": "43",
+      "TemperatureCelcius": "6",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "0",
+      "CardinalCompassDirection": "NE ",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.04430999999994,
+      "y": 47.76511000000005
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 5840,
+      "WeatherStationDescription": "CW1661 Woodinville",
+      "WeatherReportDateTime": 1795048440000,
+      "TemperatureFarhenheit": "44",
+      "TemperatureCelcius": "7",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "0",
+      "CardinalCompassDirection": "N/A",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.08782999999994,
+      "y": 47.730830000000026
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 5851,
+      "WeatherStationDescription": "GW2645 Marysville",
+      "WeatherReportDateTime": 1795048800000,
+      "TemperatureFarhenheit": "49",
+      "TemperatureCelcius": "9",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "1",
+      "CardinalCompassDirection": "NNE",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.13682999999997,
+      "y": 48.056670000000054
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 5852,
+      "WeatherStationDescription": "GW2646 Arlington",
+      "WeatherReportDateTime": 1795048800000,
+      "TemperatureFarhenheit": "47",
+      "TemperatureCelcius": "8",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "0",
+      "CardinalCompassDirection": "N  ",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.11782999999997,
+      "y": 48.17083000000008
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 5858,
+      "WeatherStationDescription": "N4VTB-13 DUVALL",
+      "WeatherReportDateTime": 1795048860000,
+      "TemperatureFarhenheit": "44",
+      "TemperatureCelcius": "7",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "0",
+      "CardinalCompassDirection": "N/A",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.02199999999999,
+      "y": 47.759330000000034
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 5871,
+      "WeatherStationDescription": "GW3348 Marysville",
+      "WeatherReportDateTime": 1795048680000,
+      "TemperatureFarhenheit": "49",
+      "TemperatureCelcius": "9",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "0",
+      "CardinalCompassDirection": "NE ",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.12849999999997,
+      "y": 48.07350000000008
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 5888,
+      "WeatherStationDescription": "GW3540 ARLINGTON",
+      "WeatherReportDateTime": 1795048800000,
+      "TemperatureFarhenheit": "49",
+      "TemperatureCelcius": "9",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "0",
+      "CardinalCompassDirection": "NE ",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.16666999999995,
+      "y": 48.200000000000045
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 5926,
+      "WeatherStationDescription": "KG7QQL SEATTLE",
+      "WeatherReportDateTime": 1795048680000,
+      "TemperatureFarhenheit": "46",
+      "TemperatureCelcius": "8",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "0",
+      "CardinalCompassDirection": "E  ",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.40132999999997,
+      "y": 47.674330000000054
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 5939,
+      "WeatherStationDescription": "GW4678 MARYSVILLE",
+      "WeatherReportDateTime": 1795048800000,
+      "TemperatureFarhenheit": "48",
+      "TemperatureCelcius": "9",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "0",
+      "CardinalCompassDirection": "NNE",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.13382999999999,
+      "y": 48.04400000000004
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 5940,
+      "WeatherStationDescription": "GW4795 SNOHOMISH",
+      "WeatherReportDateTime": 1795048800000,
+      "TemperatureFarhenheit": "46",
+      "TemperatureCelcius": "8",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "0",
+      "CardinalCompassDirection": "W  ",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.08916999999997,
+      "y": 47.924000000000035
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 5956,
+      "WeatherStationDescription": "GW5739 LAKE STEVENS",
+      "WeatherReportDateTime": 1795048800000,
+      "TemperatureFarhenheit": "46",
+      "TemperatureCelcius": "8",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "0",
+      "CardinalCompassDirection": "N  ",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.10282999999998,
+      "y": 48.044170000000065
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 5957,
+      "WeatherStationDescription": "N7JMV BOTHELL",
+      "WeatherReportDateTime": 1795048800000,
+      "TemperatureFarhenheit": "44",
+      "TemperatureCelcius": "7",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "0",
+      "CardinalCompassDirection": "NW ",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.15449999999998,
+      "y": 47.81800000000004
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 5960,
+      "WeatherStationDescription": "GW5839 SEATTLE",
+      "WeatherReportDateTime": 1795048800000,
+      "TemperatureFarhenheit": "44",
+      "TemperatureCelcius": "7",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "N/A",
+      "CardinalCompassDirection": "N/A",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.33866999999998,
+      "y": 47.73267000000004
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 5986,
+      "WeatherStationDescription": "GW6747 LANGLEY",
+      "WeatherReportDateTime": 1795048860000,
+      "TemperatureFarhenheit": "48",
+      "TemperatureCelcius": "9",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "4",
+      "CardinalCompassDirection": "NE ",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.37732999999997,
+      "y": 48.03033000000005
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 5993,
+      "WeatherStationDescription": "DW9051 Freeland",
+      "WeatherReportDateTime": 1795048500000,
+      "TemperatureFarhenheit": "46",
+      "TemperatureCelcius": "8",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "0",
+      "CardinalCompassDirection": "NNE",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.51160999999996,
+      "y": 47.98354000000006
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 5998,
+      "WeatherStationDescription": "KE7WB WOODINVILLE",
+      "WeatherReportDateTime": 1795048800000,
+      "TemperatureFarhenheit": "46",
+      "TemperatureCelcius": "8",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "0",
+      "CardinalCompassDirection": "E  ",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.16532999999998,
+      "y": 47.775000000000034
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 6003,
+      "WeatherStationDescription": "GW7027 SNOHOMISH",
+      "WeatherReportDateTime": 1795048620000,
+      "TemperatureFarhenheit": "48",
+      "TemperatureCelcius": "9",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "2",
+      "CardinalCompassDirection": "N  ",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.09882999999996,
+      "y": 47.918330000000026
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 6004,
+      "WeatherStationDescription": "N7NIP SNOHOMISH",
+      "WeatherReportDateTime": 1795048800000,
+      "TemperatureFarhenheit": "47",
+      "TemperatureCelcius": "8",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "1",
+      "CardinalCompassDirection": "E  ",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -121.98999999999995,
+      "y": 47.974330000000066
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 6010,
+      "WeatherStationDescription": "GW7231 SHORELINE",
+      "WeatherReportDateTime": 1795048860000,
+      "TemperatureFarhenheit": "44",
+      "TemperatureCelcius": "7",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "0",
+      "CardinalCompassDirection": "WNW",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.33749999999998,
+      "y": 47.762830000000065
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 6019,
+      "WeatherStationDescription": "KJ7KJC GRANITE FALLS",
+      "WeatherReportDateTime": 1795048680000,
+      "TemperatureFarhenheit": "43",
+      "TemperatureCelcius": "6",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "1",
+      "CardinalCompassDirection": "WNW",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -121.96599999999995,
+      "y": 48.053000000000054
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 6021,
+      "WeatherStationDescription": "GW7905 MONROE",
+      "WeatherReportDateTime": 1795048200000,
+      "TemperatureFarhenheit": "46",
+      "TemperatureCelcius": "8",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "0",
+      "CardinalCompassDirection": "W  ",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.01882999999998,
+      "y": 47.849830000000054
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 6022,
+      "WeatherStationDescription": "GW7914 MONROE",
+      "WeatherReportDateTime": 1795048620000,
+      "TemperatureFarhenheit": "47",
+      "TemperatureCelcius": "8",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "0",
+      "CardinalCompassDirection": "NE ",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -121.98116999999996,
+      "y": 47.877000000000066
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 6025,
+      "WeatherStationDescription": "W7PSK EVERETT",
+      "WeatherReportDateTime": 1795048800000,
+      "TemperatureFarhenheit": "44",
+      "TemperatureCelcius": "7",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "0",
+      "CardinalCompassDirection": "SW ",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.23382999999995,
+      "y": 47.92817000000008
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 6026,
+      "WeatherStationDescription": "GW8062 REDMOND",
+      "WeatherReportDateTime": 1795048800000,
+      "TemperatureFarhenheit": "45",
+      "TemperatureCelcius": "7",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "0",
+      "CardinalCompassDirection": "W  ",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.10566999999998,
+      "y": 47.66067000000004
+     }
+    },
+    {
+     "attributes": {
+      "OBJECTID": 6027,
+      "WeatherStationDescription": "GW8142 FREELAND",
+      "WeatherReportDateTime": 1795048800000,
+      "TemperatureFarhenheit": "45",
+      "TemperatureCelcius": "7",
+      "SurfaceTemperature": "N/A",
+      "WindSpeed": "0",
+      "CardinalCompassDirection": "N  ",
+      "Visibility": "N/A"
+     },
+     "geometry": {
+      "x": -122.54082999999997,
+      "y": 48.00000000000006
+     }
+    }
+   ]
+  }
+ ],
+ "credit": "Washington State Department of Transportation, Travel Center camera layer",
+ "picture_probe": {
+  "url": "https://images.wsdot.wa.gov/nw/531vc00614.jpg",
+  "bytes": 59786,
+  "headers": {
+   "Content-Type": "image/jpeg",
+   "Last-Modified": "Thu, 19 Nov 2026 01:19:33 GMT",
+   "Server": "Microsoft-IIS/10.0"
+  }
+ }
+}

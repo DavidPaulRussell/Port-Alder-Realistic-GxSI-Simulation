@@ -11,7 +11,7 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..'), DAYS = Number(
 // a look at the founded map, in a process of its own (the map's size is fixed when the modules load)
 const PROBE = `
 const root = ${JSON.stringify(ROOT)}, fs = await import('node:fs');
-const { simmyBoot } = await import(root + '/src/core.js'), { City, BKIND } = await import(root + '/src/city.js'), { KIND, layWorld } = await import(root + '/src/ground.js'), { GROUND } = await import(root + '/src/ground_data.js'), { N, SCALE } = await import(root + '/src/scale.js');
+const { simmyBoot } = await import(root + '/src/core.js'), { City, BKIND } = await import(root + '/src/city.js'), { KIND, layWorld, mapCameras } = await import(root + '/src/ground.js'), { GROUND } = await import(root + '/src/ground_data.js'), { N, SCALE } = await import(root + '/src/scale.js');
 const rd = (f) => JSON.parse(fs.readFileSync(root + '/' + f, 'utf8')), city = new City({ seed: 20261117, boot: 'instant' }, simmyBoot(rd('data/simmy/cells.json'), rd('data/simmy/authority_workload_rails.json'))), W = city.world, T = GROUND.pop;
 const at = (lat, lon) => Math.floor(((T.north - lat) / (T.rows * T.dLat)) * N) * N + Math.floor(((lon - T.west) / (T.cols * T.dLon)) * N);
 const near = (c, f) => { for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) if (f(c + dy * N + dx)) return true; return false; };
@@ -20,7 +20,7 @@ const homes = {}; for (const b of W.buildings.each()) { const k = BKIND[W.buildi
 const A = layWorld(96); let top = 0, west = 0; for (let i = 0; i < 96 * 96; i++) { if (A.height[i] > top) top = A.height[i]; } for (let y = 0; y < 96; y++) for (let x = 0; x < 32; x++) west += A.kind[y * 96 + x] === KIND.sea;
 console.log(JSON.stringify({ n: N, ratio: SCALE.ratio, people: T.people, citizens: city.people.count, households: city.hh.count, firms: city.firms.count, homes, hwy, bridge, real, pier, runway, sea,
   corner: W.water[N + 1], field: (() => { let n = 0; for (let c = 0; c < N * N; c++) { if (W.strip[c] !== 1) continue; const x = c % N, y = (c - x) / N, lat = T.north - ((y + 0.5) / N) * T.rows * T.dLat, lon = T.west + ((x + 0.5) / N) * T.cols * T.dLon; if (lat > 47.895 && lat < 47.925 && lon > -122.29 && lon < -122.27) n++; } return n; })(), lake: W.water[at(48.007, -122.085)], silver: near(at(47.8925, -122.21), (c) => W.water[c] === 1), hall: W.water[at(47.979, -122.2085)],
-  routes: W.routes.length, sites: W.sites.length, top: Math.round(top), west, roads: A.roads.length }));
+  routes: W.routes.length, sites: W.sites.length, cameras: (GROUND.cameras || []).length, oneway: GROUND.roads.filter((r) => r[0] & 32).length, cams: (() => { const L = mapCameras(); return { n: L.length, milepost: L.filter((k) => k.route > 0 && Number.isFinite(k.mp)).length, i5: L.filter((k) => k.route === 5).length, host: L.every((k) => k.url.startsWith('https://images.wsdot.wa.gov/') && ![...k.url].some((ch) => '?# <>"'.includes(ch))), plain: L.every((k) => k.title.length > 0 && k.title.length <= 120 && [...k.title].every((ch) => ch.charCodeAt(0) >= 32 && ch !== '<' && ch !== '>')), inside: L.every((k) => k.x >= 0 && k.y >= 0 && k.x < N && k.y < N) }; })(), top: Math.round(top), west, roads: A.roads.length }));
 `;
 const probe = (scale) => JSON.parse(execFileSync(process.execPath, ['--input-type=module', '-e', PROBE], { encoding: 'utf8', env: { ...process.env, PLUME_SCALE: scale }, maxBuffer: 1 << 26 }).trim().split('\n').pop());
 const run = (scale) => { const out = execFileSync(process.execPath, [join(ROOT, 'tools/run_city.mjs'), String(DAYS)], { encoding: 'utf8', env: { ...process.env, PLUME_SCALE: scale }, maxBuffer: 1 << 26 }), end = /audits failed on (\d+) days; digest ([0-9a-f]+)/.exec(out); return { failed: Number(end?.[1] ?? -1), digest: end?.[2] || '' }; };
@@ -37,6 +37,8 @@ for (const [name, m] of [['the quick map (82 m to a cell)', q], ['the map (41 m 
 check('the fine map has the piers of the port', e.pier > 10, `${e.pier} cells of pier`);
 check('most homes on the fine map are houses, as around Everett', e.homes.house > (e.homes.apartments || 0), JSON.stringify(e.homes));
 check('the world around the map: the Sound to the west, the mountains to the east, the roads beyond', e.top > 1000 && e.west > 0.4 * 96 * 32 && e.roads > 1000, `highest ground ${e.top} m, ${e.roads} road lines`);
+check('the map knows its public traffic cameras and which roads are one-way', e.cameras >= 50 && e.oneway > 500, `${e.cameras} cameras, ${e.oneway} one-way lines`);
+check('every camera stands on the map, with a plain title and a picture on the state\'s own picture host; most name their road and milepost', e.cams.n === e.cameras && e.cams.host && e.cams.plain && e.cams.inside && e.cams.milepost >= e.cams.n * 0.9 && e.cams.i5 >= 20 && q.cams.n === e.cams.n, `${e.cams.milepost} of ${e.cams.n} with a road and a milepost, ${e.cams.i5} on I-5`);
 const a = run('quick'), b = run('quick');
 check(`the books balance on each of ${DAYS} days`, a.failed === 0);
 check('the same seed founds the same city twice', a.digest.length >= 16 && a.digest === b.digest, `digest ${a.digest}…`);

@@ -1,4 +1,4 @@
-# Port Alder 1.4.0
+# Port Alder 1.5.0
 
 A sentient, deterministic city on the Plume XPU, modelled on Everett, Washington.
 
@@ -38,8 +38,8 @@ foothills, north Seattle to Arlington), which nobody lives in and the camera can
 
 | Map | Cells | Real ground to a cell | Citizens | A simulated day |
 |---|---|---|---|---|
-| `everett` (the page's default) | 512 x 512 | 41 m | 98,064, one for every four of the 391,412 people | about 2.3 s |
-| `quick` | 256 x 256 | 82 m | 39,235, one in ten | about 0.9 s |
+| `everett` (the page's default) | 512 x 512 | 41 m | 98,100, one for every four of the 391,412 people | about 2.8 s |
+| `quick` | 256 x 256 | 82 m | 39,162, one in ten | about 1.1 s |
 | `tenth` (the engine's default; `?map=invented`) | 128 x 128 | an invented town | 11,963 | about 0.25 s |
 
 What the map is made from, and how (`tools/make_map.mjs` writes `src/ground_data.js`; `src/ground.js` lays it over
@@ -55,6 +55,30 @@ the cells at the founding):
   laid between them wherever a block is settled.
 - **Heights:** the Terrain Tiles (in the United States the USGS 3D Elevation Program). Lakes stand at their own
   levels; the map being smaller than life, relief is drawn half again as steep on the quick map.
+
+### Travelling, traffic and the cameras
+
+- **Travelling.** Drag moves across the ground, right-drag turns and tilts, the wheel zooms toward the pointer,
+  W A S D and the arrow keys travel (Shift faster, Q and E turn), a double-click flies to the place under the
+  pointer, *go to* jumps to a named place, and *street level* puts the camera on the ground to walk or drive
+  (there a drag looks around and a double-click walks to the place). On a touch screen one finger moves, two
+  fingers zoom (pinch) and turn (twist).
+- **Traffic.** Every lane of every real road carries passing vehicles, and the pavements of every street people, as
+  thickly as the day's rhythm says (the rhythm is the city's own: when its workers' shifts start and end). They are
+  drawn, not simulated: they stand for the flow, beside the citizens' own trips, which are simulated. Vehicles keep
+  to the right, divided roads are drawn as their two carriageways, and a road at a standstill is a queue: a vehicle
+  every nine metres, closing up and opening out in waves.
+- **Traffic cameras.** The 94 public WSDOT cameras on the map are listed with their live pictures (the browser
+  fetches them from WSDOT; nothing of them is stored). Each stretch of freeway and main road follows the nearest
+  camera on its own kind of road. A camera's level (wide open, moderate, heavy, stop and go) comes from one of three
+  places: the day's rhythm; what you set after looking at its picture; or, with a free WSDOT access code entered in
+  the page, WSDOT's own flow sensors, read every 90 seconds. A sensor is matched to the nearest camera on its own
+  road by milepost, and each carriageway takes the reading for its own direction, so a northbound queue beside a
+  free southbound road is drawn as that. The access code is typed into the page by its user, is kept in that
+  browser only, and is sent only to WSDOT; WSDOT answers a page that is not its own with a script (JSONP), which
+  the page runs and then reads as plain data. The page cannot count vehicles in the pictures itself: the picture
+  server does not let a page read a picture's pixels. `tools/traffic_fetch.py` fetched the camera list
+  (`data/world/traffic_cameras.json`).
 
 `tools/world_fetch.py` fetched the tiles (`data/world/`); to rebuild the map from them:
 `node tools/make_map.mjs data/world`. On the real map the city is everything the map covers, so the outer layers
@@ -79,7 +103,7 @@ The repository is https://github.com/DavidPaulRussell/Port-Alder-Realistic-GxSI-
     git init
     git config core.hooksPath tools/git-hooks      # the size gatekeeper runs before every commit
     git add -A
-    git commit -m "Port Alder 1.4.0"
+    git commit -m "Port Alder 1.5.0"
 
 The repository is about ten megabytes, far under GitHub's 25 MB per file and 1 GB per repository
 (`python3 tools/check_github_limits.py` checks; every tool that writes a layer file refuses to pass 24 MB).
@@ -192,7 +216,7 @@ tax credit bonus) and its citizens vote in November; the state's voters decide i
 | `src/people.js`, `economy.js`, `finance.js`, `payroll.js`, `housing.js`, `welfare.js`, `health.js`, `civic.js`, `develop.js` | the city's agents and institutions |
 | `src/periphery.js`, `nation.js` | the outer layers and the national economy |
 | `src/scale.js`, `ground.js`, `ground_data.js`, `world.js` | the map's size; the real ground laid over the cells; the map made from it or from the seed |
-| `tools/world_fetch.py`, `tools/make_map.mjs`, `data/world/` | fetching the real map's tiles and heights; making `ground_data.js` from them |
+| `tools/world_fetch.py`, `tools/traffic_fetch.py`, `tools/make_map.mjs`, `data/world/` | fetching the real map's tiles, heights and traffic cameras; making `ground_data.js` from them |
 | `src/laws.js`, `tables.js` | the law book and its exact tables |
 | `src/registry.js` | Social Information Numbers |
 | `src/kpis.js` | the measures |

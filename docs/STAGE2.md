@@ -1,9 +1,11 @@
 # Stage 2: the full-scale city
 
-Status on 18 November 2026 (release 1.3.2): **step 1 of 6 done** (the engine runs at any size; 212,020 citizens
-founded and audited on the invented map at sixteen times the area, street life included). The real map waits for
-its sources: `tools/map_fetch.py` has not been run yet, and the loader's player (`plume-xpu-mini.html`) is not here. This note is the plan and the record of what is decided, so the
-work can be picked up without rereading the conversation that led to it.
+Status on 18 November 2026 (release 1.5.0): the engine runs at any size, and the real map is in at one citizen to
+four people (512 cells a side) and one to ten (256 cells; see "Where it stands" below). The full-scale city (every one of the 391,412 people, every
+real street and building) is not built, and the loader's player (`plume-xpu-mini.html`) is not here. This note is
+the plan and the record of what is decided, so the work can be picked up without rereading the conversation that
+led to it. The sections from "What it is" on were written before the real map arrived and are kept as the plan they
+were; where they speak of sources not yet fetched, "Where it stands" is the newer word.
 
 ## Where it stands (1.4.0)
 
@@ -13,6 +15,40 @@ the population cut, OpenStreetMap vector tiles and the Terrain Tiles (`tools/wor
 21 m, every one of the 391,412 people): every real street and building outline from the zoom-14 tiles instead of
 the lattice of side streets, the day's work moved off the page's main thread, the view's ground and buildings in
 levels of detail, and the county's places re-cut so that those the map takes in are no longer counted outside it.
+
+## Where it stands (1.5.0)
+
+The view can be travelled (drag, keys, wheel, touch, a places menu, street level), every real road carries passing
+traffic and every street walkers, and the state's 94 public traffic cameras on the map are in the page with their
+live pictures; a road's traffic follows its camera's level, set by hand or read from WSDOT's flow sensors by road,
+milepost and direction. Not done: counting vehicles in the pictures (a page may not read their pixels; it needs the
+launcher to fetch the pictures and a vision model to count), and a recorded week of the sensors kept in the
+repository so that the traffic is measured without a connection.
+
+## The repository's room
+
+GitHub's limits as this project keeps them: 25 MB a file, 1 GB the repository. On 18 November 2026 the tree is about
+40 MB and the history about 30 MB packed. Two things spend the room:
+
+- **History.** Every release stores the built pages and the layer files again (about 5 MB packed a release, since
+  compressed files do not shrink against their earlier versions). Large data therefore goes in files that are written
+  once and seldom changed, and the room is not all free to fill: a few hundred megabytes are left for releases.
+- **Data that makes the place real.** Code makes the view move; data makes it the real place. In order of what it buys
+  for its size:
+
+| What | From | Size, about | Buys |
+|---|---|---|---|
+| Every building's outline and height | the zoom-14 tiles already fetched; Overture or Microsoft footprints for heights | 10 to 15 MB | the real streetscape in place of the lattice |
+| A recorded week of the flow sensors | WSDOT Traveler API, recorded by the owner with their own access code | under 1 MB | measured traffic by hour, road and direction, with no connection |
+| Ground heights at 10 m (1 m on the shore and bluffs) | USGS 3DEP (public domain) | 5 to 60 MB | bluffs, ravines, the river's banks |
+| Where the trees stand | NLCD tree canopy or the lidar's canopy (public domain) | 3 MB | real woods and street trees |
+| The ground from the air, the map at 1 m | NAIP, US Department of Agriculture (public domain) | 250 MB in tiles of 1 to 2 MB | the real ground under everything |
+| The ground from the air, the world at 10 m | NAIP reduced, or Sentinel-2 | 15 MB | the world around the map |
+
+Pictures of the ground cannot live inside the one-file page: the page would read them as tiles from beside it, which
+needs it served (the launcher, or GitHub Pages), since a browser will not let a page opened from disk use local
+pictures as textures. Moving things (ferries, trains, aircraft, boats, weather from the 87 stations already fetched)
+are code and cost almost nothing in room.
 
 ## What it is
 

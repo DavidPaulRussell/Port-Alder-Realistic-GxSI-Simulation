@@ -78,19 +78,45 @@ pre.save { margin: 0; max-height: 200px; overflow: auto; background: var(--sunk)
   <div class="world">
     <section class="panel" aria-label="The city in 3D" style="padding:10px">
       <div class="view3d" id="view3d">
-        <canvas id="cv3d" tabindex="0" aria-label="Live 3D view of Port Alder; drag to orbit, scroll to zoom, click a building to inspect it"></canvas>
+        <canvas id="cv3d" tabindex="0" aria-label="Live 3D view of Port Alder; drag to move, right-drag to turn, scroll to zoom, W A S D to travel, click a building to inspect it"></canvas>
         <div class="hud" id="hud" hidden></div>
         <div class="tools3d">
           <button class="btn" id="b-overview" title="Back over the whole city">overview</button>
+          <button class="btn" id="b-walk" title="Down to street level where the view is aimed: drag to look, W A S D to walk, Shift to drive">street level</button>
+          <select id="goto" aria-label="Go to a place" title="Travel to a place"><option value="">go to…</option>
+            <option value="47.9790,-122.2085,900">Downtown (Everett)</option><option value="47.9870,-122.2220,900">The port and the naval station</option>
+            <option value="48.0000,-122.2250,1200">The marina and Jetty Island</option><option value="47.9090,-122.2790,1500">Kestrel Field (Paine Field)</option>
+            <option value="47.9250,-122.2720,1100">The aircraft works (Boeing Everett)</option><option value="47.9490,-122.3040,800">Kestrel Point (Mukilteo landing)</option>
+            <option value="47.9790,-122.1600,1500">The trestle (US 2)</option><option value="47.9950,-122.1650,1800">The delta and its sloughs</option>
+            <option value="48.0070,-122.0850,1800">Lake Severn (Lake Stevens)</option><option value="47.9125,-122.0985,900">Riverbend (Snohomish)</option>
+            <option value="47.8925,-122.2100,900">Silver Mere (Silver Lake)</option><option value="47.9105,-122.2135,900">South Mall (Everett Mall)</option>
+            <option value="47.8600,-122.2040,1000">Mill Run (Mill Creek)</option></select>
           <select id="quality" aria-label="Render quality"><option value="low">low</option><option value="medium">medium</option><option value="high" selected>high</option><option value="ultra">ultra</option></select>
           <select id="tod" aria-label="Time of day"><option value="">day runs with the city</option><option value="480">morning</option><option value="750">noon</option><option value="1080">evening</option><option value="1290">night</option></select>
           <button class="btn" id="b-full" title="Full screen">⤢</button>
         </div>
         <div class="caption"><span id="cap-l"></span><span id="cap-r"></span></div>
+        <p class="note" id="travel-help" style="margin:.35rem 0 0; font-size:.78rem">Drag to move · right-drag to turn and tilt · scroll or pinch to zoom · <kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> or the arrow keys to travel (<kbd>Shift</kbd> faster, <kbd>Q</kbd> <kbd>E</kbd> turn) · double-click to go there · click a building to inspect it</p>
         <p class="credit" id="map-credit" style="margin:.35rem 0 0; font-size:.72rem; opacity:.75"></p>
         <div class="prep" id="prep" hidden aria-live="polite"></div>
         <div class="nogl" id="nogl" hidden role="alert"><p id="nogl-why"></p><p class="note">The city runs without the view; every panel below works.</p></div>
       </div>
+    </section>
+    <section class="panel" aria-label="Traffic cameras" id="cams-panel" hidden>
+      <div class="label">Traffic cameras · the state's public cameras on the map, live</div>
+      <div class="row">
+        <select id="cam-sel" aria-label="A traffic camera" style="max-width:100%"></select>
+        <button class="btn" id="cam-near" title="The camera nearest to where the view is aimed">nearest to the view</button>
+        <button class="btn" id="cam-go" title="Travel to this camera">go there</button>
+        <label class="inl" for="cam-level">traffic here <select id="cam-level" title="Automatic: what the flow sensors beside the camera report, where they are connected; otherwise the day's rhythm"><option value="-1">automatic</option><option value="0">wide open</option><option value="1">moderate</option><option value="2">heavy</option><option value="3">stop and go</option></select></label>
+      </div>
+      <p class="note" id="cam-note" style="margin:.4rem 0"></p>
+      <img id="cam-img" alt="" referrerpolicy="no-referrer" style="display:block; max-width:100%; border-radius:8px; background:#0002; min-height:80px">
+      <details style="margin-top:.5rem"><summary>Take the traffic from WSDOT's own flow sensors</summary>
+        <p class="note">The Washington State Department of Transportation measures how its highways are flowing (wide open, moderate, heavy, stop and go), each direction on its own, about every 90 seconds, and gives the readings to anyone with a free access code (<a href="https://wsdot.wa.gov/traffic/api/" target="_blank" rel="noopener noreferrer">wsdot.wa.gov/traffic/api</a>). Enter yours and each carriageway a camera watches carries the traffic the sensors beside that camera report for its direction. The code is kept in this browser only and is sent only to WSDOT, whose answer the page runs as a script (that is how WSDOT serves a page that is not its own).</p>
+        <div class="row"><input id="flow-code" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore placeholder="WSDOT access code" aria-label="WSDOT access code" style="width:22em; max-width:100%; -webkit-text-security:disc"> <button class="btn" id="flow-on">connect</button> <button class="btn" id="flow-off">forget</button> <span class="note" id="flow-msg" role="status"></span></div>
+      </details>
+      <p class="note">Each stretch of freeway and main road takes the level of the nearest camera on its own kind of road (up to about 1.3 km along the view): the day's rhythm, unless you set what the picture shows or connect the sensors. A page cannot read a picture's pixels itself (the picture server does not allow it), so counting the vehicles in the pictures is not done here. Pictures: Washington State Department of Transportation.</p>
     </section>
     <section class="panel" aria-label="The four layers">
       <div class="label">Matryoshka · the city inside its county, state and nation</div>
@@ -245,7 +271,7 @@ async function newCity(cfg, interventions = []) {
   S.city = new City(cfg, S.boot); S.city.interventions = interventions.map((x) => ({ ...x }));
   S.city.breathe = () => new Promise((r) => setTimeout(r, 0));          // between the parts of a day the page draws a frame
   S.hist = []; S.outer = []; S.sin = -1; S.bld = -1;
-  if (S.view) S.view.attach(S.city);
+  if (S.view) { S.view.attach(S.city); fillCameras(); }
   msg(`Port Alder founded in ${(performance.now() - t0).toFixed(0)} ms: ${int(S.city.people.count)} citizens in ${int(S.city.hh.count)} households, ${int(S.city.firms.count)} firms; ${int(S.city.outer.A.count)} households and ${int(S.city.outer.F.count)} employers sampled in the outer layers.`, "ok");
   for (const id of ["b-play", "b-step", "b-new", "b-save", "b-iv"]) $(id).disabled = false;
   drawAll(true);
@@ -296,13 +322,84 @@ async function startView() {
   try {
     S.view = new City3D($("cv3d"), { quality: $("quality").value, onPick: (p) => { if (p) { S.bld = p.building; drawBuilding(); } }, onStatus: (t) => { $("prep").hidden = t === "ready" || t === "safe graphics"; $("prep").textContent = t; },
       onLost: () => { $("nogl").hidden = false; $("nogl-why").textContent = "The graphics context was lost. Reload the page to bring the view back."; }, onError: (e) => { $("nogl").hidden = false; $("nogl-why").textContent = "3D view unavailable: " + (e.message || e); } });
-    await S.view.whenReady; if (S.city) S.view.attach(S.city); S.view.start(); $("hud").hidden = false;
+    await S.view.whenReady; if (S.city) { S.view.attach(S.city); fillCameras(); } S.view.start(); $("hud").hidden = false;
     const tick = () => { if (S.view && S.city) { const pace = Number($("speed").value) || 1000, fixed = $("tod").value;
       const m = fixed ? Number(fixed) : S.playing ? 360 + Math.min(1, (performance.now() - S.lastStep) / pace) * 1020 : 750; S.view.setTime(m); drawHud(m); } requestAnimationFrame(tick); };
     requestAnimationFrame(tick);
   } catch (e) { $("nogl").hidden = false; $("nogl-why").textContent = "3D view unavailable: " + (e.message || e); }
 }
-$("b-overview").onclick = () => { if (S.view) Object.assign(S.view.cam, { tx: 64 * CELL_M, tz: 64 * CELL_M, yaw: -0.6, pitch: 0.7, dist: 2600 }); };
+$("b-overview").onclick = () => { if (!S.view || !S.city) return; const size = Math.sqrt(S.city.world.land.length) * CELL_M, real = !!S.city.world.cover; S.view.walk(false); $("b-walk").textContent = "street level"; Object.assign(S.view.cam, { yaw: real ? 0 : -0.6, pitch: real ? 1.1 : 0.7 }); S.view.flyTo(size / 2, size / 2, real ? S.view.reach : 2600); };
+$("b-walk").onclick = () => { if (!S.view) return; const down = S.view.cam.mode !== "walk"; S.view.walk(down); $("b-walk").textContent = down ? "back up" : "street level"; $("cv3d").focus(); };
+$("goto").onchange = (e) => { const v = e.target.value.split(",").map(Number); e.target.value = ""; if (S.view && v.length === 3) { if (S.view.cam.mode === "walk") { S.view.walk(false); $("b-walk").textContent = "street level"; } S.view.goTo(v[0], v[1], v[2]); $("cv3d").focus(); } };
+$("goto").hidden = globalThis.PLUME_MAP === "tenth";
+
+/* ---------- traffic cameras: the live pictures, and the level of traffic each one's road carries ---------- */
+const CAM = { saved: {}, sensor: {}, timer: 0, flow: 0, code: "", read: 0, asked: 0, down: false };
+try { const kept = JSON.parse(localStorage.getItem("pa-cam-levels") || "{}"); if (kept && typeof kept === "object") for (const [u, v] of Object.entries(kept)) if (Number.isInteger(v) && v >= 0 && v <= 3) CAM.saved[u] = v; } catch {}
+const camLevels = ["wide open", "moderate", "heavy", "stop and go"], camWays = ["northbound", "eastbound", "southbound", "westbound"];
+const camPicture = (u) => typeof u === "string" && /^https:\/\/images\.wsdot\.wa\.gov\/[A-Za-z0-9_\-./%]+$/.test(u);       // only WSDOT's own picture host
+function camApply() {            // what each camera's road carries: what you set, else what the sensors beside it report, else the day's rhythm
+  if (!S.view) return; for (const k of S.view.cameras()) { S.view.setLevel(k.i, CAM.saved[k.url] ?? -1); S.view.setFlow(k.i, CAM.sensor[k.i] || null); }
+}
+function camShow(refresh = true) {
+  const k = S.view && S.view.cameras()[Number($("cam-sel").value)]; if (!k) return; const img = $("cam-img");
+  if (refresh) { CAM.down = !camPicture(k.url); if (CAM.down) img.removeAttribute("src"); else img.src = k.url + "?t=" + Math.floor(Date.now() / 60000); }
+  img.alt = "Live picture from the traffic camera at " + k.title; $("cam-level").value = String(CAM.saved[k.url] ?? -1);
+  const four = CAM.sensor[k.i], heard = four ? camWays.map((w, q) => (four[q] >= 0 ? w + " " + camLevels[Math.round(four[q])] : "")).filter(Boolean).join(", ") : "";
+  $("cam-note").textContent = k.title + (heard ? " · the sensors report " + heard : "") + (CAM.saved[k.url] !== undefined ? " · set by you: " + camLevels[CAM.saved[k.url]] : "") + (CAM.down ? " · the picture could not be fetched (no connection, or the camera is out of service)" : " · the picture is renewed every two minutes");
+}
+$("cam-img").onerror = () => { if (!CAM.down) { CAM.down = true; camShow(false); } };
+$("cam-img").onload = () => { if (CAM.down) { CAM.down = false; camShow(false); } };
+function fillCameras() {
+  const list = S.view ? S.view.cameras() : []; $("cams-panel").hidden = !list.length; if (!list.length) return;
+  $("cam-sel").innerHTML = list.map((k) => `<option value="${k.i}">${esc(k.title)}</option>`).join(""); const near = S.view.cameraNear(); if (near >= 0) $("cam-sel").value = String(near); camApply(); camShow();
+  clearInterval(CAM.timer); CAM.timer = setInterval(() => { if (!document.hidden) camShow(); }, 120000);
+  if (CAM.code && !CAM.flow) flowStart();
+}
+$("cam-sel").onchange = () => camShow();
+$("cam-near").onclick = () => { if (!S.view) return; const i = S.view.cameraNear(); if (i >= 0) { $("cam-sel").value = String(i); camShow(); } };
+$("cam-go").onclick = () => { const k = S.view && S.view.cameras()[Number($("cam-sel").value)]; if (!k) return; if (S.view.cam.mode === "walk") { S.view.walk(false); $("b-walk").textContent = "street level"; } S.view.flyTo(k.sx, k.sz, 420); };
+$("cam-level").onchange = (e) => { const k = S.view && S.view.cameras()[Number($("cam-sel").value)]; if (!k) return; const v = Number(e.target.value); if (Number.isInteger(v) && v >= 0 && v <= 3) CAM.saved[k.url] = v; else delete CAM.saved[k.url]; try { localStorage.setItem("pa-cam-levels", JSON.stringify(CAM.saved)); } catch {} camApply(); camShow(false); };
+// WSDOT's flow sensors: its Traveler Information API, asked with the user's own access code. WSDOT serves a page that is
+// not its own by JSONP (its answer is a script that hands the readings to the function named in the request), so that
+// is how it is asked; what comes back is then read as plain data, field by field.
+const FLOW_CODE = /^[A-Za-z0-9-]{8,64}$/;
+function flowAsk(code) {
+  return new Promise((res, rej) => {
+    const cb = "paFlow" + Date.now() + "_" + ++CAM.asked, el = document.createElement("script"); let done = false;
+    const end = (f, v) => { if (done) return; done = true; clearTimeout(t); globalThis[cb] = () => { delete globalThis[cb]; }; el.remove(); f(v); }, t = setTimeout(() => end(rej, new Error("no answer")), 25000);
+    globalThis[cb] = (d) => { end(res, d); delete globalThis[cb]; }; el.onerror = () => end(rej, new Error("the request was refused (is the access code right, and is there a connection?)"));
+    el.referrerPolicy = "no-referrer"; el.src = "https://wsdot.wa.gov/Traffic/api/TrafficFlow/TrafficFlowREST.svc/GetTrafficFlowsAsJson?AccessCode=" + encodeURIComponent(code) + "&callback=" + cb; document.head.appendChild(el);
+  });
+}
+// Each reading is of one station: its road (RoadName, "005"), its milepost, its direction of travel and its level. A
+// station is taken by the nearest camera on its own road, by milepost (within a mile); a camera keeps, for each
+// direction, the heaviest of its stations' readings.
+async function flowRead() {
+  const code = CAM.code; if (!code || !S.view) return;
+  try {
+    const rows = await flowAsk(code); if (!Array.isArray(rows)) throw new Error("WSDOT did not accept the code");
+    const NAMES = { WideOpen: 0, Moderate: 1, Heavy: 2, StopAndGo: 3 }, WAYS = { N: 0, E: 1, S: 2, W: 3 }, cams = S.view.cameras(), flow = {}; let used = 0;
+    for (const r of rows.slice(0, 20000)) {
+      const L = r && typeof r === "object" ? r.FlowStationLocation : null; if (!L || typeof L !== "object") continue;
+      const v = r.FlowReadingValue, level = typeof v === "number" ? (v >= 1 && v <= 4 ? Math.round(v) - 1 : -1) : typeof v === "string" && Object.hasOwn(NAMES, v) ? NAMES[v] : -1;
+      const route = parseInt(L.RoadName, 10), mp = Number(L.MilePost), way = String(L.Direction ?? "").trim().charAt(0).toUpperCase(); if (level < 0 || !Number.isFinite(route) || !Number.isFinite(mp)) continue;
+      let best = -1, gap = 1; for (const k of cams) { if (k.route !== route) continue; const g = Math.abs(k.mp - mp); if (g < gap) { gap = g; best = k.i; } } if (best < 0) continue;
+      const four = flow[best] || (flow[best] = [-1, -1, -1, -1]); if (Object.hasOwn(WAYS, way)) four[WAYS[way]] = Math.max(four[WAYS[way]], level); else for (let q = 0; q < 4; q++) four[q] = Math.max(four[q], level); used++;
+    }
+    CAM.sensor = flow; CAM.read = Date.now(); camApply(); camShow(false); const n = Object.keys(flow).length;
+    $("flow-msg").textContent = `${used} sensor${used === 1 ? "" : "s"} beside the map's cameras read at ${new Date().toLocaleTimeString()}; the roads of ${n} camera${n === 1 ? "" : "s"} follow them`;
+  } catch (e) {
+    // a reading that is more than five minutes old is let go: the roads return to the day's rhythm
+    if (CAM.read && Date.now() - CAM.read > 300000) { CAM.sensor = {}; CAM.read = 0; camApply(); camShow(false); }
+    $("flow-msg").textContent = "The sensors could not be read: " + ((e && e.message) || e);
+  }
+}
+function flowStart() { clearInterval(CAM.flow); CAM.flow = setInterval(() => { if (!document.hidden) flowRead(); }, 90000); $("flow-msg").textContent = "asking WSDOT…"; flowRead(); }
+$("flow-on").onclick = () => { const code = $("flow-code").value.trim(); if (!FLOW_CODE.test(code)) { $("flow-msg").textContent = "That does not look like an access code (letters, digits and hyphens)."; return; } CAM.code = code; try { localStorage.setItem("pa-wsdot-code", code); } catch {} flowStart(); };
+$("flow-off").onclick = () => { clearInterval(CAM.flow); CAM.flow = 0; CAM.code = ""; CAM.sensor = {}; CAM.read = 0; $("flow-code").value = ""; try { localStorage.removeItem("pa-wsdot-code"); } catch {} $("flow-msg").textContent = "forgotten"; camApply(); camShow(false); };
+// (only a code this page stored itself is used without being asked: never whatever a browser may have put in the field)
+try { const kept = localStorage.getItem("pa-wsdot-code"); if (kept && FLOW_CODE.test(kept)) { CAM.code = kept; $("flow-code").value = kept; } } catch {}
 $("b-full").onclick = () => { const el = $("view3d"); (document.fullscreenElement ? document.exitFullscreen() : el.requestFullscreen?.())?.catch?.(() => {}); };
 $("quality").onchange = () => msg("the render quality applies when the page is reloaded");
 function drawHud(minutes) {

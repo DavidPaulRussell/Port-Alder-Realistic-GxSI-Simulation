@@ -82,7 +82,11 @@ medical, engineering or safety advice.
       heights from Terrain Tiles (Mapzen/Tilezen; in the United States the
       U.S. Geological Survey's 3D Elevation Program),
       https://registry.opendata.aws/terrain-tiles/;
-      population from WorldPop, as above (CC BY 4.0).
+      population from WorldPop, as above (CC BY 4.0);
+      the list of traffic cameras (data/world/traffic_cameras.json) from the
+      Washington State Department of Transportation's Travel Center camera
+      layer; the cameras' live pictures are fetched from WSDOT by the
+      user's browser and are not part of this repository.
 
   - Files that carry their own licence line (an SPDX-License-Identifier)
     are under the licence that line names.

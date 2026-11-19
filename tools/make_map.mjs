@@ -125,7 +125,7 @@ const LAYOUT = {
       if (layer === 'transportation') return p.class === 'pier' ? K.pier : 0;
       return 0;
     },
-    road: (layer, p) => (layer !== 'transportation' || p.brunnel === 'tunnel' ? -1 : { motorway: 0, trunk: 1, primary: 2, secondary: 3, tertiary: 4, minor: 5 }[p.class] ?? -1), link: (p) => p.ramp === 1 || p.ramp === true, bridge: (p) => p.brunnel === 'bridge',
+    road: (layer, p) => (layer !== 'transportation' || p.brunnel === 'tunnel' ? -1 : { motorway: 0, trunk: 1, primary: 2, secondary: 3, tertiary: 4, minor: 5 }[p.class] ?? -1), link: (p) => p.ramp === 1 || p.ramp === true, bridge: (p) => p.brunnel === 'bridge', oneway: (p) => (p.oneway === 1 || p.oneway === true ? 1 : p.oneway === -1 ? -1 : 0),
     pierLine: (layer, p) => layer === 'transportation' && p.class === 'pier',
     rail: (layer, p) => (layer !== 'transportation' ? -1 : p.class === 'ferry' ? 2 : p.class === 'rail' && !has(p.service, /^(yard|siding|spur|crossover)$/) ? 0 : p.class === 'transit' ? 1 : -1),
     river: (layer, p) => (layer !== 'waterway' ? -1 : p.class === 'river' ? 0 : p.class === 'canal' ? 1 : -1),
@@ -146,7 +146,7 @@ const LAYOUT = {
         : has(k, /^(grass|park|village_green|recreation_ground|garden|golf_course|cemetery|playground)$/) ? K.grass : k === 'residential' ? K.residential : has(k, /^(commercial|retail)$/) ? K.commercial
         : has(k, /^(industrial|railway|quarry|landfill|brownfield)$/) ? K.industrial : 0;
     },
-    road: (layer, p) => (layer !== 'streets' || p.tunnel === true ? -1 : { motorway: 0, trunk: 1, primary: 2, secondary: 3, tertiary: 4, unclassified: 5, residential: 5 }[p.kind] ?? -1), link: (p) => p.link === true, bridge: (p) => p.bridge === true,
+    road: (layer, p) => (layer !== 'streets' || p.tunnel === true ? -1 : { motorway: 0, trunk: 1, primary: 2, secondary: 3, tertiary: 4, unclassified: 5, residential: 5 }[p.kind] ?? -1), link: (p) => p.link === true, bridge: (p) => p.bridge === true, oneway: (p) => (p.oneway === true || p.oneway === 1 ? 1 : 0),
     pierLine: (layer) => layer === 'pier_lines',
     rail: (layer, p) => (layer === 'ferries' ? 2 : layer !== 'streets' ? -1 : p.kind === 'rail' && !has(p.service, /^(yard|siding|spur|crossover)$/) ? 0 : p.kind === 'light_rail' ? 1 : -1),
     river: (layer, p) => (layer !== 'water_lines' ? -1 : p.kind === 'river' ? 0 : p.kind === 'canal' ? 1 : -1),
@@ -159,7 +159,7 @@ if (!LAYOUT) { console.error('unknown source ' + SOURCE); process.exit(2); }
 
 /* 1. every tile: its shapes into the sheets, its lines kept */
 const Q = 1e5, qx = (lon) => Math.round((lon - W_) * Q), qy = (lat) => Math.round((N_ - lat) * Q), inMap = (lon, lat, m) => lon >= mapW - m && lon <= mapE + m && lat >= mapS - m && lat <= mapN + m;
-const roadLines = Array.from({ length: 32 }, () => []), railLines = [[], [], []], riverLines = [[], []], stripLines = [[], []], points = [], towns = [], census = {}; let buildings = 0, tiles = 0, service = '';
+const roadLines = Array.from({ length: 64 }, () => []), railLines = [[], [], []], riverLines = [[], []], stripLines = [[], []], points = [], towns = [], census = {}; let buildings = 0, tiles = 0, service = '';
 {
   const idx = JSON.parse(readFileSync(join(dir, `vector_${SOURCE}.json`), 'utf8')), blob = readFileSync(join(dir, `vector_${SOURCE}.bin`)); service = idx.pattern.split('/')[2];
   const worldZoom = Math.min(...idx.tiles.map((t) => t[0])), seenPoint = new Set();
@@ -177,7 +177,7 @@ const roadLines = Array.from({ length: 32 }, () => []), railLines = [[], [], []]
           if (z !== worldZoom) continue;                    // lines are taken from the world's tiles (one zoom, so their cut ends meet)
           const rc = LAYOUT.road(name, f.props), rl = rc < 0 ? LAYOUT.rail(name, f.props) : -1, rv = rc < 0 && rl < 0 ? LAYOUT.river(name, f.props) : -1; if (rc < 0 && rl < 0 && rv < 0) continue;
           for (const p of f.parts) for (const piece of cut(p, E)) { const ll = lonLat(z, tx, ty, E, piece), line = []; for (let i = 0; i < ll.length; i += 2) line.push([ll[i], ll[i + 1]]);
-            if (rc >= 0) { const ramp = LAYOUT.link(f.props); if (ramp && !line.some((q) => inMap(q[0], q[1], 0.012))) continue; roadLines[rc + (LAYOUT.bridge(f.props) ? 8 : 0) + (ramp ? 16 : 0)].push(line); } else if (rl >= 0) railLines[rl].push(line); else riverLines[rv].push(line); }
+            if (rc >= 0) { const ramp = LAYOUT.link(f.props), way = LAYOUT.oneway(f.props); if (ramp && !line.some((q) => inMap(q[0], q[1], 0.012))) continue; if (way < 0) line.reverse(); roadLines[rc + (LAYOUT.bridge(f.props) ? 8 : 0) + (ramp ? 16 : 0) + (way ? 32 : 0)].push(line); } else if (rl >= 0) railLines[rl].push(line); else riverLines[rv].push(line); }
           continue;
         }
         if (f.type === 1) {
@@ -221,6 +221,21 @@ function join_(lines) {
   for (let i = 0; i < lines.length; i++) { if (used[i]) continue; used[i] = 1; const fwd = lines[i].slice(); grow(fwd, i, 1); const head = lines[i].slice().reverse(); grow(head, i, 0); out.push(head.reverse().slice(0, head.length - lines[i].length).concat(fwd)); }
   return out;
 }
+// join one-way lines head to tail (never turned round) where exactly one ends and one begins
+function joinOneWay(lines) {
+  const key = (p) => Math.round(p[0] * 1e5) + ',' + Math.round(p[1] * 1e5), starts = new Map(), ends = new Map();
+  const add = (m, k, i) => { if (!m.has(k)) m.set(k, []); m.get(k).push(i); };
+  lines.forEach((l, i) => { add(starts, key(l[0]), i); add(ends, key(l[l.length - 1]), i); });
+  const used = new Uint8Array(lines.length), out = [];
+  for (let i = 0; i < lines.length; i++) {
+    if (used[i]) continue; const first = key(lines[i][0]); if ((ends.get(first) || []).length === 1 && (starts.get(first) || []).length === 1 && !used[ends.get(first)[0]] && ends.get(first)[0] !== i) continue;   // not the head of its run
+    used[i] = 1; const pts = lines[i].slice();
+    for (;;) { const k = key(pts[pts.length - 1]), nx = starts.get(k) || []; if (nx.length !== 1 || (ends.get(k) || []).length !== 1 || used[nx[0]]) break; used[nx[0]] = 1; const l = lines[nx[0]]; for (let q = 1; q < l.length; q++) pts.push(l[q]); }
+    out.push(pts);
+  }
+  for (let i = 0; i < lines.length; i++) if (!used[i]) out.push(lines[i]);          // (rings and whatever a head was not found for)
+  return out;
+}
 // cut a line where it leaves the world, thin it (finely on and near the map), and write it as differences
 function pack(cls, lines, tolIn, tolOut, keepOut) {
   const out = [];
@@ -232,14 +247,30 @@ function pack(cls, lines, tolIn, tolOut, keepOut) {
   }
   return out;
 }
-const roads = []; { let pts = 0; const count = [0, 0, 0, 0, 0, 0]; roadLines.forEach((lines, code) => { const c = code & 7; count[c] += lines.length; if (c > 4) return; for (const r of pack(code, join_(lines), 4, 20, c < 4)) { roads.push(r); pts += r[1].length / 2; } });
-  lap(`roads: ${count.slice(0, 5).join(' + ')} pieces (motorway, trunk, primary, secondary, tertiary) joined into ${roads.length.toLocaleString('en-US')} lines of ${pts.toLocaleString('en-US')} points (${roads.filter((r) => r[0] & 8).length} bridges, ${roads.filter((r) => r[0] & 16).length} ramps); ${count[5]} smaller roads left for the full-scale city`); }
+const roads = []; { let pts = 0; const count = [0, 0, 0, 0, 0, 0]; roadLines.forEach((lines, code) => { const c = code & 7; count[c] += lines.length; if (c > 4) return; for (const r of pack(code, code & 32 ? joinOneWay(lines) : join_(lines), 4, 20, c < 4)) { roads.push(r); pts += r[1].length / 2; } });
+  lap(`roads: ${count.slice(0, 5).join(' + ')} pieces (motorway, trunk, primary, secondary, tertiary) joined into ${roads.length.toLocaleString('en-US')} lines of ${pts.toLocaleString('en-US')} points (${roads.filter((r) => r[0] & 8).length} bridges, ${roads.filter((r) => r[0] & 16).length} ramps, ${roads.filter((r) => r[0] & 32).length} one-way); ${count[5]} smaller roads left for the full-scale city`); }
 const rivers = [], rail = [], strips = [];
 for (const c of [0, 1]) for (const r of pack(c, join_(stripLines[c]), 4, 10, true)) strips.push(r);
 for (const c of [0, 1]) for (const r of pack(c, join_(riverLines[c]), 8, 30, true)) rivers.push(r);
 for (const [c, a, b] of [[0, 6, 25], [1, 6, 25], [2, 40, 80]]) for (const r of pack(c, join_(railLines[c]), a, b, true)) rail.push(r);
 points.sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : a[2] - b[2] || a[1] - b[1])); towns.sort((a, b) => a[2] - b[2] || a[1] - b[1]);
 lap(`rivers: ${rivers.length} lines; railways and ferries: ${rail.length} lines; runways and taxiways: ${strips.filter((r) => r[0] === 0).length} and ${strips.filter((r) => r[0] === 1).length}; public buildings: ${points.length}; towns: ${towns.length}; building outlines on the map: ${buildings.toLocaleString('en-US')}`);
+
+/* the public traffic cameras on the map (tools/traffic_fetch.py): what each looks at, where it stands, where its live picture is */
+const cameras = [];
+if (existsSync(join(dir, 'traffic_cameras.json'))) {
+  const doc = JSON.parse(readFileSync(join(dir, 'traffic_cameras.json'), 'utf8')), lay = doc.layers.find((l) => /camera/i.test(l.name || '')) || doc.layers[0];
+  // (a picture's address is kept only if it is on WSDOT's own picture host; a title is plain text of a sensible length)
+  const PICTURE = /^https:\/\/images\.wsdot\.wa\.gov\/[A-Za-z0-9_\-./%]+\.(?:jpg|jpeg|png)$/i; let refused = 0;
+  for (const f of lay.features) {
+    const a = f.attributes || {}, g = f.geometry || {}, url = String(a.ImageURL || a.ImageUrl || ''), title = String(a.CameraTitle || a.Title || '').replace(/[\u0000-\u001f\u007f<>]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 120);
+    if (typeof g.x !== 'number' || typeof g.y !== 'number' || !inMap(g.x, g.y, 0)) continue; if (!title || !PICTURE.test(url)) { refused++; continue; }
+    cameras.push([title, url, String(a.CompassDirection || '').replace(/[^A-Za-z]/g, '').slice(0, 2), qx(g.x), qy(g.y)]);
+  }
+  if (refused) lap(`traffic cameras refused (no title, or a picture that is not on images.wsdot.wa.gov): ${refused}`);
+  cameras.sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
+  lap(`traffic cameras on the map: ${cameras.length} (of ${lay.features.length} fetched)`);
+}
 
 /* 5. heights from the terrain tiles (PNG pictures: metres = red * 256 + green + blue / 256 - 32768) */
 function png(buf) {
@@ -292,7 +323,7 @@ const G = { name: 'everett', centre, halfX, halfY, mLat: M_LAT, mLon: M_LON,
   pop: { rows: meta.rows, cols: meta.cols, north: meta.north, west: meta.west, dLat, dLon, people: Math.round(people / 100) },
   kinds: Object.keys(K), fine: FINE, heights: HG,
   world: { times: TIMES, north: Number(N_.toFixed(6)), west: Number(W_.toFixed(6)), south: Number(S_.toFixed(6)), east: Number(E_.toFixed(6)), cells: HALF, unit: 1 / Q },
-  roads, rivers, rail, strips, points, towns, places: outline.places, sites: outline.sites, tiles: service + (asOf ? ' ' + asOf : '') };
+  roads, rivers, rail, strips, points, towns, cameras, places: outline.places, sites: outline.sites, tiles: service + (asOf ? ' ' + asOf : '') };
 const out = `// SPDX-License-Identifier: ODbL-1.0 AND CC-BY-4.0
 // GENERATED by tools/make_map.mjs. Do not edit by hand. (This file is data, under its sources' terms: see NOTICE.)
 // What the map of the real place, and the world around it, are shaped from.
