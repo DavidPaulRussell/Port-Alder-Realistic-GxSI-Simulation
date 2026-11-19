@@ -9,8 +9,10 @@
 import { ContextLost, compilePrograms, buffer, vao, texture, target, freeTarget, M4, V3, gpuName } from "./gl.js";
 import { Atmosphere, ATMOS_PROGRAMS, sunColor } from "./atmos.js";
 import { Perf } from "./perf.js";
-import { CITY_PROGRAMS } from "./city3d_shaders.js";
+import { CITY_PROGRAMS, LIGHTS_W, LIGHTS_H } from "./city3d_shaders.js";
 import { N, CELL_M, MATERIALS, SECTORS, B as BK, L as LAND } from "./citydata.js";
+import { SCALE, NSHIFT, NMASK } from "./scale.js";
+import { layWorld, walkLine, KIND } from "./ground.js";
 import { E_F0, E_B0, E_CITY, E_SCHOOL, E_ROW } from "./books.js";
 import { dayInfo, DAY0 } from "./rules.js";
 import { along, sunAt, LAMP, tideAt } from "./motion.js";
@@ -19,7 +21,7 @@ import { along, sunAt, LAMP, tideAt } from "./motion.js";
 const weyl = (n, a = 0.6180339887498949) => (((n * a) % 1) + 1) % 1, look = (n) => Math.floor(weyl(n) * 4294967296) >>> 0;
 import { homeCell } from "./people.js";
 
-export const CITY3D_VERSION = "1.2.0";
+export const CITY3D_VERSION = "1.3.0";
 const WORLD = N * CELL_M, LAT = 47.6, LON = -122.6;
 // base colours of the 24 materials (linear), used in safe graphics and until the library is loaded
 const MAT_COL = [[0.05, 0.05, 0.055], [0.42, 0.41, 0.39], [0.36, 0.16, 0.10], [0.30, 0.29, 0.28], [0.10, 0.22, 0.05], [0.20, 0.14, 0.08], [0.62, 0.55, 0.42], [0.16, 0.11, 0.07],
@@ -107,7 +109,7 @@ export class City3D {
     this.half = !!gl.getExtension("EXT_color_buffer_float"); gl.getExtension("OES_texture_float_linear");
     this.maxTex = gl.getParameter(gl.MAX_TEXTURE_SIZE);
     this.q = QUALITY[quality] || QUALITY.high; this.qualityName = quality;
-    this.perf = new Perf(gl); this.cam = { tx: 30 * CELL_M, tz: 62 * CELL_M, yaw: -0.6, pitch: 0.55, dist: 900, mode: "orbit" };
+    this.perf = new Perf(gl); this.cam = { tx: 30 * CELL_M, tz: 62 * CELL_M, yaw: -0.6, pitch: 0.55, dist: 900, mode: "orbit" }; this.reach = 4200 * (N / 128);
     this.minutes = 9 * 60; this.ready = false; this.running = false; this.lost = false; this.matReady = 0; this.t0 = performance.now();
     this.lostHandler = (ev) => { ev.preventDefault(); this.lost = true; this.running = false; this.onLost?.({ preparing: !this.ready, upgrading: !!this.upgradingNow }); };
     canvas.addEventListener("webglcontextlost", this.lostHandler);
@@ -162,36 +164,140 @@ export class City3D {
   attach(city) {
     this.city = city; const W = city.world, gl = this.gl;
     // heights: metres per cell (the bay floor lies below the water line)
-    const hgt = new Float32Array(N * N); for (let c = 0; c < N * N; c++) hgt[c] = W.water[c] && !W.road[c] ? -2.5 : Math.max(0.3, W.height[c] / 1000);
-    for (let c = 0; c < N * N; c++) if (W.road[c] === 3) hgt[c] = Math.max(hgt[c], 2.5);   // bridges
+    const hgt = new Float32Array(N * N); for (let c = 0; c < N * N; c++) hgt[c] = W.water[c] && !W.road[c] ? (W.level ? W.height[c] / 1000 : -2.5) : Math.max(0.3, W.height[c] / 1000);
+    for (let c = 0; c < N * N; c++) if (W.road[c] === 3) hgt[c] = Math.max(hgt[c], (W.level ? W.level[c] : 0) + 2.5);   // bridges
     this.hgt = hgt;
-    this.heightTex = texture(gl, N, N, { internal: gl.R32F, format: gl.RED, type: gl.FLOAT, filter: gl.NEAREST, data: hgt });
+    // on the real map bridges and piers are decks of their own: the ground under them is the bed of the water
+    const bed = W.cover ? hgt.slice() : hgt; this.bed = bed;
+    if (W.cover) for (let c = 0; c < N * N; c++) {
+      if (W.cover[c] === KIND.pier) { bed[c] = -4; continue; }
+      if (!W.water[c]) continue;
+      if (W.road[c] === 3) bed[c] = W.height[c] / 1000;
+      // beside the land the water is shallow, so the shore falls where the cells say it does
+      const x = c & NMASK, y = c >> NSHIFT; let shore = false; for (let dy = -1; dy <= 1 && !shore; dy++) for (let dx = -1; dx <= 1; dx++) { const xx = x + dx, yy = y + dy; if (xx >= 0 && yy >= 0 && xx < N && yy < N && !W.water[(yy << NSHIFT) | xx] && W.cover[(yy << NSHIFT) | xx] !== KIND.pier) { shore = true; break; } }
+      if (shore) bed[c] = Math.max(bed[c], W.level[c] - 1.1);
+    }
+    // where a vehicle on a cell drives: the cell's middle, or on a real road the nearest point of its centre line (buildRoads)
+    this.snapX = new Float32Array(N * N); this.snapZ = new Float32Array(N * N); for (let c = 0; c < N * N; c++) { this.snapX[c] = ((c & NMASK) + 0.5) * CELL_M; this.snapZ[c] = ((c >> NSHIFT) + 0.5) * CELL_M; }
     this.landTex = texture(gl, N, N, { filter: gl.NEAREST, data: this.landData() });
-    this.lightsData = new Uint8Array(128 * 64 * 4); this.lightsTex = texture(gl, 128, 64, { filter: gl.NEAREST, data: this.lightsData });
+    this.lightsData = new Uint8Array(LIGHTS_W * LIGHTS_H * 4); this.lightsTex = texture(gl, LIGHTS_W, LIGHTS_H, { filter: gl.NEAREST, data: this.lightsData });
     // the ground: a 257 x 257 grid, ten metres apart, heights smoothed from the cells
-    const G = 2 * N + 1, P = new Float32Array(G * G * 3), Nm = new Float32Array(G * G * 3), I = new Uint32Array((G - 1) * (G - 1) * 6);
+    // (on the real map: a point at the middle of every cell, so a wharf or a slough one cell wide keeps its own height)
+    const mid = !!W.cover, per = mid ? 1 : 2, gap = CELL_M / per, G = mid ? N : per * N + 1, off = mid ? CELL_M / 2 : 0, P = new Float32Array(G * G * 3), Nm = new Float32Array(G * G * 3), I = new Uint32Array((G - 1) * (G - 1) * 6);
     const hAt = (x, z) => { const cx = Math.max(0, Math.min(N - 1, Math.floor(x / CELL_M - 0.5))), cz = Math.max(0, Math.min(N - 1, Math.floor(z / CELL_M - 0.5))), fx = Math.max(0, Math.min(1, x / CELL_M - 0.5 - cx)), fz = Math.max(0, Math.min(1, z / CELL_M - 0.5 - cz));
-      const h = (i, j) => hgt[(Math.min(N - 1, j) << 7) | Math.min(N - 1, i)]; return (h(cx, cz) * (1 - fx) + h(cx + 1, cz) * fx) * (1 - fz) + (h(cx, cz + 1) * (1 - fx) + h(cx + 1, cz + 1) * fx) * fz; };
+      const h = (i, j) => bed[(Math.min(N - 1, j) << NSHIFT) | Math.min(N - 1, i)]; return (h(cx, cz) * (1 - fx) + h(cx + 1, cz) * fx) * (1 - fz) + (h(cx, cz + 1) * (1 - fx) + h(cx + 1, cz + 1) * fx) * fz; };
     this.groundAt = hAt;
-    for (let j = 0; j < G; j++) for (let i = 0; i < G; i++) { const k = j * G + i, x = i * 10, z = j * 10; P[k * 3] = x; P[k * 3 + 1] = hAt(x, z); P[k * 3 + 2] = z; }
-    for (let j = 0; j < G; j++) for (let i = 0; i < G; i++) { const k = j * G + i, hl = P[(j * G + Math.max(0, i - 1)) * 3 + 1], hr = P[(j * G + Math.min(G - 1, i + 1)) * 3 + 1], hd = P[(Math.max(0, j - 1) * G + i) * 3 + 1], hu = P[(Math.min(G - 1, j + 1) * G + i) * 3 + 1]; const n = V3.norm([hl - hr, 20, hd - hu]); Nm.set(n, k * 3); }
+    for (let j = 0; j < G; j++) for (let i = 0; i < G; i++) { const k = j * G + i, x = i * gap + off, z = j * gap + off; P[k * 3] = x; P[k * 3 + 1] = hAt(x, z); P[k * 3 + 2] = z; }
+    for (let j = 0; j < G; j++) for (let i = 0; i < G; i++) { const k = j * G + i, hl = P[(j * G + Math.max(0, i - 1)) * 3 + 1], hr = P[(j * G + Math.min(G - 1, i + 1)) * 3 + 1], hd = P[(Math.max(0, j - 1) * G + i) * 3 + 1], hu = P[(Math.min(G - 1, j + 1) * G + i) * 3 + 1]; const n = V3.norm([hl - hr, 2 * gap, hd - hu]); Nm.set(n, k * 3); }
     let o = 0; for (let j = 0; j < G - 1; j++) for (let i = 0; i < G - 1; i++) { const a = j * G + i; I[o++] = a; I[o++] = a + G; I[o++] = a + 1; I[o++] = a + 1; I[o++] = a + G; I[o++] = a + G + 1; }
     this.ground = { va: vao(gl, [[gl.getAttribLocation(this.P.ground.p, "a_pos"), buffer(gl, P), 3], [gl.getAttribLocation(this.P.ground.p, "a_nrm"), buffer(gl, Nm), 3]], buffer(gl, I, gl.ELEMENT_ARRAY_BUFFER)), count: I.length };
-    const wq = new Float32Array([-2000, 0, -2000, WORLD + 2000, 0, -2000, WORLD + 2000, 0, WORLD + 2000, -2000, 0, WORLD + 2000]);
+    const far = W.cover ? WORLD + 2000 : 2000, wq = new Float32Array([-far, 0, -far, WORLD + far, 0, -far, WORLD + far, 0, WORLD + far, -far, 0, WORLD + far]);
     this.water = { va: vao(gl, [[gl.getAttribLocation(this.P.water.p, "a_pos"), buffer(gl, wq), 3]], buffer(gl, new Uint16Array([0, 1, 2, 0, 2, 3]), gl.ELEMENT_ARRAY_BUFFER)), count: 6 };
+    this.around = null; this.lakes = null; this.roads = null; this.decks = null; if (W.cover) { this.buildWorld(); this.buildRoads(); }
+    this.heightTex = texture(gl, N, N, { internal: gl.R32F, format: gl.RED, type: gl.FLOAT, filter: gl.NEAREST, data: hgt });
     this.buildBuildings(); this.buildTrees();
     this.carBuf = gl.createBuffer(); this.personBuf = gl.createBuffer();
     this.carVao = this.instVao(this.P.vehicle, this.meshes.car, this.carBuf, ["i_car", "i_col"]);
     this.carShadowVao = this.instVao(this.P.shadowVehicle, this.meshes.car, this.carBuf, ["i_car", "i_col"]);
     this.personVao = this.instVao(this.P.person, this.meshes.person, this.personBuf, ["i_p", "i_c"]);
     this.routes = new Map(); this.dayKey = -1;
+    if (W.cover && W.sites.length) { const [x, z] = W.centre(W.sites[0]); this.cam.tx = x; this.cam.tz = z; this.cam.dist = 1500; }
+  }
+  // The world around the map (the real map only): three map-widths across with the map in its middle, drawn like the
+  // map's own ground from a table of the same kind. And the lakes and rivers that stand above the sea, each at its level.
+  buildWorld() {
+    const gl = this.gl, W = this.city.world, C = 3 * N, A = layWorld(C), rel = W.relief, wet = (k) => k >= 1 && k <= 3, CC = C * C;
+    // the level of every stretch of water (the sea and what is joined to it: 0; a lake: the lowest height on it), and the ground's heights
+    const lvl = new Float32Array(CC), hg = new Float32Array(CC), seen = new Uint8Array(CC);
+    for (let c0 = 0; c0 < CC; c0++) {
+      if (!wet(A.kind[c0]) || seen[c0]) continue; const part = [c0]; seen[c0] = 1; let low = 1e9, sea = false;
+      for (let q = 0; q < part.length; q++) { const c = part[q], x = c % C, y = (c - x) / C; if (A.kind[c] === KIND.sea) sea = true; if (A.height[c] < low) low = A.height[c];
+        if (x > 0 && !seen[c - 1] && wet(A.kind[c - 1])) { seen[c - 1] = 1; part.push(c - 1); } if (x < C - 1 && !seen[c + 1] && wet(A.kind[c + 1])) { seen[c + 1] = 1; part.push(c + 1); }
+        if (y > 0 && !seen[c - C] && wet(A.kind[c - C])) { seen[c - C] = 1; part.push(c - C); } if (y < C - 1 && !seen[c + C] && wet(A.kind[c + C])) { seen[c + C] = 1; part.push(c + C); } }
+      const lv = sea || low < 3 ? 0 : low * rel; for (const c of part) lvl[c] = lv;
+    }
+    const road = new Uint8Array(CC), hwy = new Uint8Array(CC);
+    for (const [cls, pts] of A.roads) if (cls <= 3) walkLine(pts, C, (x, y) => { const c = y * C + x; road[c] = wet(A.kind[c]) ? 3 : 2; if (cls <= 1) hwy[c] = 1; });
+    const strip = new Uint8Array(CC); for (const [cls, pts] of A.strips) walkLine(pts, C, (x, y) => { const c = y * C + x; if (wet(A.kind[c])) return; A.kind[c] = KIND.runway; if (cls === 0) strip[c] = 1; });
+    for (let c = 0; c < CC; c++) { const k = A.kind[c]; hg[c] = wet(k) ? lvl[c] - (k === KIND.sea ? 6 : 2.5) : Math.max(1.6, A.height[c] * rel); }
+    this.wd = { A, C, hg, lvl };
+    // the table the ground shader reads: land use, road, road condition, neighbours and the kind of open ground
+    const d = new Uint8Array(CC * 4);
+    for (let y = 0; y < C; y++) for (let x = 0; x < C; x++) {
+      const c = y * C + x, k = A.kind[c], r = road[c]; let nb = 0; if (r) { if (x < C - 1 && road[c + 1]) nb |= 1; if (x > 0 && road[c - 1]) nb |= 2; if (y < C - 1 && road[c + C]) nb |= 4; if (y > 0 && road[c - C]) nb |= 8; }
+      else if (strip[c]) { if (x < C - 1 && strip[c + 1]) nb |= 1; if (x > 0 && strip[c - 1]) nb |= 2; if (y < C - 1 && strip[c + C]) nb |= 4; if (y > 0 && strip[c - C]) nb |= 8; if (!nb) nb = 15; }
+      const town = (q) => q === KIND.residential || q === KIND.commercial || q === KIND.industrial, urban = r && (town(k) || (x > 0 && town(A.kind[c - 1])) || (x < C - 1 && town(A.kind[c + 1])));
+      d[c * 4] = wet(k) ? LAND.water : k === KIND.beach ? LAND.beach : k === KIND.runway ? LAND.plaza : LAND.park; d[c * 4 + 1] = r | (hwy[c] ? 16 : 0) | (r ? 32 : 0) | (urban ? 64 : 0); d[c * 4 + 2] = 225; d[c * 4 + 3] = nb | ((k === KIND.none ? (A.height[c] < 9 ? KIND.farm : KIND.forest) : k) << 4);   // unmarked ground: fields on the valley floors, woods elsewhere
+    }
+    // the ground: a point every two cells; under the map itself it is sunk out of sight, and its middle is left out
+    const S = 2, G = C / S + 1, P = new Float32Array(G * G * 3), Nm = new Float32Array(G * G * 3), I = [];
+    const at = (i, j) => hg[Math.max(0, Math.min(C - 1, j)) * C + Math.max(0, Math.min(C - 1, i))];
+    for (let j = 0; j < G; j++) for (let i = 0; i < G; i++) {
+      const k = j * G + i, x = i * S, y = j * S, inMap = x > N + 1 && x < 2 * N - 1 && y > N + 1 && y < 2 * N - 1;
+      P[k * 3] = (x - N) * CELL_M; P[k * 3 + 1] = (at(x - 1, y - 1) + at(x, y - 1) + at(x - 1, y) + at(x, y)) / 4 - (inMap ? 3 : 0); P[k * 3 + 2] = (y - N) * CELL_M;
+    }
+    for (let j = 0; j < G; j++) for (let i = 0; i < G; i++) { const k = j * G + i, hl = P[(j * G + Math.max(0, i - 1)) * 3 + 1], hr = P[(j * G + Math.min(G - 1, i + 1)) * 3 + 1], hd = P[(Math.max(0, j - 1) * G + i) * 3 + 1], hu = P[(Math.min(G - 1, j + 1) * G + i) * 3 + 1]; Nm.set(V3.norm([hl - hr, 2 * S * CELL_M, hd - hu]), k * 3); }
+    for (let j = 0; j < G - 1; j++) for (let i = 0; i < G - 1; i++) { const x = i * S, y = j * S; if (x >= N + 2 && x + S <= 2 * N - 2 && y >= N + 2 && y + S <= 2 * N - 2) continue; const a = j * G + i; I.push(a, a + G, a + 1, a + 1, a + G, a + G + 1); }
+    this.around = { cells: C, tex: texture(gl, C, C, { filter: gl.NEAREST, data: d }), count: I.length,
+      va: vao(gl, [[gl.getAttribLocation(this.P.ground.p, "a_pos"), buffer(gl, P), 3], [gl.getAttribLocation(this.P.ground.p, "a_nrm"), buffer(gl, Nm), 3]], buffer(gl, new Uint32Array(I), gl.ELEMENT_ARRAY_BUFFER)) };
+    // water above the sea: a flat piece over every such cell, in the world and on the map
+    const q = [], qi = []; const piece = (x0, z0, y) => { const o = q.length / 3; q.push(x0, y, z0, x0 + CELL_M, y, z0, x0 + CELL_M, y, z0 + CELL_M, x0, y, z0 + CELL_M); qi.push(o, o + 1, o + 2, o, o + 2, o + 3); };
+    for (let y = 0; y < C; y++) for (let x = 0; x < C; x++) { if (x >= N && x < 2 * N && y >= N && y < 2 * N) continue; const c = y * C + x; if (lvl[c] > 0.5 && !road[c]) piece((x - N) * CELL_M, (y - N) * CELL_M, lvl[c]); }
+    for (let c = 0; c < N * N; c++) if (W.water[c] && W.level[c] > 0.5 && !W.road[c]) piece((c & NMASK) * CELL_M, (c >> NSHIFT) * CELL_M, W.level[c]);
+    this.lakes = qi.length ? { count: qi.length, va: vao(gl, [[gl.getAttribLocation(this.P.water.p, "a_pos"), buffer(gl, new Float32Array(q)), 3]], buffer(gl, new Uint32Array(qi), gl.ELEMENT_ARRAY_BUFFER)) } : null;
+    this.reach = WORLD * 0.95;
+  }
+  // The real roads, drawn from their centre lines as ribbons over the ground (ROAD_FS), on the map and in the world
+  // around it: a point at least every 12 m, the edges at the road's half-width to either side, following the ground;
+  // a long bridge rises to a deck above the water or the marsh. And the piers: a deck over every cell of one.
+  buildRoads() {
+    const gl = this.gl, W = this.city.world, { A, C, hg, lvl } = this.wd, VP = [], VR = [], I = [], HALF = [12, 10, 6.5, 5.5, 4.5], near = new Float32Array(N * N).fill(1e9);
+    const inMap = (x, z) => x >= 0 && z >= 0 && x < WORLD && z < WORLD;
+    const read = (a, S, fx, fz) => { const x0 = Math.max(0, Math.min(S - 2, Math.floor(fx - 0.5))), z0 = Math.max(0, Math.min(S - 2, Math.floor(fz - 0.5))), u = Math.max(0, Math.min(1, fx - 0.5 - x0)), v = Math.max(0, Math.min(1, fz - 0.5 - z0)); return (a[z0 * S + x0] * (1 - u) + a[z0 * S + x0 + 1] * u) * (1 - v) + (a[(z0 + 1) * S + x0] * (1 - u) + a[(z0 + 1) * S + x0 + 1] * u) * v; };
+    // the ground under a point and the level of the water there (none: far below), from the map's tables or the world's
+    const earth = (x, z) => (inMap(x, z) ? read(this.bed, N, x / CELL_M, z / CELL_M) : read(hg, C, x / CELL_M + N, z / CELL_M + N));
+    const level = (x, z) => { if (inMap(x, z)) { const c = (Math.floor(z / CELL_M) << NSHIFT) | Math.floor(x / CELL_M); return W.water[c] ? W.level[c] : -99; } const cx = Math.floor(x / CELL_M) + N, cz = Math.floor(z / CELL_M) + N; if (cx < 0 || cz < 0 || cx >= C || cz >= C) return -99; const k = A.kind[cz * C + cx]; return k >= 1 && k <= 3 ? lvl[cz * C + cx] : -99; };
+    for (const [cls, pts, bridge, ramp] of A.roads) {
+      const half = ramp ? 3.5 : HALF[cls], code = cls + (ramp ? 16 : 0), P = [];
+      for (let i = 0; i + 1 < pts.length; i += 2) { const x = (pts[i] - N) * CELL_M, z = (pts[i + 1] - N) * CELL_M; if (P.length) { const [px, pz] = P[P.length - 1], n = Math.ceil(Math.hypot(x - px, z - pz) / 12); for (let k = 1; k < n; k++) P.push([px + ((x - px) * k) / n, pz + ((z - pz) * k) / n]); } P.push([x, z]); }
+      if (P.length < 2) continue;
+      const S = [0]; for (let i = 1; i < P.length; i++) S.push(S[i - 1] + Math.hypot(P[i][0] - P[i - 1][0], P[i][1] - P[i - 1][1]));
+      const L = S[S.length - 1] || 1, long = bridge && L > 110, lift = 0.3 + (4 - cls) * 0.05, first = VP.length / 3, end = P[P.length - 1];
+      const y0 = Math.max(earth(P[0][0], P[0][1]), level(P[0][0], P[0][1]) + 1), y1 = Math.max(earth(end[0], end[1]), level(end[0], end[1]) + 1);
+      for (let i = 0; i < P.length; i++) {
+        const [x, z] = P[i], a = P[Math.max(0, i - 1)], b = P[Math.min(P.length - 1, i + 1)], tl = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1, nx = -(b[1] - a[1]) / tl, nz = (b[0] - a[0]) / tl;
+        const lx = x - nx * half, lz = z - nz * half, rx = x + nx * half, rz = z + nz * half; let yl, yr;
+        if (bridge) { const e = Math.min(1, Math.min(S[i], L - S[i]) / 45), rise = long ? 5 * e * e * (3 - 2 * e) : 0.5; yl = yr = Math.max(y0 + ((y1 - y0) * S[i]) / L, earth(x, z), level(x, z) + 1) + rise + lift; }
+        else { const wl = level(x, z) + 0.8; yl = Math.max(earth(lx, lz), wl) + lift; yr = Math.max(earth(rx, rz), wl) + lift; }
+        VP.push(lx, yl, lz, rx, yr, rz); VR.push(-1, S[i], code, 1, S[i], code);
+        if (inMap(x, z)) { const c = (Math.floor(z / CELL_M) << NSHIFT) | Math.floor(x / CELL_M), d = Math.hypot(x - ((c & NMASK) + 0.5) * CELL_M, z - ((c >> NSHIFT) + 0.5) * CELL_M); if (d < near[c]) { near[c] = d; this.snapX[c] = x; this.snapZ[c] = z; if (bridge) this.hgt[c] = Math.max(this.hgt[c], (yl + yr) / 2 - lift); } }
+      }
+      for (let i = 0; i + 1 < P.length; i++) { const a = first + i * 2; I.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
+      if (long) for (const side of [0, 1]) {                           // the sides of the deck
+        const sf = VP.length / 3; for (let i = 0; i < P.length; i++) { const o = (first + i * 2 + side) * 3, u = side ? 1.1 : -1.1; VP.push(VP[o], VP[o + 1], VP[o + 2], VP[o], VP[o + 1] - 1.4, VP[o + 2]); VR.push(u, S[i], code, u, S[i], code); }
+        for (let i = 0; i + 1 < P.length; i++) { const a = sf + i * 2; I.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
+      }
+    }
+    this.roads = I.length ? { count: I.length, va: vao(gl, [[gl.getAttribLocation(this.P.road.p, "a_pos"), buffer(gl, new Float32Array(VP)), 3], [gl.getAttribLocation(this.P.road.p, "a_road"), buffer(gl, new Float32Array(VR)), 3]], buffer(gl, new Uint32Array(I), gl.ELEMENT_ARRAY_BUFFER)) } : null;
+    // piers: the top of the deck, and a side wherever the next cell is not pier
+    const dp = [], dn = [], di = [], quad = (p, n) => { const o = dp.length / 3; dp.push(...p); for (let k = 0; k < 4; k++) dn.push(...n); di.push(o, o + 1, o + 2, o, o + 2, o + 3); };
+    const pier = (x, y) => x >= 0 && y >= 0 && x < N && y < N && W.cover[(y << NSHIFT) | x] === KIND.pier;
+    for (let cy = 0; cy < N; cy++) for (let cx = 0; cx < N; cx++) {
+      if (!pier(cx, cy)) continue; const x0 = cx * CELL_M, x1 = x0 + CELL_M, z0 = cy * CELL_M, z1 = z0 + CELL_M, y = this.hgt[(cy << NSHIFT) | cx], b = -2;
+      quad([x0, y, z0, x0, y, z1, x1, y, z1, x1, y, z0], [0, 1, 0]);
+      if (!pier(cx - 1, cy)) quad([x0, y, z0, x0, b, z0, x0, b, z1, x0, y, z1], [-1, 0, 0]); if (!pier(cx + 1, cy)) quad([x1, y, z0, x1, y, z1, x1, b, z1, x1, b, z0], [1, 0, 0]);
+      if (!pier(cx, cy - 1)) quad([x0, y, z0, x1, y, z0, x1, b, z0, x0, b, z0], [0, 0, -1]); if (!pier(cx, cy + 1)) quad([x0, y, z1, x0, b, z1, x1, b, z1, x1, y, z1], [0, 0, 1]);
+    }
+    this.decks = di.length ? { count: di.length, va: vao(gl, [[gl.getAttribLocation(this.P.ground.p, "a_pos"), buffer(gl, new Float32Array(dp)), 3], [gl.getAttribLocation(this.P.ground.p, "a_nrm"), buffer(gl, new Float32Array(dn)), 3]], buffer(gl, new Uint32Array(di), gl.ELEMENT_ARRAY_BUFFER)) } : null;
   }
   landData() {
     const W = this.city.world, d = new Uint8Array(N * N * 4);
     for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
-      const c = (y << 7) | x, r = W.road[c];
+      const c = (y << NSHIFT) | x, r = W.road[c];
       let nb = 0; if (r) { if (x < N - 1 && W.road[c + 1]) nb |= 1; if (x > 0 && W.road[c - 1]) nb |= 2; if (y < N - 1 && W.road[c + N]) nb |= 4; if (y > 0 && W.road[c - N]) nb |= 8; }
-      d[c * 4] = W.land[c]; d[c * 4 + 1] = r; d[c * 4 + 2] = Math.min(255, Math.round(W.cond[c] / 4)); d[c * 4 + 3] = nb;
+      else if (W.strip && W.strip[c] === 1) { const S = W.strip; if (x < N - 1 && S[c + 1] === 1) nb |= 1; if (x > 0 && S[c - 1] === 1) nb |= 2; if (y < N - 1 && S[c + N] === 1) nb |= 4; if (y > 0 && S[c - N] === 1) nb |= 8; if (!nb) nb = 15; }   // a runway: which way it runs
+      const ribbon = W.real && W.real[c], built = (q) => q >= 0 && q < N * N && (W.bldOf[q] >= 0 || W.land[q] === LAND.yard), urban = ribbon && (built(c - 1) || built(c + 1) || built(c - N) || built(c + N));
+      d[c * 4] = W.land[c]; d[c * 4 + 1] = r | (W.hwy && W.hwy[c] ? 16 : 0) | (ribbon ? 32 : 0) | (urban ? 64 : 0); d[c * 4 + 2] = Math.min(255, Math.round(W.cond[c] / 4)); d[c * 4 + 3] = nb | ((W.cover ? W.cover[c] : 0) << 4);
     }
     return d;
   }
@@ -206,7 +312,7 @@ export class City3D {
     list.forEach((b, k) => {
       const kind = T.kind[b], set = kind === BK.house ? 3.5 : kind === BK.townhouse ? 2.0 : kind <= BK.mixed ? 1.2 : 1.0;
       const x0 = T.x[b] * CELL_M + set, z0 = T.y[b] * CELL_M + set, w = T.w[b] * CELL_M - 2 * set, dd = T.h[b] * CELL_M - 2 * set;
-      let base = 1e9; for (let y = T.y[b]; y < T.y[b] + T.h[b]; y++) for (let x = T.x[b]; x < T.x[b] + T.w[b]; x++) base = Math.min(base, this.hgt[(y << 7) | x]);
+      let base = 1e9; for (let y = T.y[b]; y < T.y[b] + T.h[b]; y++) for (let x = T.x[b]; x < T.x[b] + T.w[b]; x++) base = Math.min(base, this.hgt[(y << NSHIFT) | x]);
       const fl = T.floors[b], fh = kind === BK.office || kind === BK.hotel || kind === BK.hospital ? 3.8 : kind === BK.industrial ? 7.5 : 3.1;
       // a building coming down shrinks with the demolition's progress, a new one rises with the builder's, under scaffold
       const st = T.stage[b], prog = Math.max(0, Math.min(1000, T.progress[b])) / 1000, grow = st === 4 ? Math.max(0.06, prog) : st === 3 ? Math.max(0.06, 1 - prog) : 1, works = st >= 3 ? 1 : 0;
@@ -223,47 +329,65 @@ export class City3D {
     this.bVao = this.instVao(this.P.building, this.meshes.box, this.bBuf, names); this.gVao = this.instVao(this.P.building, this.meshes.gable, this.gBuf, names);
     this.bShadowVao = this.instVao(this.P.shadowBuilding, this.meshes.box, this.bBuf, names); this.gShadowVao = this.instVao(this.P.shadowBuilding, this.meshes.gable, this.gBuf, names);
   }
+  // The trees, in groups: on the invented map one group, always drawn; on the real map (tens of thousands of trees) a
+  // group for every 32 x 32 cells, drawn when it is near enough to the camera to be seen as trees.
   buildTrees() {
-    const gl = this.gl, W = this.city.world, s = this.city.cfg.seed, t = [];
+    const gl = this.gl, W = this.city.world, TS = 32, across = Math.ceil(N / TS), groups = new Map();
+    for (const g of this.tGroups || []) { gl.deleteBuffer(g.buf); gl.deleteVertexArray(g.va); gl.deleteVertexArray(g.shadow); }
     for (let c = 0; c < N * N; c++) {
-      const k = W.tree[c]; if (!k) continue; const x = (c & 127) * CELL_M, z = (c >> 7) * CELL_M, n = k === 3 ? 4 : k === 4 ? 1 : k;
+      const k = W.tree[c]; if (!k) continue; const cx = c & NMASK, cz = c >> NSHIFT, x = cx * CELL_M, z = cz * CELL_M, n = W.cover ? 1 : k === 3 ? 4 : k === 4 ? 1 : k;
+      const key = W.cover ? Math.floor(cz / TS) * across + Math.floor(cx / TS) : 0; let t = groups.get(key); if (!t) groups.set(key, (t = []));
       for (let j = 0; j < n; j++) {
         const jx = weyl(c * 7 + j), jz = weyl(c * 7 + j, 0.41421356237309515), h = look(c * 7 + j);
         const px = k === 4 ? x + (jx < 0.5 ? 2.5 : CELL_M - 2.5) : x + 2 + jx * (CELL_M - 4), pz = k === 4 ? z + CELL_M / 2 : z + 2 + jz * (CELL_M - 4);
-        t.push(px, pz, (k === 3 ? 14 : 8) + ((h >>> 20) % 80) / 10, k === 3 || (h & 7) === 0 ? 2 : 1);
+        t.push(px, pz, (k === 3 ? (W.cover ? 19 : 14) : 8) + ((h >>> 20) % 80) / 10, k === 3 || (h & 7) === 0 ? 2 : 1);
       }
     }
-    this.tCount = t.length / 4; this.tBuf = buffer(gl, new Float32Array(t));
-    this.tVao = this.instVao(this.P.tree, this.meshes.tree, this.tBuf, ["i_tree"]); this.tShadowVao = this.instVao(this.P.shadowTree, this.meshes.tree, this.tBuf, ["i_tree"]);
+    this.tGroups = []; this.tCount = 0;
+    for (const [key, t] of groups) {
+      const buf = buffer(gl, new Float32Array(t)); this.tCount += t.length / 4;
+      this.tGroups.push({ buf, count: t.length / 4, va: this.instVao(this.P.tree, this.meshes.tree, buf, ["i_tree"]), shadow: this.instVao(this.P.shadowTree, this.meshes.tree, buf, ["i_tree"]),
+        all: !W.cover, x: ((key % across) + 0.5) * TS * CELL_M, z: (Math.floor(key / across) + 0.5) * TS * CELL_M });
+    }
   }
+  // the groups of trees near enough to draw
+  treesNear() { const c = this.cam, reach = Math.min(2800, 800 + c.dist * 1.3) + 32 * CELL_M * 0.75; return this.tGroups.filter((g) => g.all || Math.hypot(g.x - c.tx, g.z - c.tz) < reach); }
 
   /* -------------------------------------------------------------- the day's traffic and people */
   // shortest street paths to a destination cell: breadth-first parents over the road grid, kept per destination
   route(to) {
     let r = this.routes.get(to); if (r) return r;
-    const W = this.city.world, par = new Int32Array(N * N).fill(-1), q = new Int32Array(N * N); let h = 0, t = 0;
+    const W = this.city.world, par = new Int32Array(N * N).fill(-1), q = this.searchQ || (this.searchQ = new Int32Array(N * N)); let h = 0, t = 0;
     if (!W.road[to]) return null;
     par[to] = to; q[t++] = to;
-    while (h < t) { const c = q[h++], x = c & 127, y = c >> 7; for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const nx = x + dx, ny = y + dy; if (nx < 0 || ny < 0 || nx >= N || ny >= N) continue; const n = (ny << 7) | nx; if (!W.road[n] || par[n] >= 0) continue; par[n] = c; q[t++] = n; } }
-    r = par; if (this.routes.size > 600) this.routes.clear(); this.routes.set(to, r); return r;
+    while (h < t) { const c = q[h++], x = c & NMASK, y = c >> NSHIFT; for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const nx = x + dx, ny = y + dy; if (nx < 0 || ny < 0 || nx >= N || ny >= N) continue; const n = (ny << NSHIFT) | nx; if (!W.road[n] || par[n] >= 0) continue; par[n] = c; q[t++] = n; } }
+    r = par; if (this.routes.size > Math.max(40, Math.floor(600 * 16384 / (N * N)))) this.routes.clear(); this.routes.set(to, r); return r;
   }
   path(from, to) {
     const par = this.route(to); if (!par || par[from] < 0) return null;
-    const out = [from]; let c = from; while (c !== to && out.length < 400) { c = par[c]; out.push(c); } return out;
+    const out = [from]; let c = from; while (c !== to && out.length < 4 * N) { c = par[c]; out.push(c); } return out;
   }
   planDay() {
     const c = this.city, P = c.people, W = c.world, e = c.epoch, s = c.cfg.seed;
     this.trips = []; this.walkers = []; this.dayKey = e;
-    const exitCell = (y) => { for (let x = N - 1; x > 100; x--) if (W.road[(y << 7) | x] === 2) return (y << 7) | x; return -1; };
-    const exits = [12, 36, 60, 84, 108].map(exitCell).filter((x) => x >= 0);
+    const exitCell = (y) => { for (let x = N - 1; x > 100; x--) if (W.road[(y << NSHIFT) | x] === 2) return (y << NSHIFT) | x; return -1; };
+    let exits = [12, 36, 60, 84, 108].map(exitCell).filter((x) => x >= 0), port = (100 << NSHIFT) | 30;
+    const every = P.count > 20000 ? Math.ceil(P.count / 8000) : 1;                  // on a large map one citizen in `every` is drawn on the streets
+    if (W.cover) {
+      // the real map: the ways out are where its main roads cross its edge; the port is the works street nearest the water
+      exits = []; for (let k = 0; k < N; k++) for (const c of [k, (N - 1) * N + k, k * N, k * N + N - 1]) if (W.road[c] === 2 && (!exits.length || exits[exits.length - 1] !== c)) exits.push(c);
+      if (this.portCell === undefined) { let best = -1, bd = 1e9; for (let c = 0; c < N * N; c++) if (W.road[c] && !W.hwy[c] && W.hood[c] === 6 && W.waterDist[c] < bd) { bd = W.waterDist[c]; best = c; } this.portCell = best; }
+      port = this.portCell;
+    }
     for (const i of P.each()) {
+      if (i % every) continue;
       const h = P.hh[i]; if (h < 0) continue; const hc = homeCell(c, h); if (hc < 0) continue;
       const t = P.today[i], mode = P.mode[i];
       if (t & 1) {
-        let wc = c.workCell(i); if (P.emp[i] === E_ROW) { const f = P.away[i] - 1, south = f >= 0 && c.outer?.F.place[f] >= 9; let best = exits[0]; for (const x of exits) if (south ? (x >> 7) > (best >> 7) : (x >> 7) < (best >> 7)) best = x; wc = best; }   // toward the outer workplace
+        let wc = c.workCell(i); if (P.emp[i] === E_ROW) { const f = P.away[i] - 1, south = f >= 0 && c.outer?.F.place[f] >= 9; let best = exits[0]; for (const x of exits) if (south ? (x >> NSHIFT) > (best >> NSHIFT) : (x >> NSHIFT) < (best >> NSHIFT)) best = x; wc = best; }   // toward the outer workplace
         if (wc >= 0 && wc !== hc) {
           const start = P.shift[i], end = start + P.hours[i] * 60 + (P.hours[i] >= 8 ? 30 : 0);
-          if (mode === 1) { this.trips.push({ from: hc, to: wc, at: start - 25, kind: 0, col: look(P.sin[i] * 3 + 1) }); this.trips.push({ from: wc, to: hc, at: end + 2, kind: 0, col: look(P.sin[i] * 3 + 1) }); }
+          if (mode === 1) { this.trips.push({ from: hc, to: wc, at: start - 25, kind: 0, col: look(P.sin[i] * 3 + 1) }); this.trips.push({ from: hc, to: wc, back: true, at: end + 2, kind: 0, col: look(P.sin[i] * 3 + 1) }); }
           else this.walkers.push({ from: hc, to: mode === 2 ? W.stopNear[hc] : wc, at: start - (mode === 2 ? 30 : 22), back: end, speed: mode === 3 ? 3.5 : 1.3, i });
         }
       }
@@ -271,15 +395,16 @@ export class City3D {
       for (let k = 0; k < 3; k++) { const f = P.visit[i * 3 + k]; if (f < 0) continue; const fc = c.firmCell(f - E_F0); if (fc >= 0) this.walkers.push({ stay: fc, at: P.vtime[i * 3 + k] - 10, back: P.vtime[i * 3 + k] + 25, i, speed: 0.6 }); }
     }
     // deliveries between the port and the highway; buses on their routes
-    for (let k = 0; k < 120; k++) { const from = W.frontCell(W.sites[0]) >= 0 ? exits[k % exits.length] : -1, port = (100 << 7) | 30; if (from >= 0 && W.road[port]) this.trips.push({ from: k & 1 ? from : port, to: k & 1 ? port : from, at: 300 + (k * 7) % 1080, kind: 2, col: 0xd0d0d0 }); }
-    for (const t of this.trips) { t.path = this.path(t.from, t.to); }
-    for (const w of this.walkers) if (w.to !== undefined && w.to >= 0) w.path = this.path(w.from, w.to);
+    for (let k = 0; k < 120; k++) { const from = exits.length && W.frontCell(W.sites[0]) >= 0 ? exits[k % exits.length] : -1; if (from >= 0 && port >= 0 && W.road[port]) this.trips.push({ from: k & 1 ? from : port, to: k & 1 ? port : from, at: 300 + (k * 7) % 1080, kind: 2, col: 0xd0d0d0 }); }
+    // (one search of the streets serves every trip to the same place, so the trips are taken place by place; the way home is the way there, backwards)
+    const jobs = this.trips.concat(this.walkers.filter((w) => w.to !== undefined && w.to >= 0)).sort((a, b) => a.to - b.to);
+    for (const t of jobs) { t.path = this.path(t.from, t.to); if (t.back && t.path) t.path = t.path.slice().reverse(); }
     this.trips = this.trips.filter((t) => t.path && t.path.length > 1);
   }
   traffic() {
     const c = this.city, m = this.minutes, out = [], buses = [];
-    if (this.dayKey !== c.epoch) this.planDay();
-    const pos = (path, f) => { const L = path.length - 1, x = f * L, k = Math.min(L - 1, Math.floor(x)), u = x - k, a = path[k], b = path[k + 1]; const ax = (a & 127) * CELL_M + 10, az = (a >> 7) * CELL_M + 10, bx = (b & 127) * CELL_M + 10, bz = (b >> 7) * CELL_M + 10; const dx = bx - ax, dz = bz - az, len = Math.hypot(dx, dz) || 1; return [ax + dx * u + (dz / len) * 3, az + dz * u - (dx / len) * 3, Math.atan2(dx, dz)]; };
+    if (this.dayKey !== c.epoch && !c.stepping) this.planDay();
+    const pos = (path, f) => { const L = path.length - 1, x = f * L, k = Math.min(L - 1, Math.floor(x)), u = x - k, a = path[k], b = path[k + 1]; const ax = this.snapX[a], az = this.snapZ[a], bx = this.snapX[b], bz = this.snapZ[b]; const dx = bx - ax, dz = bz - az, len = Math.hypot(dx, dz) || 1; return [ax + dx * u + (dz / len) * 3, az + dz * u - (dx / len) * 3, Math.atan2(dx, dz)]; };
     for (const t of this.trips) {
       const dur = t.path.length * 1.7 / 60 * (t.kind === 2 ? 1.4 : 1); if (m < t.at || m > t.at + dur) continue;
       const [x, z, hd] = pos(t.path, t.kind === 2 ? (m - t.at) / dur : along((m - t.at) / dur)), col = t.col;   // pulling away and braking (motion.js)
@@ -293,13 +418,13 @@ export class City3D {
   people() {
     const m = this.minutes, out = [], s = this.city.cfg.seed;
     for (const w of this.walkers) {
-      if (w.stay !== undefined) { if (m < w.at || m > w.back) continue; const cx = (w.stay & 127) * CELL_M, cz = (w.stay >> 7) * CELL_M, h = look(w.i * 131 + w.at); const jx = (h % 100) / 100, jz = ((h >> 8) % 100) / 100; out.push(cx + 2 + jx * 16, cz + 1 + jz * 3, (h % 628) / 100, h % 50, ((h >> 4) % 100) / 100, ((h >> 12) % 100) / 100, 0.92 + ((h >> 20) % 16) / 100, ((m - w.at) % 7 < 2) ? 0.8 : 0); continue; }
+      if (w.stay !== undefined) { if (m < w.at || m > w.back) continue; const cx = (w.stay & NMASK) * CELL_M, cz = (w.stay >> NSHIFT) * CELL_M, h = look(w.i * 131 + w.at); const jx = (h % 100) / 100, jz = ((h >> 8) % 100) / 100; out.push(cx + 2 + jx * 16, cz + 1 + jz * 3, (h % 628) / 100, h % 50, ((h >> 4) % 100) / 100, ((h >> 12) % 100) / 100, 0.92 + ((h >> 20) % 16) / 100, ((m - w.at) % 7 < 2) ? 0.8 : 0); continue; }
       if (!w.path || w.path.length < 2) continue;
       const dur = (w.path.length * CELL_M) / w.speed / 60; let f = -1, path = w.path;
       if (m >= w.at && m <= w.at + dur) f = (m - w.at) / dur; else if (m >= w.back && m <= w.back + dur) { f = 1 - (m - w.back) / dur; }
       if (f < 0) continue;
       const L = path.length - 1, x = f * L, k = Math.min(L - 1, Math.floor(x)), u = x - k, a = path[k], b = path[k + 1];
-      const ax = (a & 127) * CELL_M + 10, az = (a >> 7) * CELL_M + 10, bx = (b & 127) * CELL_M + 10, bz = (b >> 7) * CELL_M + 10, dx = bx - ax, dz = bz - az, len = Math.hypot(dx, dz) || 1;
+      const ax = this.snapX[a], az = this.snapZ[a], bx = this.snapX[b], bz = this.snapZ[b], dx = bx - ax, dz = bz - az, len = Math.hypot(dx, dz) || 1;
       const side = (w.i & 1 ? 1 : -1) * 7.6, h = look(w.i * 131 + 7), back = m >= w.back;
       out.push(ax + dx * u + (dz / len) * side, az + dz * u - (dx / len) * side, Math.atan2(back ? -dx : dx, back ? -dz : dz), h % 50, ((h >> 4) % 100) / 100, ((h >> 12) % 100) / 100 * 0 + (w.kid ? 0.66 : 0.95 + ((h >> 20) % 12) / 100), w.speed > 2 ? 2.2 : 1.0);
     }
@@ -311,14 +436,14 @@ export class City3D {
     const home = new Float32Array(T.top), units = new Float32Array(T.top);
     for (const dd of D.each()) { const b = D.bld[dd]; units[b]++; if (D.hh[dd] >= 0) home[b]++; }
     const dark = m > 30 && m < 330, eve = m > 1050 || m < 30, morn = m > 330 && m < 480;
-    for (const b of T.each()) { if (b >= 8192) break; const frac = units[b] ? home[b] / units[b] : 0; d[b * 4] = Math.round(255 * frac * (dark ? 0.08 : eve ? 0.72 : morn ? 0.45 : 0.12)); d[b * 4 + 2] = T.units[b] && !home[b] ? 255 : 0; }
+    for (const b of T.each()) { if (b >= LIGHTS_W * LIGHTS_H) break; const frac = units[b] ? home[b] / units[b] : 0; d[b * 4] = Math.round(255 * frac * (dark ? 0.08 : eve ? 0.72 : morn ? 0.45 : 0.12)); d[b * 4 + 2] = T.units[b] && !home[b] ? 255 : 0; }
     for (const f of F.each()) {
       if (F.status[f] === 1) continue; const b = W.spaces.bld[F.space[f]], S = SECTORS[F.sector[f]];
       const open = m >= S.open && m < Math.min(S.close, 1440) || (S.close > 1440 && m < S.close - 1440);
       d[b * 4 + 1] = Math.max(d[b * 4 + 1], open ? 230 : 18); d[b * 4 + 3] = F.sector[f] + 1;
     }
     for (const b of [...T.each()].filter((x) => T.civic[x] || T.kind[x] === BK.school || T.kind[x] === BK.hospital)) d[b * 4 + 1] = (m > 450 && m < 1080) || T.kind[b] === BK.hospital ? 200 : 20;
-    const gl = this.gl; gl.bindTexture(gl.TEXTURE_2D, this.lightsTex); gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 128, 64, gl.RGBA, gl.UNSIGNED_BYTE, d);
+    const gl = this.gl; gl.bindTexture(gl.TEXTURE_2D, this.lightsTex); gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, LIGHTS_W, LIGHTS_H, gl.RGBA, gl.UNSIGNED_BYTE, d);
     // scaffolding where a floor is going up
     for (let k = 0; k < this.bList.length; k++) this.bInst[k * 16 + 15] = T.started[this.bList[k]] ? 1 : 0;
     gl.bindBuffer(gl.ARRAY_BUFFER, this.bBuf); gl.bufferSubData(gl.ARRAY_BUFFER, 0, this.bInst);
@@ -329,10 +454,10 @@ export class City3D {
     const cv = this.canvas; let drag = null;
     this.onDown = (e) => { drag = { x: e.clientX, y: e.clientY, b: e.button, yaw: this.cam.yaw, pitch: this.cam.pitch, tx: this.cam.tx, tz: this.cam.tz, moved: false }; cv.setPointerCapture?.(e.pointerId); };
     this.onMove = (e) => { if (!drag) return; const dx = e.clientX - drag.x, dy = e.clientY - drag.y; if (Math.abs(dx) + Math.abs(dy) > 3) drag.moved = true;
-      if (drag.b === 2 || e.shiftKey) { const s = this.cam.dist / 900, c = Math.cos(this.cam.yaw), sn = Math.sin(this.cam.yaw); this.cam.tx = drag.tx - (dx * c - dy * sn) * s; this.cam.tz = drag.tz - (dx * sn + dy * c) * s; }
+      if (drag.b === 2 || e.shiftKey) { const s = this.cam.dist / 900, c = Math.cos(this.cam.yaw), sn = Math.sin(this.cam.yaw); this.cam.tx = Math.max(0, Math.min(WORLD, drag.tx - (dx * c - dy * sn) * s)); this.cam.tz = Math.max(0, Math.min(WORLD, drag.tz - (dx * sn + dy * c) * s)); }
       else { this.cam.yaw = drag.yaw + dx * 0.005; this.cam.pitch = Math.max(0.05, Math.min(1.45, drag.pitch + dy * 0.004)); } this.cam.mode = "orbit"; };
     this.onUp = (e) => { if (drag && !drag.moved && drag.b === 0) this.pick(e); drag = null; };
-    this.onWheel = (e) => { e.preventDefault(); this.cam.dist = Math.max(25, Math.min(4200, this.cam.dist * Math.exp(e.deltaY * 0.0012))); };
+    this.onWheel = (e) => { e.preventDefault(); this.cam.dist = Math.max(25, Math.min(this.reach, this.cam.dist * Math.exp(e.deltaY * 0.0012))); };
     this.onCtx = (e) => e.preventDefault();
     cv.addEventListener("pointerdown", this.onDown); cv.addEventListener("pointermove", this.onMove); cv.addEventListener("pointerup", this.onUp); cv.addEventListener("wheel", this.onWheel, { passive: false }); cv.addEventListener("contextmenu", this.onCtx);
   }
@@ -380,7 +505,7 @@ export class City3D {
     this.atmos.update(env, 40, 1.4);
     // the camera
     const eye = this.eye(), target0 = [this.cam.tx, this.groundAt(this.cam.tx, this.cam.tz), this.cam.tz];
-    const proj = M4.persp(0.95, this.W / this.H, Math.max(0.5, this.cam.dist / 400), Math.max(6000, this.cam.dist * 8)), view = M4.lookAt(eye, target0, [0, 1, 0]);
+    const proj = M4.persp(0.95, this.W / this.H, Math.max(0.5, this.cam.dist / 400), Math.max(6000, this.cam.dist * 8, this.around ? WORLD * 4.5 : 0)), view = M4.lookAt(eye, target0, [0, 1, 0]);
     const VP = M4.mul(proj, view); this.VP = VP;
     // the sun's shadow: an orthographic box around the camera's target, as large as the view needs
     const sunDir = env.sun[1] > 0.02 ? env.sun : [0.3, 0.6, 0.2], span = Math.min(2600, Math.max(260, this.cam.dist * 1.6));
@@ -394,18 +519,23 @@ export class City3D {
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.shadowT.fb); gl.viewport(0, 0, this.q.shadow, this.q.shadow); gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LEQUAL); gl.clear(gl.DEPTH_BUFFER_BIT); gl.colorMask(false, false, false, false);
     if (env.sun[1] > 0.02) {
       this.drawInst(this.P.shadowBuilding, this.bShadowVao, this.meshes.box, this.bCount, { u_VP: SVP }); this.drawInst(this.P.shadowBuilding, this.gShadowVao, this.meshes.gable, this.gCount, { u_VP: SVP });
-      this.drawInst(this.P.shadowTree, this.tShadowVao, this.meshes.tree, this.tCount, { u_VP: SVP, u_time: t });
+      for (const g of this.treesNear()) this.drawInst(this.P.shadowTree, g.shadow, this.meshes.tree, g.count, { u_VP: SVP, u_time: t });
     }
     gl.colorMask(true, true, true, true);
     // 2. the scene, into the high dynamic range target
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.hdr.fb); gl.viewport(0, 0, this.W, this.H); gl.clearColor(0, 0, 0, 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     gl.disable(gl.DEPTH_TEST); this.drawSky(VP, env); gl.enable(gl.DEPTH_TEST);
+    // (on the real map the haze thins as the camera rises, so the whole of it can be seen)
     const common = { u_VP: VP, u_eye: eye, u_sun: env.sun, u_sunCol: env.sunCol, u_amb: [0.05 + 0.25 * (1 - env.night), 0.06 + 0.27 * (1 - env.night), 0.08 + 0.3 * (1 - env.night)], u_night: env.night, u_time: t,
-      u_fogCol: [0.5, 0.56, 0.62].map((x) => x * (1 - env.night * 0.95)), u_fogK: 0.00028, u_shadowVP: SVP, u_shadowTexel: 1 / this.q.shadow, u_keepLoops: 0, u_cell: CELL_M, u_season: env.season, u_matReady: this.matReady , u_lamp: env.lamp, u_tide: env.tide};
-    this.use(this.P.ground, common); this.bindCommon(this.P.ground); this.tex(this.P.ground, "u_land", 4, this.landTex); gl.bindVertexArray(this.ground.va); gl.drawElements(gl.TRIANGLES, this.ground.count, gl.UNSIGNED_INT, 0);
+      u_fogCol: [0.5, 0.56, 0.62].map((x) => x * (1 - env.night * 0.95)), u_fogK: this.around ? Math.min(0.00028, 0.22 / Math.max(300, this.cam.dist)) : 0.00028, u_shadowVP: SVP, u_shadowTexel: 1 / this.q.shadow, u_keepLoops: 0, u_cell: CELL_M, u_season: env.season, u_matReady: this.matReady , u_lamp: env.lamp, u_tide: env.tide};
+    this.use(this.P.ground, { ...common, u_origin: [0, 0], u_cells: N }); this.bindCommon(this.P.ground); this.tex(this.P.ground, "u_land", 4, this.landTex); gl.bindVertexArray(this.ground.va); gl.drawElements(gl.TRIANGLES, this.ground.count, gl.UNSIGNED_INT, 0);
+    if (this.around) { this.use(this.P.ground, { ...common, u_origin: [N, N], u_cells: this.around.cells }); this.bindCommon(this.P.ground); this.tex(this.P.ground, "u_land", 4, this.around.tex); gl.bindVertexArray(this.around.va); gl.drawElements(gl.TRIANGLES, this.around.count, gl.UNSIGNED_INT, 0); }
+    if (this.decks) { this.use(this.P.ground, { ...common, u_origin: [0, 0], u_cells: N }); this.bindCommon(this.P.ground); this.tex(this.P.ground, "u_land", 4, this.landTex); gl.bindVertexArray(this.decks.va); gl.drawElements(gl.TRIANGLES, this.decks.count, gl.UNSIGNED_INT, 0); }
+    if (this.roads) { gl.enable(gl.POLYGON_OFFSET_FILL); gl.polygonOffset(-1.5, -1.5); this.use(this.P.road, common); this.bindCommon(this.P.road); gl.bindVertexArray(this.roads.va); gl.drawElements(gl.TRIANGLES, this.roads.count, gl.UNSIGNED_INT, 0); gl.disable(gl.POLYGON_OFFSET_FILL); }
     this.use(this.P.water, common); this.bindCommon(this.P.water); gl.bindVertexArray(this.water.va); gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
+    if (this.lakes) { gl.bindVertexArray(this.lakes.va); gl.drawElements(gl.TRIANGLES, this.lakes.count, gl.UNSIGNED_INT, 0); }
     for (const [va, mesh, n] of [[this.bVao, this.meshes.box, this.bCount], [this.gVao, this.meshes.gable, this.gCount]]) { this.use(this.P.building, common); this.bindCommon(this.P.building); this.tex(this.P.building, "u_lights", 5, this.lightsTex); if (this.P.building.u.u_signs) gl.uniform3fv(this.P.building.u.u_signs, SECTORS.flatMap((x) => x.sign).concat([1, 1, 1])); gl.bindVertexArray(va); gl.drawElementsInstanced(gl.TRIANGLES, mesh.count, gl.UNSIGNED_SHORT, 0, n); }
-    this.use(this.P.tree, common); this.bindCommon(this.P.tree); gl.bindVertexArray(this.tVao); gl.drawElementsInstanced(gl.TRIANGLES, this.meshes.tree.count, gl.UNSIGNED_SHORT, 0, this.tCount);
+    this.use(this.P.tree, common); this.bindCommon(this.P.tree); for (const g of this.treesNear()) { gl.bindVertexArray(g.va); gl.drawElementsInstanced(gl.TRIANGLES, this.meshes.tree.count, gl.UNSIGNED_SHORT, 0, g.count); }
     if (this.carCount) { this.use(this.P.vehicle, common); this.bindCommon(this.P.vehicle); this.tex(this.P.vehicle, "u_height", 6, this.heightTex); gl.bindVertexArray(this.carVao); gl.drawElementsInstanced(gl.TRIANGLES, this.meshes.car.count, gl.UNSIGNED_SHORT, 0, this.carCount); }
     if (this.personCount) { this.use(this.P.person, common); this.bindCommon(this.P.person); this.tex(this.P.person, "u_height", 6, this.heightTex); gl.bindVertexArray(this.personVao); gl.drawElementsInstanced(gl.TRIANGLES, this.meshes.person.count, gl.UNSIGNED_SHORT, 0, this.personCount); }
     // 3. the final image: bloom from the target's mipmaps, filmic tone mapping

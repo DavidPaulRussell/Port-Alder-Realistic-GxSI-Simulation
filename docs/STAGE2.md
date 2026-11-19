@@ -5,6 +5,15 @@ founded and audited on the invented map at sixteen times the area, street life i
 its sources: `tools/map_fetch.py` has not been run yet, and the loader's player (`plume-xpu-mini.html`) is not here. This note is the plan and the record of what is decided, so the
 work can be picked up without rereading the conversation that led to it.
 
+## Where it stands (1.4.0)
+
+The real map is in: the engine founds the city on the real ground at 256 and 512 cells (`quick`, `everett`), from
+the population cut, OpenStreetMap vector tiles and the Terrain Tiles (`tools/world_fetch.py`, `tools/make_map.mjs`,
+`src/ground.js`), with the world around it drawn by the view. What is left for the full-scale city (1,024 cells of
+21 m, every one of the 391,412 people): every real street and building outline from the zoom-14 tiles instead of
+the lattice of side streets, the day's work moved off the page's main thread, the view's ground and buildings in
+levels of detail, and the county's places re-cut so that those the map takes in are no longer counted outside it.
+
 ## What it is
 
 Today's Port Alder is about 11,900 citizens on a map of 128 x 128 cells of 20 m (2.56 km on a side), standing for

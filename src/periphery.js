@@ -20,8 +20,10 @@ import { issue, relocate, retire as retireSin } from "./registry.js";
 import { members, ageYears, addMemory, M, trait, newHousehold, newPerson, removeFromHousehold, T_O, T_C, T_E, T_A, T_N, T_RISK, T_THRIFT, T_CIVIC } from "./people.js";
 import { findHome, moveInto, leaveCity } from "./housing.js";
 import { newMovement, movePrior, countMove, rollMovement, moveKm, moveUnit, topMoves, movedLastYear, MOVE_UNITS, M_CITY, M_ABROAD } from "./movement.js";
+import { SCALE } from "./scale.js";
+import { GROUND } from "./ground_data.js";
 
-export const PERIPHERY_VERSION = "1.2.0";
+export const PERIPHERY_VERSION = "1.3.0";
 export const PERIPHERY_SOURCES = {
   populationWA: "https://ofm.wa.gov/pop/april1/",
   populationUS: "https://www.census.gov/newsroom/press-releases/2026/population-growth-slows.html",
@@ -81,6 +83,15 @@ export const PLACES = [
   [3, "Pacific", "California, Oregon, Alaska and Hawaii", 45900000, "nation", 1120, 210000, 78000000, 1650, 1000],
   [4, "Abroad", "the world beyond the nation", 0, "world", 450, 60000, 15000000, 300, 0],
 ];
+// On the real map (scale.js) the city is the whole of the map's ground, not Everett alone: its people are the
+// population cut's, and the county is what is left of the two together, each of its places smaller in proportion.
+// (Which places the map takes in, place by place, is still to be cut: docs/STAGE2.md.)
+if (SCALE.map) {
+  const both = LAYERS[0].pop + LAYERS[1].pop, mine = GROUND.pop.people, k = (both - mine) / LAYERS[1].pop;
+  LAYERS[0].pop = mine; LAYERS[0].basis = "Everett, Washington, and the towns around it that the map takes in"; LAYERS[1].pop = both - mine; LAYERS[1].basis = "Snohomish County, Washington, outside the map";
+  for (const p of PLACES) if (p[0] === 1) p[3] = Math.round(p[3] * k);
+}
+
 const WORLD = PLACES.length - 1, DUWAMISH = 9, KESTREL = 0;
 // Everett's city centre (latitude, longitude)
 export const CITY_AT = [47.979, -122.202];

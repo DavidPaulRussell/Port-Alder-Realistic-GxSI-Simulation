@@ -9,7 +9,7 @@ SPDX-License-Identifier: GPL-3.0-only
 import base64, json, pathlib, re, sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-VERSION = "1.3.2"
+VERSION = "1.4.0"
 
 
 def _declarators(src: str, i: int) -> list:
@@ -108,7 +108,7 @@ def main():
     workload = (ROOT / 'data/simmy/authority_workload_rails.json').read_text(encoding='ascii')
     console_mods = ['src/lcufa.js', 'src/russl.js', 'src/schemas.js', 'src/schema.js', 'src/engines.js', 'src/russ.js']
     # the city's modules in the order of their imports (each after everything it imports)
-    SIM = ['src/simmy.js', 'src/tables.js', 'src/laws.js', 'src/rules.js', 'src/scale.js', 'src/citydata.js', 'src/books.js', 'src/core.js', 'src/nation.js', 'src/world.js',
+    SIM = ['src/simmy.js', 'src/tables.js', 'src/laws.js', 'src/rules.js', 'src/scale.js', 'src/citydata.js', 'src/books.js', 'src/core.js', 'src/nation.js', 'src/ground_data.js', 'src/ground.js', 'src/world.js',
            'src/registry.js', 'src/people.js', 'src/finance.js', 'src/economy.js', 'src/payroll.js', 'src/housing.js', 'src/welfare.js', 'src/health.js',
            'src/civic.js', 'src/develop.js', 'src/kpis.js', 'src/movement_data.js', 'src/movement.js', 'src/periphery.js', 'src/variables.js', 'src/city.js']
     VIEW3D = ['src/gl.js', 'src/atmos.js', 'src/perf.js', 'src/motion.js', 'src/city3d_shaders.js', 'src/city3d.js']

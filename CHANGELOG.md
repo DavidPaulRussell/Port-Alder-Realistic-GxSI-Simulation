@@ -1,5 +1,41 @@
 # Changelog
 
+## 1.4.0 — 2026-11-18 (the real place)
+
+The one-in-ten invented city is unchanged, digest for digest (60 days: `6146b22c56149fb0…`). It is still the
+engine's default; the page now opens on the real map.
+
+### Added
+- **The city stands on real ground.** The map is the 21 km around Everett that the population cut covers, and each
+  cell houses the citizens the cut counts there. Its ground comes from OpenStreetMap (as vector map tiles) and its
+  heights from the Terrain Tiles: the Sound and its islands, the Snohomish River, its sloughs and delta, Lake
+  Stevens and the smaller lakes at their own levels, wetland, forest, farmland, works, shops, the port's piers and
+  Paine Field with its runways. Two sizes: `everett` (512 cells of 41 m, 98,064 citizens, one for every four
+  people; true to scale) and `quick` (256 cells of 82 m, 39,235 citizens, one in ten).
+- **Real roads.** Interstate 5, US 2 and its trestle, routes 9, 92, 99, 204, 525, 526, 527 and 529 and the roads
+  between neighbourhoods run where they really run (2,973 lines, 394 of them bridges, 338 ramps). The simulation's
+  street cells follow them; the 3D view draws them from their centre lines as ribbons: freeways with two
+  carriageways, a median and lane lines, long bridges as decks above the water, vehicles driving along the lines.
+- **A world around the map.** The view draws three map-widths of real ground (63 km) around the map: its shores,
+  towns, forests, farmland, roads and the Cascade foothills up to Mount Pilchuck. The camera stays over the map and
+  the haze thins as it rises, so the edge of the world is never in sight.
+- **The map menu** on the page (`?map=quick`, `?map=invented`), and a credit line for the map's sources.
+- `tools/world_fetch.py` (fetches the vector tiles and the heights; the Overpass route is kept as `--only osm`),
+  `tools/make_map.mjs` (makes `src/ground_data.js`), `data/world/` (the fetched tiles), `test/map.test.mjs`.
+
+### Changed
+- On the real map the outer layers count the map's 391,412 people as the city and the rest as the county.
+- A simulated day can pause between its parts so the page keeps drawing (`city.breathe`); nothing in the day
+  depends on it, and the digests are the same with and without.
+- The 3D view works at any map size; trees are drawn in groups by distance; a day's traffic is planned place by
+  place (one search of the streets for every trip to the same place).
+
+### Known
+- Side streets are still laid on a lattice between the real roads; every real street, and the real building
+  outlines, are for the full-scale city (the tiles already hold them: 31,906 smaller roads).
+- The county's places are scaled down as a whole on the real map, not re-cut place by place.
+- The loading console is not yet the page's first screen: its player (`plume-xpu-mini.html`) has not arrived.
+
 ## 1.3.2 — 2026-11-18 (street life on a larger map)
 
 The one-in-ten city is unchanged, digest for digest.

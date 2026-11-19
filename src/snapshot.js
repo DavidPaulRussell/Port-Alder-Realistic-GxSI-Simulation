@@ -15,7 +15,7 @@ import { SCALE } from "./scale.js";
 export const SNAP_FORMAT = "PLUME-CITY-STATE/1";
 const TYPED = { Int8Array, Uint8Array, Uint8ClampedArray, Int16Array, Uint16Array, Int32Array, Uint32Array, Float32Array, Float64Array, BigInt64Array, BigUint64Array };
 // what the configuration alone determines, by where it hangs
-const SKIP_TOP = new Set(["boot", "P", "law", "founders"]);
+const SKIP_TOP = new Set(["boot", "P", "law", "founders", "breathe", "stepping"]);
 const SKIP_IN = { Slots: new Set(["spec"]) };
 // timings are not state (how long a day took to compute says nothing of the day)
 const TIMINGS = "ms";

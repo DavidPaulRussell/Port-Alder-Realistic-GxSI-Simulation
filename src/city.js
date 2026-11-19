@@ -40,7 +40,7 @@ import { civicDay, civicMonth, civicYear, civicGenesis, election } from "./civic
 import { housingDay, housingMonth, attachHousing } from "./housing.js";
 import { attachDevelop, developDay, developMonth } from "./develop.js";
 
-export const CITY_VERSION = "1.3.2";
+export const CITY_VERSION = "1.4.0";
 export const SAVE_FORMAT = "PLUME-CITY/1";
 export const PCAP = SCALE.people, LCAP = SCALE.loans;
 // the XPU frames a map takes (one of 128 x 128 cells each), and where a cell's lanes are in them
@@ -187,6 +187,8 @@ export class City {
   async step(engine, digest = subtleDigest) {
     const e = this.epoch + 1, d = dayInfo(e), g = this.gates(e), B = this.books;
     this.epoch = e; this.today = d; B.resetDay(e);
+    // a page may ask the day to pause between its parts so the view can draw (this.breathe); nothing in the day depends on it
+    const rest = this.breathe || null; this.stepping = true;
     const R = { epoch: e, date: d.iso, label: d.label, holiday: d.holiday, ms: {}, counts: {}, notes: [] };
     this.R = R; this.yearRules(d.y);
     const t0 = globalThis.performance ? performance.now() : 0;
@@ -197,29 +199,39 @@ export class City {
     R.ms.xpu = 0; if (this.xout.length !== frameIn.length) this.xout = new Uint32Array(frameIn.length);
     for (let t = 0; t < TILES; t++) { const r = await engine.run(this.law, TILES === 1 ? frameIn : frameIn.slice(t * WORDS, (t + 1) * WORDS), gens, rule); R.ms.xpu += r.ms; this.xout.set(r.out, t * WORDS); }
     this.lastRule = rule; this.vitality(d);
+    if (rest) await rest();
     // C-I
     lightDay(this, d);
     healthDay(this, d);
     morning(this, d, g);
+    if (rest) await rest();
     if (d.monthStart) { coverageMonth(this); if (this.gov.welDone !== (d.y - 2026) * 12 + d.m) welfareMonth(this, d); this.gov.welDone = 0; }
     if (d.wd === 1 || e === 1) { laborMarket(this, d, g); outerWeek(this, d); }
     shopping(this, d, g);
+    if (rest) await rest();
     developDay(this, d, g);
     firmDay(this, d, g);
+    if (rest) await rest();
     financeDay(this, d, g);
     payrollDay(this, d, g);
+    if (rest) await rest();
     taxesDay(this, d, g);
     civicDay(this, d, g);
     welfareDay(this, d, schoolDay(d));
+    if (rest) await rest();
     bankMeeting(this, d);
     if (d.m === 8 && d.d === 1) placeMeasures(this, d, this.board);
     if (g.elections && d.m === 11 && d.d === electionDay(d.y)) { election(this, d); voteMeasures(this, d); stateElection(this, d); }
     housingDay(this, d, g);
+    if (rest) await rest();
     if (d.monthEnd) { taxesMonth(this, d, g); financeMonth(this, d, g); firmMonth(this, d, g); housingMonth(this, d, g); developMonth(this, d, g); civicMonth(this, d, g); healthMonth(this, d); this.monthStats(d); measureMonth(this); cityBoard(this); outerMonth(this, d); }
     if (g.entrepreneurs && d.monthStart) entrepreneurs(this, d, g);
     lifeEvents(this, d, g);
+    if (rest) await rest();
     minds(this, d, g);
+    if (rest) await rest();
     activities(this, d, false);
+    if (rest) await rest();
     if (d.yearEnd) { taxesYear(this, d, g); civicYear(this, d, g); firmYearEnd(this); this.closeYear(d); this.gov.deathsYear = 0; this.gov.birthsYear = 0; }
     // J. audit and seal
     const audit = this.audit(); R.audit = { ok: audit.ok, problems: audit.problems.slice(0, 6), checks: audit.checks.length };
@@ -230,7 +242,7 @@ export class City {
     R.stats = this.stats(); R.ms.total = globalThis.performance ? performance.now() - t0 : 0;
     const tables = await digest(this.tableBytes()), frameOutSha = await digest(u8(this.xout));
     this.digest = sha256Hex(pyDumps({ law: this.lawSha, previous: this.digest, epoch: e, date: d.iso, frame_in: frameInSha, frame_out: frameOutSha, tables, rule: rule.text, stats: R.stats.digestable }));
-    R.digest = this.digest; this.last = R;
+    R.digest = this.digest; this.last = R; this.stepping = false;
     this.history.push({ e, digest: this.digest, ...R.stats.series });
     return R;
   }

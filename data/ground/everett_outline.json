@@ -1,0 +1,147 @@
+{
+ "about": "What the simulation names itself on the real map: its centres (the downtown and the old towns, as discs) and its civic buildings, placed by hand at the real places they stand for. Everything else about the map (shores, rivers, lakes, land use, roads, railways, heights) is read from OpenStreetMap and the Terrain Tiles by tools/make_map.mjs. Places of kind industry and shops are no longer used: the land use says where the works and the shops are.",
+ "places": [
+  {
+   "name": "Downtown",
+   "at": [
+    47.979,
+    -122.205
+   ],
+   "kind": "downtown",
+   "radius_m": 650
+  },
+  {
+   "name": "Old Town",
+   "at": [
+    47.979,
+    -122.205
+   ],
+   "kind": "oldtown",
+   "radius_m": 1300
+  },
+  {
+   "name": "Riverbend old town",
+   "at": [
+    47.9128,
+    -122.098
+   ],
+   "kind": "oldtown",
+   "radius_m": 520
+  },
+  {
+   "name": "Kestrel Harbour",
+   "at": [
+    47.948,
+    -122.303
+   ],
+   "kind": "oldtown",
+   "radius_m": 420
+  },
+  {
+   "name": "Lake Severn old town",
+   "at": [
+    48.015,
+    -122.064
+   ],
+   "kind": "oldtown",
+   "radius_m": 420
+  }
+ ],
+ "sites": [
+  [
+   "City Hall",
+   47.9795,
+   -122.206
+  ],
+  [
+   "Public Library",
+   47.9773,
+   -122.2078
+  ],
+  [
+   "Police Station",
+   47.979,
+   -122.203
+  ],
+  [
+   "Fire Station",
+   47.9758,
+   -122.2012
+  ],
+  [
+   "Fire Station",
+   47.91,
+   -122.23
+  ],
+  [
+   "Transit Center",
+   47.975,
+   -122.1978
+  ],
+  [
+   "Elementary School",
+   47.995,
+   -122.206
+  ],
+  [
+   "Elementary School",
+   47.96,
+   -122.21
+  ],
+  [
+   "Elementary School",
+   47.92,
+   -122.235
+  ],
+  [
+   "Middle School",
+   47.987,
+   -122.199
+  ],
+  [
+   "High School",
+   47.984,
+   -122.2068
+  ],
+  [
+   "Community Center",
+   47.964,
+   -122.218
+  ],
+  [
+   "Hospital",
+   47.999,
+   -122.2062
+  ],
+  [
+   "Bank",
+   47.9788,
+   -122.2075
+  ],
+  [
+   "Bank",
+   47.9802,
+   -122.204
+  ],
+  [
+   "Bank",
+   47.9776,
+   -122.2045
+  ],
+  [
+   "Bank",
+   47.948,
+   -122.302
+  ],
+  [
+   "Bank",
+   48.014,
+   -122.066
+  ],
+  [
+   "Bank",
+   47.913,
+   -122.0975
+  ]
+ ]
+}

@@ -1,4 +1,4 @@
-# Port Alder 1.3.2
+# Port Alder 1.4.0
 
 A sentient, deterministic city on the Plume XPU, modelled on Everett, Washington.
 
@@ -24,6 +24,42 @@ served on 127.0.0.1 with cross-origin isolation so the multi-threaded XPU engine
 
 - **One file:** `dist/plume-port-alder.html` opens straight from disk (one thread).
 - **Without the 3D view:** add `?view=0` to the address.
+- **Another map:** the page opens on the real place (below). The *map* menu beside *New city*, or `?map=quick` and
+  `?map=invented` in the address, founds the city on the coarser real map or on the invented town of the earlier
+  releases.
+
+## The real map
+
+From 1.4.0 the city stands on real ground. The map is the piece of the world the population cut covers, 21.0 km
+by 21.1 km around Everett, Washington (47.8442 N to 48.0342 N, 122.3250 W to 122.0425 W): Mukilteo and Paine Field,
+the port and Jetty Island, the Snohomish River and its sloughs, Lake Stevens, Silver Lake and Snohomish. Around it
+the view draws the wider world it sits in, three times as wide (63 km: Whidbey Island and Kingston to the Cascade
+foothills, north Seattle to Arlington), which nobody lives in and the camera cannot reach the edge of.
+
+| Map | Cells | Real ground to a cell | Citizens | A simulated day |
+|---|---|---|---|---|
+| `everett` (the page's default) | 512 x 512 | 41 m | 98,064, one for every four of the 391,412 people | about 2.3 s |
+| `quick` | 256 x 256 | 82 m | 39,235, one in ten | about 0.9 s |
+| `tenth` (the engine's default; `?map=invented`) | 128 x 128 | an invented town | 11,963 | about 0.25 s |
+
+What the map is made from, and how (`tools/make_map.mjs` writes `src/ground_data.js`; `src/ground.js` lays it over
+the cells at the founding):
+
+- **People:** the population cut (WorldPop, 3 arc-seconds). Every block houses the citizens the table counts there:
+  houses first, and blocks of flats just tall enough to take what houses cannot.
+- **Ground:** OpenStreetMap, as vector map tiles: the Sound, rivers, sloughs and lakes; wetland, forest, farmland
+  and parks; works, shops and housing; the airfield with its runways drawn along their lines; the piers.
+- **Roads:** the real motorways, highways and the roads between neighbourhoods, kept as their centre lines. The
+  simulation's cells follow them; the view draws them as ribbons at their own widths, with carriageways, medians and
+  lane lines on the freeways and decks on the long bridges (the US 2 trestle, the river crossings). Side streets are
+  laid between them wherever a block is settled.
+- **Heights:** the Terrain Tiles (in the United States the USGS 3D Elevation Program). Lakes stand at their own
+  levels; the map being smaller than life, relief is drawn half again as steep on the quick map.
+
+`tools/world_fetch.py` fetched the tiles (`data/world/`); to rebuild the map from them:
+`node tools/make_map.mjs data/world`. On the real map the city is everything the map covers, so the outer layers
+count its 391,412 people as the city's and the county as what is left; which of the county's places the map takes
+in, place by place, is still to be cut (`docs/STAGE2.md`).
 - **Headless:** `node tools/run_city.mjs 365` runs a year in Node and prints each month's measures for the city and
   its layers, the audits and the laws that ran (`--events` prints every event).
 - **Through its files:** `node tools/edhx_run.mjs --days 30` runs the city out of its layer files and writes the
@@ -43,7 +79,7 @@ The repository is https://github.com/DavidPaulRussell/Port-Alder-Realistic-GxSI-
     git init
     git config core.hooksPath tools/git-hooks      # the size gatekeeper runs before every commit
     git add -A
-    git commit -m "Port Alder 1.3.2"
+    git commit -m "Port Alder 1.4.0"
 
 The repository is about ten megabytes, far under GitHub's 25 MB per file and 1 GB per repository
 (`python3 tools/check_github_limits.py` checks; every tool that writes a layer file refuses to pass 24 MB).
@@ -155,6 +191,8 @@ tax credit bonus) and its citizens vote in November; the state's voters decide i
 | `src/city.js` | the day, in order; genesis; saves; the audit and the digest chain |
 | `src/people.js`, `economy.js`, `finance.js`, `payroll.js`, `housing.js`, `welfare.js`, `health.js`, `civic.js`, `develop.js` | the city's agents and institutions |
 | `src/periphery.js`, `nation.js` | the outer layers and the national economy |
+| `src/scale.js`, `ground.js`, `ground_data.js`, `world.js` | the map's size; the real ground laid over the cells; the map made from it or from the seed |
+| `tools/world_fetch.py`, `tools/make_map.mjs`, `data/world/` | fetching the real map's tiles and heights; making `ground_data.js` from them |
 | `src/laws.js`, `tables.js` | the law book and its exact tables |
 | `src/registry.js` | Social Information Numbers |
 | `src/kpis.js` | the measures |

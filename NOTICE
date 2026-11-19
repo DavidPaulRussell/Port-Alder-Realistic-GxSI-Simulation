@@ -72,6 +72,18 @@ medical, engineering or safety advice.
   - src/lcufa.js is offered under "MIT OR GPL-3.0-only", as its header
     says; as part of this program it is used under GPL-3.0-only.
 
+  - The real map. src/ground_data.js and the files in data/world/ are data,
+    not program code, and stay under their sources' terms:
+      map data (C) OpenStreetMap contributors, Open Database License 1.0
+      (https://www.openstreetmap.org/copyright), as vector map tiles from
+      OpenFreeMap (https://openfreemap.org) in the OpenMapTiles layout
+      ((C) OpenMapTiles, https://www.openmaptiles.org/); what is derived
+      from it here remains under the Open Database License;
+      heights from Terrain Tiles (Mapzen/Tilezen; in the United States the
+      U.S. Geological Survey's 3D Elevation Program),
+      https://registry.opendata.aws/terrain-tiles/;
+      population from WorldPop, as above (CC BY 4.0).
+
   - Files that carry their own licence line (an SPDX-License-Identifier)
     are under the licence that line names.
 

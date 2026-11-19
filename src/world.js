@@ -3,6 +3,7 @@
 import { N, CELLS, CELL_M, L, B, BKIND, MAT, NEIGHBOURHOODS } from "./citydata.js";
 import { Slots, sat } from "./core.js";
 import { SCALE, NSHIFT, NMASK, CoordArray, cellOf } from "./scale.js";
+import { layGround, walkLine, WATER, KIND } from "./ground.js";
 // the founding survey of the land draws from the city's founding census (law 12.42); nothing after genesis may
 let DRAW = () => { throw new Error("the land is surveyed only at the founding"); };
 
@@ -44,8 +45,185 @@ export class World {
     this.cond = new Uint16Array(CELLS).fill(900);                                   // road condition
     this.buildings = new Slots(SCALE.buildings, BUILDING_SPEC); this.dwellings = new Slots(SCALE.dwellings, DWELLING_SPEC); this.spaces = new Slots(SCALE.spaces, SPACE_SPEC);
     this.shore = new Int16Array(N); this.rev = 0;                                   // rev: bumped whenever a building comes down or goes up
-    this.makeGround(); this.makeStreets(); this.makeDistricts(); this.makeParcels(); this.makeRoutes(); this.valueLand();
+    // the invented map, or the real place laid over the cells (ground.js)
+    if (SCALE.map) { this.ground = layGround(); this.groundMap(); this.streetsMap(); this.districtsMap(); this.parcelsMap(); this.routesMap(); this.valueLand(); this.ground = { name: this.ground.name, real: this.ground.real, total: this.ground.total, citizens: this.ground.citizens }; this.settled = null; this.lines = null; }
+    else { this.makeGround(); this.makeStreets(); this.makeDistricts(); this.makeParcels(); this.makeRoutes(); this.valueLand(); }
   }
+
+  /* ---------------------------------------------------------------- the real place (ground.js) */
+  // the ground as it really stands: its water, its heights (the map is `k` times smaller than life, and on a small
+  // map the relief is drawn half again as steep so that it still reads), the level of every lake and river
+  groundMap() {
+    const G = this.ground, k = G.real / CELL_M, V = k > 2 ? 1.5 : 1;
+    this.creek = []; this.waterDist = G.dist; this.cover = G.kind; this.strip = G.strip; this.hwy = new Uint8Array(CELLS); this.level = new Float32Array(CELLS); this.relief = V / k;
+    this.centreAt = G.cellAt(G.sites[0][1], G.sites[0][2]) || [N >> 1, N >> 1];
+    for (let y = 0; y < N; y++) {
+      let first = N;
+      for (let x = 0; x < N; x++) {
+        const c = cellOf(x, y);
+        if (G.water[c]) { const lv = (G.level[c] * V) / k; this.water[c] = 1; this.land[c] = L.water; this.level[c] = lv; this.height[c] = Math.floor((lv - (G.water[c] === WATER.SOUND ? 6 : 2.5)) * 1000); continue; }
+        if (first === N) first = x;
+        this.height[c] = G.kind[c] === KIND.pier ? 2200 : Math.floor(Math.max(1.6, (G.height[c] * V) / k) * 1000);          // (dry land stands above the highest tide; a pier's deck a little higher)
+      }
+      this.shore[y] = first - 1;
+    }
+  }
+  // which of the six-cell blocks between the street lines are settled: people live there, or it is a centre, works or shops
+  blockOf(x, y) { return [Math.floor((x - 5) / 6), Math.floor((y - 1) / 6)]; }
+  settledBlock(bi, bj) {
+    const key = bj * 4096 + bi; let v = this.settled.get(key); if (v !== undefined) return v;
+    const G = this.ground, x0 = 5 + 6 * bi, y0 = 1 + 6 * bj; let people = 0, other = false;
+    for (let y = y0 - 1; y <= y0 + 5; y++) for (let x = x0 - 1; x <= x0 + 5; x++) { if (!inside(x, y)) continue; const c = cellOf(x, y); if (G.water[c]) continue; people += G.people[c]; if (G.hood[c] <= 1 || G.kind[c] === KIND.industrial || G.kind[c] === KIND.commercial) other = true; }
+    v = other || people >= 3 * SCALE.ratio; this.settled.set(key, v); return v;
+  }
+  // the streets: the real main roads where they really run (motorways, highways and the roads that join
+  // neighbourhoods; over water they are bridges), and between them side streets wherever a block is settled
+  streetsMap() {
+    const G = this.ground, real = new Uint8Array(CELLS); this.settled = new Map(); this.lines = []; this.real = real;      // real: the cells a real road runs over
+    for (const [cls, pts] of G.roads) {
+      const cells = []; walkLine(pts, N, (x, y) => cells.push(cellOf(x, y)));
+      for (const c of cells) { real[c] = 1; this.land[c] = L.road; if (cls <= 1) this.hwy[c] = 1; if (G.water[c]) this.road[c] = ROAD.BRIDGE; else if (cls <= 3) this.road[c] = ROAD.ARTERIAL; else if (!this.road[c]) this.road[c] = ROAD.LOCAL; }
+      if (cls >= 2 && cls <= 3 && cells.length > 16) this.lines.push(cells);
+    }
+    for (let y = 2; y < N - 2; y++) for (let x = 0; x < N; x++) {
+      const c = cellOf(x, y); if (this.road[c] || G.water[c]) continue;
+      const onX = isStreetLine(x, ARTERIAL_X), onY = isStreetLine(y, ARTERIAL_Y); if (!onX && !onY) continue;
+      const kd = G.kind[c]; if (kd === KIND.runway || kd === KIND.airfield || kd === KIND.wetland) continue;
+      const [bi, bj] = this.blockOf(x, y); let on = false;
+      if (onX) on = this.settledBlock(bi, bj) || this.settledBlock(bi + 1, bj);
+      if (onY && !on) on = this.settledBlock(bi, bj) || this.settledBlock(bi, bj + 1);
+      if (!on) continue;
+      // no side street right beside a real road that runs the same way
+      if (!(onX && onY)) { if (onX && ((x > 0 && real[c - 1]) || (x < N - 1 && real[c + 1]))) continue; if (onY && (real[c - N] || real[c + N])) continue; }
+      this.road[c] = ROAD.LOCAL; this.land[c] = L.road;
+    }
+  }
+  // open ground by its kind: woods, fields, marsh, parks, beaches, the airfield; what is left is ground to build on
+  districtsMap() {
+    const G = this.ground, few = (3 * G.real * G.real) / 10000;          // three people to the hectare live on a cell: it is lived on
+    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+      const c = cellOf(x, y); this.hood[c] = G.hood[c];
+      if (this.water[c] || this.road[c]) continue;
+      const kd = G.kind[c], r = DRAW(0x7ee, c, 0), lived = G.people[c] >= few, [bi, bj] = this.blockOf(x, y);
+      if (kd === KIND.beach) this.land[c] = L.beach;
+      else if (kd === KIND.pier) this.land[c] = L.plaza;
+      else if (kd === KIND.runway) this.land[c] = L.plaza;
+      else if (kd === KIND.airfield) this.land[c] = L.park;
+      else if (kd === KIND.wetland) { this.land[c] = L.park; this.tree[c] = r % 9 === 0 ? 1 : 0; }
+      else if (kd === KIND.grass) { this.land[c] = L.park; this.tree[c] = r % 4 === 0 ? 1 : 0; }
+      else if (kd === KIND.farm) { if (!lived) { this.land[c] = L.park; this.tree[c] = r % 23 === 0 ? 1 : 0; } }
+      else if (kd === KIND.forest) { if (!lived) { this.land[c] = L.park; this.tree[c] = r % 2 ? 3 : 2; } }
+      else if (kd !== KIND.industrial && kd !== KIND.commercial && !this.settledBlock(bi, bj)) {
+        // unmarked and empty: fields on the low flat ground of the valley, woods everywhere else
+        if (G.height[c] < 9) { this.land[c] = L.park; this.tree[c] = r % 23 === 0 ? 1 : 0; this.cover[c] = KIND.farm; }
+        else { this.land[c] = L.park; this.tree[c] = r % 5 === 0 ? 1 : r % 2 ? 3 : 2; this.cover[c] = KIND.forest; }
+      }
+    }
+    for (let c = 0; c < CELLS; c++) if (this.road[c] === ROAD.ARTERIAL && !this.hwy[c] && this.hood[c] !== 6 && ((c & NMASK) + (c >> NSHIFT)) % 2 === 0) this.tree[c] = 4;   // street trees
+  }
+  // the buildings: the civic ones where the place has them, then every block filled so that it houses the people the
+  // population table counts there (one citizen for every `ratio` of them), with works and shops where the land is theirs
+  parcelsMap() {
+    // how many citizens the founding census (people.js) puts in a home of each kind, empty homes counted: houses hold
+    // more families, flats more people living alone
+    const W = this, G = this.ground, HOUSE = 2.21, ROW = 1.92, FLAT = 1.60;
+    const open = (c) => !W.road[c] && !W.water[c] && W.land[c] !== L.park && W.land[c] !== L.beach && W.land[c] !== L.plaza && W.land[c] !== L.yard && W.bldOf[c] === -1;
+    const free = (x, y) => inside(x, y) && open(cellOf(x, y));
+    const fits = (x, y, w, h, kd = -1) => { for (let yy = y; yy < y + h; yy++) for (let xx = x; xx < x + w; xx++) if (!free(xx, yy) || (kd >= 0 && G.kind[cellOf(xx, yy)] !== kd)) return false; return true; };
+    const near = (tx, ty, w, h, reach = 24) => { for (let r = 0; r < reach; r++) for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) { if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue; if (fits(tx + dx, ty + dy, w, h)) return [tx + dx, ty + dy]; } return null; };
+    let owed = 0;                                                                 // citizens still to be housed somewhere (or housed ahead)
+    this.tally = [0, 0, 0, 0];
+    // civic buildings, the hospital and the banks, each on the nearest free ground to where the place has it
+    const KINDS = { "City Hall": [B.civic, 1, 3, 3], "Public Library": [B.civic, 2, 2, 2], "Police Station": [B.civic, 3, 2, 2], "Fire Station": [B.civic, 4, 2, 2], "Transit Center": [B.civic, 5, 3, 2],
+      "Elementary School": [B.school, 6, 4, 3], "Middle School": [B.school, 7, 4, 3], "High School": [B.school, 8, 5, 4], "Community Center": [B.civic, 9, 2, 2], Hospital: [B.hospital, 0, 5, 4], Bank: [B.bank, 0, 2, 2] };
+    this.sites = [];
+    const site = (tx, ty, name) => { const [kind, civic, w, h] = KINDS[name], at = near(tx, ty, w, h); if (!at) return -1; const i = this.place(at[0], at[1], w, h, kind, civic, DRAW(0xc1c, tx, ty)); this.sites.push(i); return i; };
+    for (const [name, lat, lon] of G.sites) { const at = G.cellAt(lat, lon); if (at) site(at[0], at[1], name); }
+    // more schools where the place has schools: of those, each time the one with the most people beyond the reach of a school already chosen
+    const schoolAt = []; for (const i of this.sites) if (this.buildings.kind[i] === B.school) schoolAt.push([this.buildings.x[i], this.buildings.y[i]]);
+    const wanted = Math.round(G.total / SCALE.ratio / 3000), REACH = Math.max(6, Math.round(1500 / G.real)), LEVEL = { E: "Elementary School", M: "Middle School", H: "High School" };
+    const cand = G.points.filter((p) => LEVEL[p[0]]);
+    for (let k = schoolAt.length; k < wanted; k++) {
+      let best = null, most = 0;
+      for (const p of cand) { if (schoolAt.some(([sx, sy]) => Math.abs(sx - p[1]) + Math.abs(sy - p[2]) < REACH)) continue; const v = G.around(p[1], p[2], REACH); if (v > most) { most = v; best = p; } }
+      if (!best) break;
+      const i = site(best[1], best[2], LEVEL[best[0]]); schoolAt.push(i >= 0 ? [this.buildings.x[i], this.buildings.y[i]] : [best[1], best[2]]);
+    }
+    // the citizens each cell is to house; what the table counts on streets and open ground goes to the nearest building ground
+    const homes = new Float64Array(CELLS);
+    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+      const c = cellOf(x, y), v = G.people[c] / SCALE.ratio; if (!v) continue;
+      if (free(x, y)) { homes[c] += v; continue; }
+      let to = -1; for (let r = 1; r < 6 && to < 0; r++) for (let dy = -r; dy <= r && to < 0; dy++) for (let dx = -r; dx <= r; dx++) if (Math.max(Math.abs(dx), Math.abs(dy)) === r && free(x + dx, y + dy)) { to = cellOf(x + dx, y + dy); break; }
+      if (to >= 0) homes[to] += v; else { owed += v; this.tally[3] += v; }
+    }
+    const onArt = (x, y) => [[x - 1, y], [x + 1, y], [x, y - 1], [x, y + 1]].some(([a, b]) => inside(a, b) && W.road[cellOf(a, b)] === ROAD.ARTERIAL && !W.hwy[cellOf(a, b)]);
+    const onRoad = (x, y) => [[x - 1, y], [x + 1, y], [x, y - 1], [x, y + 1]].some(([a, b]) => inside(a, b) && W.road[cellOf(a, b)] && !W.hwy[cellOf(a, b)]);
+    const T = this.buildings;
+    for (let by = 0; by < N; by++) for (let bx = 0; bx < N; bx++) {
+      if (!free(bx, by) || free(bx - 1, by) || free(bx, by - 1)) continue;
+      let w = 0, h = 0; while (w < 8 && free(bx + w, by)) w++; while (h < 8 && free(bx, by + h)) h++;
+      const r = DRAW(0xb10c, bx, by), kinds = [0, 0, 0];                          // the block's cells: centre, old town, neighbourhood
+      let want = 0; for (let y = by; y < by + h; y++) for (let x = bx; x < bx + w; x++) { const c = cellOf(x, y); if (!open(c)) continue; want += homes[c]; kinds[this.hood[c] === 0 ? 0 : this.hood[c] === 1 ? 1 : 2]++; }
+      const hood = kinds[0] >= kinds[1] && kinds[0] >= kinds[2] && kinds[0] ? 0 : kinds[1] >= kinds[2] && kinds[1] ? 1 : 2;
+      const lives = (i) => T.units[i] * (T.kind[i] === B.house ? HOUSE : T.kind[i] === B.townhouse ? ROW : FLAT);
+      // (a building may reach past its block; the citizens of the ground it takes there are this block's to house)
+      let built = 0, spill = 0; const put = (...a) => { const i = this.place(...a); built += lives(i); for (let yy = T.y[i]; yy < T.y[i] + T.h[i]; yy++) for (let xx = T.x[i]; xx < T.x[i] + T.w[i]; xx++) { const cc = cellOf(xx, yy); if (xx < bx || xx >= bx + w || yy < by || yy >= by + h) spill += homes[cc]; homes[cc] = 0; } return i; };
+      // works: sheds and warehouses on the land that is theirs, an office here and there, yards between
+      for (let y = by; y < by + h; y++) for (let x = bx; x < bx + w; x++) {
+        if (!free(x, y) || G.kind[cellOf(x, y)] !== KIND.industrial) continue; const q = DRAW(0x907, x, y);
+        const s = fits(x, y, 3, 3, KIND.industrial) ? 3 : fits(x, y, 2, 2, KIND.industrial) ? 2 : 1;
+        if (s === 1 && q % 3) { this.land[cellOf(x, y)] = L.plaza; continue; }
+        put(x, y, s, s, q % 11 === 0 ? B.office : B.industrial, 0, DRAW(0x908, x, y));
+      }
+      // shops and offices on the land that is theirs: big stores with their car parks, smaller ones between
+      if (hood === 2) for (let y = by; y < by + h; y++) for (let x = bx; x < bx + w; x++) {
+        if (!free(x, y) || G.kind[cellOf(x, y)] !== KIND.commercial) continue; const q = DRAW(0x5a0, x, y);
+        if (q % 100 >= 72) { this.land[cellOf(x, y)] = L.plaza; continue; }
+        const big = q % 5 === 0 && fits(x, y, 2, 2, KIND.commercial);
+        put(x, y, big ? 2 : 1, big ? 2 : 1, q % 13 === 0 ? B.clinic : q % 37 === 0 ? B.hotel : q % 4 === 0 ? B.office : q % 7 === 0 ? B.mixed : B.shop, 0, q);
+      }
+      if (hood === 0) {                                                 // the centre: towers and podiums
+        if (w >= 4 && h >= 4 && r % 3 === 0 && fits(bx, by, w, h)) put(bx, by, w, h, r % 2 ? B.office : B.hotel, 0, r);
+        else for (let y = by; y < by + h; y += 2) for (let x = bx; x < bx + w; x += 3) if (free(x, y)) { const ww = Math.min(3, bx + w - x), hh = Math.min(2, by + h - y); if (fits(x, y, ww, hh)) put(x, y, ww, hh, [B.office, B.mixed, B.office, B.office, B.mixed, B.apartments][DRAW(0xd0, x, y) % 6], 0, DRAW(0xd1, x, y)); }
+      } else if (hood === 1) {                                          // an old town: shops with flats over, around a courtyard
+        for (let y = by; y < by + h; y++) for (let x = bx; x < bx + w; x++) if (free(x, y) && (x === bx || y === by || x === bx + w - 1 || y === by + h - 1)) { const q = DRAW(0x01d, x, y); put(x, y, 1, 1, q % 13 === 0 ? B.office : q % 5 ? B.mixed : B.shop, 0, DRAW(0x01e, x, y)); }
+      } else {                                                          // neighbourhoods: homes for as many citizens as the table's people make
+        const plots = [];                                               // the plots on the streets first, then the inside of the block
+        for (let y = by; y < by + h; y++) for (let x = bx; x < bx + w; x++) if (free(x, y) && onRoad(x, y)) plots.push([x, y]);
+        for (let y = by; y < by + h; y++) for (let x = bx; x < bx + w; x++) if (free(x, y) && !onRoad(x, y)) plots.push([x, y]);
+        let need = want + owed + spill - built, left = plots.length, acc = 0.5, seen = spill;
+        for (const [x, y] of plots) {
+          need += spill - seen; seen = spill;
+          left--; if (!free(x, y)) continue;
+          // citizens still to be housed for every plot left, and how many more than houses on all those plots would hold
+          const hh = DRAW(0x0e5, x, y), c = cellOf(x, y), each = need / Math.max(1, left + 1), over = need - HOUSE * (left + 1);
+          // corner shops and services face the main streets
+          if (onArt(x, y) && hh % 1000 < 120) { const i = put(x, y, 1, 1, hh % 11 === 0 ? B.clinic : hh % 6 === 0 ? B.office : hh % 3 ? B.shop : B.mixed, 0, hh); need -= lives(i); continue; }
+          // more than houses can hold: a block of flats just tall enough to take the rest; a little less: a terrace now and then
+          if (over >= 3 && fits(x, y, 2, 2)) { const i = put(x, y, 2, 2, B.apartments, 0, hh, Math.max(2, Math.min(9, Math.round((Math.min(over, 60) + 4 * HOUSE) / (4 * FLAT))))); need -= lives(i); continue; }
+          if (each >= 1.5 && each < 2.1 && hh % 4 === 0 && fits(x, y, 2, 2)) { const i = put(x, y, 2, 2, B.townhouse, 0, hh); need -= lives(i); continue; }
+          acc += Math.min(1, Math.max(0, each / HOUSE)); if (acc < 1) { this.land[c] = L.yard; this.tree[c] = hh % 3 === 0 || G.kind[c] === KIND.forest ? 1 : 0; continue; }
+          acc -= 1; put(x, y, 1, 1, B.house, 0, hh); need -= HOUSE;
+        }
+      }
+      for (let y = by; y < by + h; y++) for (let x = bx; x < bx + w; x++) if (free(x, y)) { const c = cellOf(x, y); this.land[c] = L.yard; this.tree[c] = DRAW(0x0e5, x, y) % 4 === 0 || G.kind[c] === KIND.forest ? 1 : 0; }
+      owed = Math.max(-300, Math.min(300, owed + want + spill - built)); this.tally[0] += want + spill; this.tally[1] += built;
+    }
+    // what no block took in (odd corners): a house wherever the citizens still owed call for one
+    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) { if (!free(x, y)) continue; const c = cellOf(x, y); owed += homes[c]; this.tally[3] += homes[c]; if (owed >= HOUSE * 0.75 && G.kind[c] !== KIND.industrial && G.kind[c] !== KIND.commercial) { this.place(x, y, 1, 1, B.house, 0, DRAW(0x0e5, x, y)); owed -= HOUSE; } else this.land[c] = L.yard; }
+    this.tally[2] = owed;
+    this.ground.citizens = Math.round(G.total / SCALE.ratio);
+  }
+  // bus routes along the real main roads that the most people live beside
+  routesMap() {
+    const G = this.ground, colours = [[0.86, 0.22, 0.18], [0.16, 0.46, 0.82], [0.20, 0.66, 0.30], [0.90, 0.62, 0.10], [0.55, 0.30, 0.75], [0.10, 0.62, 0.62]];
+    const scored = this.lines.map((cells) => { const run = cells.filter((c, i) => (i === 0 || c !== cells[i - 1]) && this.road[c]); let v = 0; for (let i = 0; i < run.length; i += 3) v += G.around(run[i] & NMASK, run[i] >> NSHIFT, 3); return [v, run]; }).filter((s) => s[1].length > 16).sort((a, b) => b[0] - a[0] || a[1][0] - b[1][0]);
+    const taken = new Uint8Array(CELLS), want = Math.max(4, Math.min(6, Math.round(N / 48))); this.routes = [];
+    for (const [, run] of scored) { if (this.routes.length >= want) break; let shared = 0; for (const c of run) shared += taken[c]; if (shared * 3 > run.length) continue; for (const c of run) taken[c] = 1; this.routes.push({ name: `Line ${this.routes.length + 1}`, colour: colours[this.routes.length % colours.length], cells: run }); }
+    this.finishRoutes();
+  }
+
   makeGround() {
     const s = this.seed;
     for (let y = 0; y < N; y++) {
@@ -162,12 +340,13 @@ export class World {
     }
     for (let c = 0; c < CELLS; c++) if (this.bldOf[c] === -2) this.bldOf[c] = -1;
   }
-  place(x, y, w, h, kind, civic, r) {
+  place(x, y, w, h, kind, civic, r, storeys = 0) {
     const T = this.buildings, i = T.alloc(), K = BKIND[kind];
     T.x[i] = x; T.y[i] = y; T.w[i] = w; T.h[i] = h; T.kind[i] = kind; T.civic[i] = civic; T.seed[i] = r;
     const [f0, f1] = K.floors, tall = this.hood[cellOf(x, y)] === 0 ? 1 : 0;
     T.floors[i] = kind === B.office && tall ? f0 + (r % (f1 - f0 + 1)) : f0 + ((r >>> 4) % (Math.min(f1, f0 + 2) - f0 + 1));
     if (kind === B.hotel) T.floors[i] = f0 + (r % (f1 - f0 + 1));
+    if (storeys) T.floors[i] = storeys;
     T.built[i] = 1905 + (r >>> 8) % 118; T.cond[i] = Math.max(180, Math.min(1000, 1000 - (2026 - T.built[i]) * 5 - (r >>> 12) % 260 + 120)); T.hood[i] = this.hood[cellOf(x, y)];
     const facades = { [B.house]: ["siding", "siding", "brick_red", "stucco"], [B.townhouse]: ["brick_red", "siding", "stucco"], [B.apartments]: ["stucco", "brick_yellow", "concrete", "brick_red"],
       [B.mixed]: ["brick_red", "brick_yellow", "stucco", "sandstone"], [B.shop]: ["brick_yellow", "stucco", "brick_red", "metal_panel"], [B.office]: ["curtain_glass", "concrete", "curtain_glass", "sandstone"],
@@ -199,21 +378,32 @@ export class World {
       { name: "3 Eastside Loop", colour: [0.20, 0.66, 0.30], cells: along([[64, 36], [112, 36], [112, 84], [64, 84], [64, 36]]) },
       { name: "4 Port and Southridge", colour: [0.90, 0.62, 0.10], cells: along([[16, 108], [112, 108], [112, 84]]) },
     ];
+    this.finishRoutes();
+  }
+  // a stop every sixth cell of a route, and for every cell the nearest stop within six cells
+  finishRoutes() {
     for (const r of this.routes) r.stops = r.cells.filter((_, k) => k % 6 === 0);
     this.stopNear = new Int32Array(CELLS).fill(-1);
-    for (let c = 0; c < CELLS; c++) {
-      if (this.water[c]) continue; let best = -1, bd = 7;
-      for (const r of this.routes) for (const st of r.stops) { const d = Math.max(Math.abs((st & NMASK) - (c & NMASK)), Math.abs((st >> NSHIFT) - (c >> NSHIFT))); if (d < bd) { bd = d; best = st; } }
-      this.stopNear[c] = best;
+    if (!SCALE.map) {
+      for (let c = 0; c < CELLS; c++) {
+        if (this.water[c]) continue; let best = -1, bd = 7;
+        for (const r of this.routes) for (const st of r.stops) { const d = Math.max(Math.abs((st & NMASK) - (c & NMASK)), Math.abs((st >> NSHIFT) - (c >> NSHIFT))); if (d < bd) { bd = d; best = st; } }
+        this.stopNear[c] = best;
+      }
+      return;
     }
+    // (on a large map: each stop claims the cells around it, the nearer stop winning, the earlier on a tie)
+    const bd = new Uint8Array(CELLS).fill(7);
+    for (const r of this.routes) for (const st of r.stops) { const sx = st & NMASK, sy = st >> NSHIFT; for (let dy = -6; dy <= 6; dy++) for (let dx = -6; dx <= 6; dx++) { const x = sx + dx, y = sy + dy; if (!inside(x, y)) continue; const c = cellOf(x, y), d = Math.max(Math.abs(dx), Math.abs(dy)); if (!this.water[c] && d < bd[c]) { bd[c] = d; this.stopNear[c] = st; } } }
   }
   // land value, dollars per square metre in cents: downtown, the water, parks and the hills' views
   valueLand() {
     const pk = new Uint8Array(CELLS);
+    if (!this.centreAt) this.centreAt = [26, 62];
     for (let c = 0; c < CELLS; c++) if (this.land[c] === L.park) for (let dy = -3; dy <= 3; dy++) for (let dx = -3; dx <= 3; dx++) { const x = (c & NMASK) + dx, y = (c >> NSHIFT) + dy; if (inside(x, y)) pk[cellOf(x, y)] = 1; }
     for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
       const c = cellOf(x, y); if (this.water[c]) continue;
-      const dd = Math.abs(x - 26) + Math.abs(y - 62), shoreD = x - this.shore[y];
+      const dd = Math.abs(x - this.centreAt[0]) + Math.abs(y - this.centreAt[1]), shoreD = this.waterDist ? this.waterDist[c] : x - this.shore[y];
       let v = 26000 + Math.max(0, 95000 - dd * 1700) + Math.max(0, 40000 - shoreD * 3000) + (pk[c] ? 12000 : 0) + Math.max(0, this.height[c] - 30000) / 3;
       if (this.hood[c] === 6) v = 30000 + Math.max(0, 40000 - dd * 600);
       this.landValue[c] = Math.floor(v);

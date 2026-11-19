@@ -63,6 +63,10 @@ pre.save { margin: 0; max-height: 200px; overflow: auto; background: var(--sunk)
       <div class="row">
         <label class="inl" for="seed">seed <input id="seed" type="number" value="20261117" style="width:7.5em"></label>
         <button class="btn" id="b-new" disabled>New city</button>
+        <label class="inl" for="sel-map">map <select id="sel-map" title="The page reloads to found the city on another map">
+          <option value="everett">the real place, 41 m to a square (98,000 citizens)</option>
+          <option value="quick">the real place, 82 m to a square (39,000 citizens, faster)</option>
+          <option value="invented">the invented town (12,000 citizens, fastest)</option></select></label>
         <button class="btn" id="b-save" disabled>Save</button>
         <label class="file btn">Load a save<input type="file" id="f-load" accept=".json,application/json" hidden></label>
       </div>
@@ -83,6 +87,7 @@ pre.save { margin: 0; max-height: 200px; overflow: auto; background: var(--sunk)
           <button class="btn" id="b-full" title="Full screen">⤢</button>
         </div>
         <div class="caption"><span id="cap-l"></span><span id="cap-r"></span></div>
+        <p class="credit" id="map-credit" style="margin:.35rem 0 0; font-size:.72rem; opacity:.75"></p>
         <div class="prep" id="prep" hidden aria-live="polite"></div>
         <div class="nogl" id="nogl" hidden role="alert"><p id="nogl-why"></p><p class="note">The city runs without the view; every panel below works.</p></div>
       </div>
@@ -177,6 +182,13 @@ pre.save { margin: 0; max-height: 200px; overflow: auto; background: var(--sunk)
   </section>
 </div>
 
+<script>
+// Which map the city is founded on: the real place, shaped from the population cut, OpenStreetMap and the terrain
+// (the default; ?map=quick is the same place on a coarser, faster map), or the invented one-in-ten town of the earlier
+// releases (?map=invented). The choice is made before the simulation's modules load, because every table is sized by it.
+globalThis.PLUME_MAP = { invented: "tenth", quick: "quick" }[new URLSearchParams(location.search).get("map")] || "everett";
+globalThis.PLUME_SCALE = globalThis.PLUME_MAP;
+</script>
 <script type="module">
 %%MODULES%%
 const CONSOLE_VERSION = "%%VERSION%%";
@@ -190,6 +202,7 @@ const money = (cents) => (cents < 0 ? "−$" : "$") + Math.round(Math.abs(cents)
 const bp = (x) => (x / 100).toFixed(1) + "%", pm = (x) => (x / 10).toFixed(1) + "%", int = (x) => Math.round(x).toLocaleString("en-US");
 $("ver").textContent = "v" + CITY_VERSION;
 const S = { engines: [], engine: null, boot: null, city: null, view: null, playing: false, busy: false, timer: null, hist: [], outer: [], sin: -1, bld: -1, stepAt: 0, lastStep: 0 };
+globalThis.PORT_ALDER = S;      // the page's state, for the browser's console: PORT_ALDER.city, PORT_ALDER.view
 const msg = (t, cls = "") => { $("msg").className = "msg " + cls; $("msg").textContent = t; };
 
 /* ---------- engines (as on the console page) ---------- */
@@ -230,6 +243,7 @@ async function newCity(cfg, interventions = []) {
   stop(); msg("founding Port Alder: the census reads its people, homes and firms…"); await new Promise((r) => setTimeout(r, 30));
   const t0 = performance.now();
   S.city = new City(cfg, S.boot); S.city.interventions = interventions.map((x) => ({ ...x }));
+  S.city.breathe = () => new Promise((r) => setTimeout(r, 0));          // between the parts of a day the page draws a frame
   S.hist = []; S.outer = []; S.sin = -1; S.bld = -1;
   if (S.view) S.view.attach(S.city);
   msg(`Port Alder founded in ${(performance.now() - t0).toFixed(0)} ms: ${int(S.city.people.count)} citizens in ${int(S.city.hh.count)} households, ${int(S.city.firms.count)} firms; ${int(S.city.outer.A.count)} households and ${int(S.city.outer.F.count)} employers sampled in the outer layers.`, "ok");
@@ -260,6 +274,9 @@ function loop() {
 $("b-play").onclick = () => { if (S.playing) stop(); else { S.playing = true; $("b-play").textContent = "Pause"; loop(); } };
 $("b-step").onclick = () => { stop(); stepOnce(); };
 $("b-new").onclick = () => newCity({ seed: Number($("seed").value) | 0, boot: "instant" });
+$("sel-map").value = { tenth: "invented", quick: "quick" }[globalThis.PLUME_MAP] || "everett";
+$("map-credit").innerHTML = globalThis.PLUME_MAP === "tenth" ? "" : 'The map is shaped from real data: © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a> (as map tiles from <a href="https://openfreemap.org">OpenFreeMap</a>, © <a href="https://www.openmaptiles.org/">OpenMapTiles</a>), heights from <a href="https://registry.opendata.aws/terrain-tiles/">Terrain Tiles</a> (Mapzen, USGS 3DEP), population from <a href="https://www.worldpop.org">WorldPop</a> (CC BY 4.0).';
+$("sel-map").addEventListener("change", (e) => { const u = new URL(location.href); if (e.target.value === "everett") u.searchParams.delete("map"); else u.searchParams.set("map", e.target.value); location.href = u.href; });
 $("b-save").onclick = () => { const blob = new Blob([S.city.saveText()], { type: "application/json" }), a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `port-alder-${S.city.cfg.seed}-day${S.city.epoch}.json`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); };
 $("f-load").onchange = async (ev) => {
   const f = ev.target.files?.[0]; if (!f) return;

@@ -6,11 +6,18 @@
 // number, a cell's index). Set globalThis.PLUME_SCALE to "full" (or to an object of sizes) before importing anything
 // else; left unset, it is the one-in-ten city, exactly as it has always been.
 //
-//   tenth   128 x 128 cells of 20 m (2.56 km), about 12,000 citizens standing for Everett's 115,000
-//   full    1,024 x 1,024 cells of 20 m (20.48 km), every one of the 391,000 people of the map's area (docs/STAGE2.md)
+//   tenth     128 x 128 cells, an invented map: about 12,000 citizens standing for Everett's 115,000
+//   everett   512 x 512 cells laid over the 21 km of real ground the population cut covers (each cell 41 m of it): one
+//             citizen for every four of the 391,412 people the population table counts there, living where it counts
+//             them; at this size the map is true to scale (a home's plot stands for four real plots)
+//   quick     the same place on 256 x 256 cells (82 m each), one citizen for every ten people: coarser and faster
+//   full      1,024 x 1,024 cells of 21 m over the same ground: every one of the 391,412 (docs/STAGE2.md)
 const PRESETS = {
-  tenth: { n: 128, people: 24576, households: 8192, firms: 2048, loans: 32768, buildings: 8192, dwellings: 12288, spaces: 4096, projects: 1024, proposals: 8192 },
-  full: { n: 1024, people: 458752, households: 196608, firms: 24576, loans: 327680, buildings: 196608, dwellings: 229376, spaces: 49152, projects: 8192, proposals: 65536 },
+  tenth: { n: 128, map: "", ratio: 10, people: 24576, households: 8192, firms: 2048, loans: 32768, buildings: 8192, dwellings: 12288, spaces: 4096, projects: 1024, proposals: 8192 },
+  // the real place (ground.js): the map is the 21 km of real ground the population cut covers; `ratio` real people to a citizen
+  everett: { n: 512, map: "everett", ratio: 4, people: 196608, households: 98304, firms: 8192, loans: 262144, buildings: 131072, dwellings: 98304, spaces: 32768, projects: 4096, proposals: 32768 },
+  quick: { n: 256, map: "everett", ratio: 10, people: 81920, households: 36864, firms: 4096, loans: 131072, buildings: 49152, dwellings: 40960, spaces: 16384, projects: 2048, proposals: 16384 },
+  full: { n: 1024, map: "everett", ratio: 1, people: 458752, households: 196608, firms: 24576, loans: 327680, buildings: 196608, dwellings: 229376, spaces: 49152, projects: 8192, proposals: 65536 },
 };
 // (in Node the environment variable PLUME_SCALE does the same: a name, or the sizes as JSON)
 const fromEnv = () => { const v = typeof process !== "undefined" && process.env ? process.env.PLUME_SCALE : undefined; return v && v.trim().startsWith("{") ? JSON.parse(v) : v || undefined; };
